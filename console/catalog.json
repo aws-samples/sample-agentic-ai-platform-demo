@@ -1,0 +1,536 @@
+{
+  "_comment": "Platform-curated config that is NOT in the approval workflow: approved models (with pricing metadata), blueprints + options, GitHub export orgs. Skills, typed tools, MCP servers and A2A agents moved to the unified AI Registry (seeded from console/registry-seed.json into console/ai-registry.json).",
+  "_models_note": "Vendor model IDs verified in us-west-2 (Oregon) 2026-07-15. Claude runs on the standard Bedrock runtime (BedrockModel). OpenAI GPT-5.6 Terra/Luna AND Google Gemma 4 31B run on the bedrock-mantle endpoint (openai/v1/responses path) \u2014 need OpenAIResponsesModel, NOT BedrockModel. GPT-5.6 Sol NOT added: per AWS docs it is only in us-east-1/us-east-2, so it would fail to run in us-west-2 where our agents live. No Meta/DeepSeek/Mistral/gpt-oss/Chinese-vendor models per platform policy. Gemma 3 removed per request. The acme.triage-ft entry is the ML Platform integration demo (T16/WS-E): an ILLUSTRATIVE fine-tuned model \u2014 its SageMaker training job and Bedrock custom-model import are concept-level (no such model exists in the account); its registry entry, lineage rendering, versioning and consumer derivation in the console are live.",
+  "_pricing_note": "Platform-entered pricing metadata per model (Loom's models.json pattern), USD per 1k tokens. These are demo values maintained by the platform team, not fetched from a billing API.",
+  "models": [
+    {
+      "id": "global.anthropic.claude-opus-4-8",
+      "label": "Claude Opus 4.8",
+      "vendor": "Anthropic",
+      "tier": "deep-reasoning",
+      "runtime": "bedrock",
+      "approved": true,
+      "noTemperature": true,
+      "pricing": {
+        "inputPer1k": 0.005,
+        "outputPer1k": 0.025,
+        "asOf": "2026-07-01"
+      }
+    },
+    {
+      "id": "global.anthropic.claude-sonnet-5",
+      "label": "Claude Sonnet 5",
+      "vendor": "Anthropic",
+      "tier": "balanced",
+      "runtime": "bedrock",
+      "approved": true,
+      "noTemperature": true,
+      "pricing": {
+        "inputPer1k": 0.003,
+        "outputPer1k": 0.015,
+        "asOf": "2026-07-01"
+      }
+    },
+    {
+      "id": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "label": "Claude Haiku 4.5",
+      "vendor": "Anthropic",
+      "tier": "fast",
+      "runtime": "bedrock",
+      "approved": true,
+      "pricing": {
+        "inputPer1k": 0.0008,
+        "outputPer1k": 0.004,
+        "asOf": "2026-07-01"
+      }
+    },
+    {
+      "id": "openai.gpt-5.6-terra",
+      "label": "OpenAI GPT-5.6 Terra",
+      "vendor": "OpenAI",
+      "tier": "balanced",
+      "runtime": "bedrock-mantle",
+      "approved": true,
+      "pricing": {
+        "inputPer1k": 0.00125,
+        "outputPer1k": 0.01,
+        "asOf": "2026-07-01"
+      }
+    },
+    {
+      "id": "openai.gpt-5.6-luna",
+      "label": "OpenAI GPT-5.6 Luna",
+      "vendor": "OpenAI",
+      "tier": "fast",
+      "runtime": "bedrock-mantle",
+      "approved": true,
+      "pricing": {
+        "inputPer1k": 0.00025,
+        "outputPer1k": 0.002,
+        "asOf": "2026-07-01"
+      }
+    },
+    {
+      "id": "google.gemma-4-31b",
+      "label": "Google Gemma 4 31B",
+      "vendor": "Google",
+      "tier": "open-weight \u00b7 reasoning",
+      "runtime": "bedrock-mantle",
+      "approved": true,
+      "pricing": {
+        "inputPer1k": 0.00023,
+        "outputPer1k": 0.00038,
+        "asOf": "2026-07-01"
+      }
+    },
+    {
+      "id": "acme.triage-ft-8b",
+      "label": "Support Triage FT 8B",
+      "vendor": "Acme ML Platform",
+      "tier": "fine-tuned \u00b7 domain-adapted",
+      "runtime": "bedrock (custom model import)",
+      "approved": true,
+      "pricing": {
+        "inputPer1k": 0.0002,
+        "outputPer1k": 0.0003,
+        "asOf": "2026-07-19"
+      },
+      "lineage": {
+        "source": "Acme ML Platform",
+        "baseModel": "google.gemma-4-31b",
+        "method": "LoRA fine-tune (SageMaker Training)",
+        "trainingJob": "arn:aws:sagemaker:us-west-2:111122223333:training-job/triage-ft-gemma4-2026-07-18",
+        "dataset": "s3://acme-ml-curated/support-triage/v3 (12,400 labeled tickets)",
+        "evalReport": "Triage accuracy 91.4% vs 78.2% base model (held-out set)",
+        "importedVia": "Amazon Bedrock Custom Model Import",
+        "registeredAt": "2026-07-19"
+      }
+    },
+    {
+      "id": "moonshotai.kimi-k3",
+      "label": "Kimi K3",
+      "vendor": "Moonshot AI",
+      "tier": "frontier",
+      "approved": true,
+      "pricing": {
+        "inputPer1k": 0.0006,
+        "outputPer1k": 0.0025
+      }
+    },
+    {
+      "id": "xai.grok-4.6",
+      "label": "Grok 4.6",
+      "vendor": "xAI",
+      "tier": "frontier",
+      "approved": true,
+      "pricing": {
+        "inputPer1k": 0.002,
+        "outputPer1k": 0.006
+      }
+    },
+    {
+      "id": "xai.grok-4.3",
+      "label": "Grok 4.3",
+      "vendor": "xAI",
+      "tier": "balanced",
+      "approved": true,
+      "pricing": {
+        "inputPer1k": 0.0015,
+        "outputPer1k": 0.005
+      }
+    },
+    {
+      "id": "openai.gpt-6-astra",
+      "label": "OpenAI GPT-6 Astra",
+      "vendor": "OpenAI",
+      "tier": "frontier",
+      "approved": true,
+      "pricing": {
+        "inputPer1k": 0.0025,
+        "outputPer1k": 0.01
+      }
+    },
+    {
+      "id": "openai.gpt-5.4",
+      "label": "OpenAI GPT-5.4",
+      "vendor": "OpenAI",
+      "tier": "balanced",
+      "approved": true,
+      "pricing": {
+        "inputPer1k": 0.001,
+        "outputPer1k": 0.004
+      }
+    },
+    {
+      "id": "openai.gpt-5.4-2026-03-05",
+      "label": "OpenAI GPT-5.4 (2026-03-05)",
+      "vendor": "OpenAI",
+      "tier": "balanced",
+      "approved": true,
+      "pricing": {
+        "inputPer1k": 0.001,
+        "outputPer1k": 0.004
+      }
+    },
+    {
+      "id": "google.gemma-4-26b-a4b",
+      "label": "Google Gemma 4 26B A4B",
+      "vendor": "Google",
+      "tier": "fast",
+      "approved": true,
+      "pricing": {
+        "inputPer1k": 0.0002,
+        "outputPer1k": 0.0008
+      }
+    },
+    {
+      "id": "google.gemma-4-e2b",
+      "label": "Google Gemma 4 E2B",
+      "vendor": "Google",
+      "tier": "fast",
+      "approved": true,
+      "pricing": {
+        "inputPer1k": 0.0001,
+        "outputPer1k": 0.0004
+      }
+    },
+    {
+      "id": "zai.glm-5",
+      "label": "Z.AI GLM 5",
+      "vendor": "Z.AI",
+      "tier": "frontier",
+      "approved": true,
+      "pricing": {
+        "inputPer1k": 0.0008,
+        "outputPer1k": 0.003
+      }
+    },
+    {
+      "id": "minimax.minimax-m2.5",
+      "label": "MiniMax M2.5",
+      "vendor": "MiniMax",
+      "tier": "balanced",
+      "approved": true,
+      "pricing": {
+        "inputPer1k": 0.0005,
+        "outputPer1k": 0.002
+      }
+    }
+  ],
+  "_blueprints_note": "Predefined Foundation Harness templates the platform publishes. Each is a pre-chosen combination of framework + deploy target + build + protocol + memory + streaming + identity/guardrails, with the foundation (identity/memory/observability/guardrails) pre-wired. Domain teams pick one and add only their domain harness. These are shown as the platform's catalog of ready templates; the console can deploy the Strands/AgentCore-Runtime ones for real (chat + workflow), the rest illustrate common combinations. template.defaultModel must be the id of an approved entry in `models` (null = the blueprint needs no LLM, e.g. a pure tool server); template.tools lists Skill/MCPServer ids from console/registry-seed.json the blueprint pre-wires; template.observability names the pre-wired telemetry. All three are validated at synth by infra/platform-registry/bin/app.ts \u2014 a dangling reference fails the deploy.",
+  "_githubOrgs_note": "Mock SSO targets for export. When a domain team hands off to GitHub, they sign in via SSO and pick an org they can access \u2014 the platform's own org or one their domain team owns. `real: true` = the console's gh credential can actually create the repo there (demoed live); the rest are mock orgs shown to convey the concept.",
+  "githubOrgs": [
+    {
+      "id": "melanie531",
+      "label": "melanie531",
+      "kind": "personal",
+      "real": true,
+      "patSsm": "/openclaw/github/melanie531-pat",
+      "note": "Your personal GitHub \u2014 real repo gets created here. PAT verified for workflow-file pushes."
+    },
+    {
+      "id": "ao-lab-531",
+      "label": "ao-lab-531",
+      "kind": "lab",
+      "real": false,
+      "patSsm": "/openclaw/github/ao-lab-531-pat",
+      "note": "Lab org \u2014 DO NOT USE for real exports: org PAT lacks Workflows write permission (2026-08-25). Use melanie531 instead."
+    },
+    {
+      "id": "acme-platform",
+      "label": "acme-platform",
+      "kind": "platform",
+      "real": false,
+      "note": "Platform team org (demo) \u2014 central platform's GitHub."
+    },
+    {
+      "id": "acme-domain-support",
+      "label": "acme-domain-support",
+      "kind": "domain",
+      "real": false,
+      "note": "Your domain team's org (demo)."
+    },
+    {
+      "id": "acme-domain-hr",
+      "label": "acme-domain-hr",
+      "kind": "domain",
+      "real": false,
+      "note": "Another domain team's org (demo)."
+    }
+  ],
+  "blueprintOptions": {
+    "framework": [
+      "Strands",
+      "Claude Agent SDK",
+      "LangGraph",
+      "OpenAI Agents SDK",
+      "Google ADK"
+    ],
+    "deployTarget": [
+      "AgentCore Runtime",
+      "AWS Lambda",
+      "ECS Fargate",
+      "Amazon EKS"
+    ],
+    "protocol": [
+      "HTTP",
+      "MCP",
+      "A2A"
+    ],
+    "memory": [
+      "longAndShortTerm",
+      "shortTerm",
+      "none"
+    ],
+    "_compatibility_note": "Framework \u00d7 hosting matrix: compatibility[framework][deployTarget] = reason string means the pairing is NOT supported (reason shown in the wizard); absent = supported. Enforced in the wizard (invalid combos unselectable) and by the registry auto-check on Blueprint versions.",
+    "compatibility": {
+      "Claude Agent SDK": {
+        "AWS Lambda": "Container-based agent loop needs a writable filesystem and long-lived sessions \u2014 Lambda's 15-minute cap and read-only runtime don't fit. Use AgentCore Runtime, ECS Fargate or EKS."
+      },
+      "LangGraph": {
+        "AWS Lambda": "Supervisor graphs are long-running and checkpoint mid-flight \u2014 they exceed Lambda's 15-minute invocation limit. Use a container target."
+      }
+    }
+  },
+  "_blueprint_source_note": "source records where the template's actual harness lives. kind=repo: a full exportable repo under blueprints/<templateId> in this repository (AGENTS.md + agentcore.json spec + app code + CDK) \u2014 the compose flow exports exactly these files to the customer's GitHub. kind=github: an external template repository. kind=s3: a platform-uploaded template bundle. kind=illustrative: no published harness \u2014 the entry documents a supported framework/hosting combination only, and the console must say so instead of implying code exists.",
+  "blueprints": [
+    {
+      "id": "chat-assistant",
+      "name": "Chat Assistant",
+      "recommended": true,
+      "useCase": "Conversational / knowledge assistant",
+      "source": {
+        "kind": "repo",
+        "templateId": "chatagent"
+      },
+      "template": {
+        "framework": "Strands",
+        "deployTarget": "AgentCore Runtime",
+        "build": "CodeZip",
+        "protocol": "HTTP",
+        "memory": "longAndShortTerm",
+        "streaming": true,
+        "identity": true,
+        "guardrails": true,
+        "defaultModel": null,
+        "modelSelection": "domain-approved",
+        "tools": [],
+        "observability": "AgentCore Observability (CloudWatch + OTEL)"
+      }
+    },
+    {
+      "id": "workflow-orchestrator",
+      "name": "Workflow Orchestrator",
+      "recommended": true,
+      "useCase": "Multi-step task & process orchestration",
+      "source": {
+        "kind": "repo",
+        "templateId": "workflowagent"
+      },
+      "template": {
+        "framework": "Strands",
+        "deployTarget": "AgentCore Runtime",
+        "build": "CodeZip",
+        "protocol": "HTTP",
+        "memory": "shortTerm",
+        "streaming": true,
+        "identity": false,
+        "guardrails": true,
+        "defaultModel": null,
+        "modelSelection": "domain-approved",
+        "tools": [],
+        "observability": "AgentCore Observability (CloudWatch + OTEL)"
+      }
+    },
+    {
+      "id": "rag-knowledge",
+      "name": "RAG Knowledge Agent",
+      "useCase": "Retrieval-grounded answers over enterprise docs",
+      "source": {
+        "kind": "illustrative"
+      },
+      "template": {
+        "framework": "Strands",
+        "deployTarget": "AgentCore Runtime",
+        "build": "CodeZip",
+        "protocol": "HTTP",
+        "memory": "longAndShortTerm",
+        "streaming": true,
+        "identity": true,
+        "guardrails": true,
+        "defaultModel": "global.anthropic.claude-sonnet-5",
+        "tools": [
+          "knowledge_base"
+        ],
+        "observability": "AgentCore Observability (CloudWatch + OTEL)"
+      }
+    },
+    {
+      "id": "claude-cos",
+      "name": "Claude Agent SDK Assistant",
+      "useCase": "Skills-driven agent (CLAUDE.md, filesystem, code)",
+      "source": {
+        "kind": "github",
+        "url": "https://github.com/anthropics/claude-agent-sdk-python"
+      },
+      "template": {
+        "framework": "Claude Agent SDK",
+        "deployTarget": "AgentCore Runtime",
+        "build": "Container",
+        "protocol": "HTTP",
+        "memory": "longAndShortTerm",
+        "streaming": true,
+        "identity": true,
+        "guardrails": true,
+        "defaultModel": "global.anthropic.claude-opus-4-8",
+        "tools": [
+          "code_interpreter",
+          "github-mcp"
+        ],
+        "observability": "AgentCore Observability (CloudWatch + OTEL)"
+      }
+    },
+    {
+      "id": "langgraph-multiagent",
+      "name": "LangGraph Multi-Agent",
+      "useCase": "Graph-based supervisor + specialist agents",
+      "source": {
+        "kind": "github",
+        "url": "https://github.com/langchain-ai/langgraph"
+      },
+      "template": {
+        "framework": "LangGraph",
+        "deployTarget": "AgentCore Runtime",
+        "build": "CodeZip",
+        "protocol": "HTTP",
+        "memory": "shortTerm",
+        "streaming": true,
+        "identity": true,
+        "guardrails": true,
+        "defaultModel": "global.anthropic.claude-sonnet-5",
+        "tools": [
+          "data-analysis",
+          "web_browser"
+        ],
+        "observability": "AgentCore Observability (CloudWatch + OTEL)"
+      }
+    },
+    {
+      "id": "mcp-tool-server",
+      "name": "MCP Tool Server",
+      "useCase": "Expose enterprise tools to other agents over MCP",
+      "source": {
+        "kind": "illustrative"
+      },
+      "template": {
+        "framework": "Strands",
+        "deployTarget": "AgentCore Runtime",
+        "build": "CodeZip",
+        "protocol": "MCP",
+        "memory": "none",
+        "streaming": false,
+        "identity": true,
+        "guardrails": true,
+        "defaultModel": null,
+        "tools": [
+          "order_lookup",
+          "product_catalogue"
+        ],
+        "observability": "AgentCore Observability (CloudWatch + OTEL)"
+      }
+    },
+    {
+      "id": "action-agent",
+      "name": "Action-Taking Agent",
+      "useCase": "Side-effecting actions with approvals (A2A)",
+      "source": {
+        "kind": "illustrative"
+      },
+      "template": {
+        "framework": "Strands",
+        "deployTarget": "ECS Fargate",
+        "build": "Container",
+        "protocol": "A2A",
+        "memory": "longAndShortTerm",
+        "streaming": false,
+        "identity": true,
+        "guardrails": true,
+        "defaultModel": "global.anthropic.claude-sonnet-5",
+        "tools": [
+          "servicenow-itsm"
+        ],
+        "observability": "CloudWatch + OTEL collector sidecar"
+      }
+    },
+    {
+      "id": "edge-classifier",
+      "name": "Lightweight Classifier",
+      "useCase": "High-volume classify/route, low latency & cost",
+      "source": {
+        "kind": "illustrative"
+      },
+      "template": {
+        "framework": "Strands",
+        "deployTarget": "AWS Lambda",
+        "build": "CodeZip",
+        "protocol": "HTTP",
+        "memory": "none",
+        "streaming": false,
+        "identity": false,
+        "guardrails": true,
+        "defaultModel": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+        "tools": [],
+        "observability": "CloudWatch Logs + X-Ray"
+      }
+    },
+    {
+      "id": "adk-data-agent",
+      "name": "ADK Data Agent",
+      "useCase": "Google ADK analytics agent on your existing EKS clusters",
+      "source": {
+        "kind": "github",
+        "url": "https://github.com/google/adk-samples"
+      },
+      "template": {
+        "framework": "Google ADK",
+        "deployTarget": "Amazon EKS",
+        "build": "Container",
+        "protocol": "HTTP",
+        "memory": "shortTerm",
+        "streaming": true,
+        "identity": true,
+        "guardrails": true,
+        "defaultModel": "google.gemma-4-31b",
+        "tools": [
+          "data-analysis"
+        ],
+        "observability": "Container Insights + OTEL collector"
+      }
+    },
+    {
+      "id": "openai-ops-agent",
+      "name": "OpenAI Ops Agent",
+      "useCase": "OpenAI Agents SDK runbook executor for platform teams",
+      "source": {
+        "kind": "github",
+        "url": "https://github.com/openai/openai-agents-python"
+      },
+      "template": {
+        "framework": "OpenAI Agents SDK",
+        "deployTarget": "Amazon EKS",
+        "build": "Container",
+        "protocol": "HTTP",
+        "memory": "shortTerm",
+        "streaming": true,
+        "identity": true,
+        "guardrails": true,
+        "defaultModel": "openai.gpt-5.6-terra",
+        "tools": [
+          "it-troubleshooting",
+          "aws-docs"
+        ],
+        "observability": "Container Insights + OTEL collector"
+      }
+    }
+  ]
+}

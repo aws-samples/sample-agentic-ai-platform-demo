@@ -1,0 +1,14 @@
+{
+  "project": "supportdesk",
+  "domain": "customer-support",
+  "blueprint": "chat-assistant",
+  "blueprintVersion": "1.0.0",
+  "model": "(blueprint default)",
+  "modelParams": {},
+  "persona": "Customer support assistant for order status, returns and shipping questions",
+  "skills": [],
+  "tools": [],
+  "builtinTools": [],
+  "mcpServers": [],
+  "a2aAgents": []
+}

@@ -1,0 +1,33 @@
+{
+  "region": "us-west-2",
+  "registries": {
+    "shared": {
+      "name": "platform_shared",
+      "registryId": "REGISTRY_ID_PLACEHOLDER",
+      "registryArn": "arn:aws:agent-registry:REGION:ACCOUNT_ID:registry/REGISTRY_ID_PLACEHOLDER"
+    },
+    "domains": {
+      "platform": {
+        "name": "domain_platform",
+        "registryId": "REGISTRY_ID_PLACEHOLDER",
+        "registryArn": "arn:aws:agent-registry:REGION:ACCOUNT_ID:registry/REGISTRY_ID_PLACEHOLDER"
+      },
+      "customer-support": {
+        "name": "domain_customer_support",
+        "registryId": "REGISTRY_ID_PLACEHOLDER",
+        "registryArn": "arn:aws:agent-registry:REGION:ACCOUNT_ID:registry/REGISTRY_ID_PLACEHOLDER"
+      },
+      "operations": {
+        "name": "domain_operations",
+        "registryId": "REGISTRY_ID_PLACEHOLDER",
+        "registryArn": "arn:aws:agent-registry:REGION:ACCOUNT_ID:registry/REGISTRY_ID_PLACEHOLDER"
+      }
+    }
+  },
+  "toolsGateway": {
+    "name": "platform-tools-gw",
+    "gatewayId": "GATEWAY_ID_PLACEHOLDER",
+    "gatewayArn": "arn:aws:bedrock-agentcore:REGION:ACCOUNT_ID:gateway/GATEWAY_ID_PLACEHOLDER",
+    "gatewayUrl": "https://GATEWAY_ID_PLACEHOLDER.gateway.bedrock-agentcore.REGION.amazonaws.com/mcp"
+  }
+}

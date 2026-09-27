@@ -1,0 +1,35 @@
+[project]
+name = "data-analyst-agent-runtime"
+version = "0.3.0"
+description = "AgentCore Runtime bundle for the data-analyst teammate (M3)"
+requires-python = ">=3.12"
+# Pins used when bundling arm64 (manylinux2014_aarch64) wheels for the runtime
+# (the runtime needs the arm64 wheel set — pandas/pyarrow split).
+dependencies = [
+    "aws-bedrock-token-generator==1.1.0",
+    "bedrock-agentcore==1.14.1",
+    "boto3==1.43.31",
+    "pydantic==2.12.4",
+    "pandas==2.3.2",
+    "pyarrow==20.0.0",
+    "matplotlib==3.10.3",
+    "openai-codex==0.1.0b3",
+    "aws-opentelemetry-distro",
+    "opentelemetry-exporter-otlp-proto-http",
+]
+
+# openai-codex==0.1.0b3 depends on the prerelease openai-codex-cli-bin, which
+# uv refuses to resolve by default — without this, `uv sync` fails out of box.
+[tool.uv]
+prerelease = "allow"
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+# Flat layout with several top-level packages: setuptools auto-discovery
+# refuses to guess, so `pip install -e` (the tests CI gate) needs the
+# explicit list.
+[tool.setuptools]
+py-modules = ["main", "m4_integration", "metrics", "telemetry"]
+packages = ["agent", "agent.tools", "identity", "memory", "model"]

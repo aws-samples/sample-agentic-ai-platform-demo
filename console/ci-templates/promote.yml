@@ -1,0 +1,86 @@
+# platform-gate: v1 (org required check — do not remove or bypass)
+# CD (promotion): manual, environment-gated deploy of the SAME agent code to
+# the `staging` or `prod` deployment target (agentcore/aws-targets.json).
+# Single AWS account — promotion is a target redeploy with GitHub Environment
+# protection rules (required reviewers), not a separate account/pipeline.
+# Configure the `staging` and `prod` GitHub Environments with required
+# reviewers before using this workflow. Exports ship with aws-targets.json
+# reset to [] — the deploy step skips honestly until targets are configured.
+name: promote
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options: [staging, prod]
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install AgentCore CLI
+        # npm `@aws/agentcore` is the AgentCore CLI — NOT the deprecated pip
+        # starter toolkit (different options; caused `No such option: -y` in
+        # deploy-dev run 32854161825). uv is required by the CLI's CodeZip
+        # bundling for python runtimes.
+        run: |
+          npm install -g @aws/agentcore
+          pip install --quiet uv
+      - name: Eval gate (same runner and threshold as the PR gate)
+        # One gate, three moments: this is the SAME gates/run-eval.mjs and the
+        # SAME threshold in gates/platform-gates.json that a builder runs locally
+        # and that eval.yml enforces on every PR. Re-scored here so a promotion
+        # can never ship code that regressed after the PR gate went green.
+        # --mode auto degrades to the deterministic assertion checks when the
+        # judge role can't be assumed; it never pretends to pass.
+        run: node gates/run-eval.mjs --mode auto
+      - name: Check deployment configuration
+        # Skip contract (platform-telemetry v1): no configured deploy role or
+        # target → the Deploy step below is SKIPPED via `if:` (native `skipped`
+        # step conclusion). gates/report-run.mjs reads that conclusion and
+        # reports the deployment as status "skipped", not success. Keep the
+        # "Deploy " step-name prefix and this output name stable — the reporter
+        # depends on both.
+        id: deployment
+        env:
+          AWS_DEPLOY_ROLE_ARN: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+        run: |
+          TARGET='${{ github.event.inputs.environment }}'
+          if [ -z "$AWS_DEPLOY_ROLE_ARN" ]; then
+            echo "::notice::AWS_DEPLOY_ROLE_ARN is not configured; promotion is skipped."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          elif node -e 'const t=require("./agentcore/aws-targets.json");process.exit(Array.isArray(t)&&t.some(x=>x.name===process.argv[1])?0:1)' "$TARGET"; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::No '$TARGET' target in agentcore/aws-targets.json (exports reset targets to []). Configure the target and a CDK-capable deploy role to enable promotion — skipping deploy honestly."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Configure AWS credentials (OIDC)
+        if: steps.deployment.outputs.enabled == 'true'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_DEPLOY_REGION || 'us-west-2' }}
+      - name: Deploy <agent>-${{ github.event.inputs.environment }}
+        # TLP-B11 #14: the AgentCore CLI can exit 0 on failure (observed on
+        # v0.24.1 local-run commands) — verify the output, not just the exit code.
+        if: steps.deployment.outputs.enabled == 'true'
+        run: |
+          set -euo pipefail
+          TARGET='${{ github.event.inputs.environment }}'
+          node gates/check-resource-bindings.mjs
+          npm --prefix agentcore/cdk install --no-audit --no-fund
+          agentcore deploy --target "$TARGET" --yes 2>&1 | tee deploy.log
+          ! grep -qiE "error|failed|traceback" deploy.log || { echo "::error::agentcore deploy reported errors (CLI may still exit 0 — see log above)"; exit 1; }

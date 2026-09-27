@@ -1,0 +1,31 @@
+{
+  "name": "platform-registry-infra",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run test:control-plane-config-types && npm run test:config-generator && tsx --test test/*.test.ts",
+    "test:control-plane-config": "npm run test:control-plane-config-types && tsx --test test/control-plane-config.test.ts",
+    "test:config-generator": "node --test test/generate-console-config.test.mjs",
+    "test:platform-registry-stack": "tsx --test test/platform-registry-stack.test.ts",
+    "test:control-plane-config-types": "tsc --noEmit --strict --skipLibCheck --target ES2020 --module commonjs --moduleResolution node test/control-plane-config.types.ts",
+    "synth": "cdk synth",
+    "deploy": "cdk deploy --require-approval broadening",
+    "deploy:outputs": "cdk deploy --require-approval broadening --outputs-file outputs.json",
+    "config": "node scripts/generate-console-config.mjs outputs.json",
+    "destroy": "cdk destroy",
+    "diff": "cdk diff"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.170.0",
+    "constructs": "^10.0.0",
+    "source-map-support": "^0.5.21"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "aws-cdk": "^2.170.0",
+    "ts-node": "^10.9.2",
+    "tsx": "4.23.12",
+    "typescript": "~5.6.0"
+  }
+}

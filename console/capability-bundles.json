@@ -1,0 +1,65 @@
+{
+  "note": "G1 capability bundles — named sets of capability flags resolved server-side by console/capabilities.mjs. The admin/lead/builder defaults reproduce the pre-refactor role behavior exactly (zero behavior change). Editable via the admin bundles API; domainOverrides may add/remove flags per bundle inside one domain.",
+  "bundles": {
+    "admin": {
+      "description": "Platform team: governance, vending, approvals, integrations. Content planes stay domain-owned — platform-side content access is break-glass only.",
+      "capabilities": [
+        "viewAllDomains",
+        "createDomain",
+        "approveRegistryVersion",
+        "manageRegistryEntries",
+        "viewDomainCostRollup",
+        "manageApprovalPolicies",
+        "decideInterrupts",
+        "manageAlertPolicies",
+        "manageIncidents",
+        "manageIntegrations",
+        "manageModelAccess",
+        "exportAudit",
+        "approveAgentDeploy",
+        "manageCapabilityBundles",
+        "requestPlatformContentAccess",
+        "decideBreakGlass",
+        "attributeMemoryStores",
+        "ownContentPlane",
+        "viewDomainOperations",
+        "viewAlerts",
+        "useBuilderSurfaces",
+        "manageProjectMembers",
+        "viewAuditTrail"
+      ]
+    },
+    "lead": {
+      "description": "Domain lead: everything a builder has, plus deciding access requests and default (audited) visibility of the owned domain's content plane.",
+      "capabilities": [
+        "useBuilderSurfaces",
+        "domainContentPlane",
+        "requestContentAccess",
+        "requestModelAccess",
+        "decideAccessRequests",
+        "viewDomainCostRollup",
+        "ownContentPlane",
+        "viewDomainOperations",
+        "viewAlerts",
+        "manageProjectMembers",
+        "viewAuditTrail"
+      ]
+    },
+    "builder": {
+      "description": "Domain builder: build/deploy agents in the own domain, request content access through the grant path.",
+      "capabilities": [
+        "useBuilderSurfaces",
+        "domainContentPlane",
+        "requestContentAccess",
+        "requestModelAccess",
+        "viewDomainOperations",
+        "viewAlerts"
+      ]
+    },
+    "user": {
+      "description": "End user: chat with published agents only. No operator, builder, or governance surfaces.",
+      "capabilities": []
+    }
+  },
+  "domainOverrides": {}
+}

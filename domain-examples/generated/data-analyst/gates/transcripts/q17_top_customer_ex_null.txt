@@ -1,0 +1,1 @@
+Customer 14646 spent the most: £280,206.02 total across valid sales. Source_table: uci_retail.transactions, uci_retail.invoices.

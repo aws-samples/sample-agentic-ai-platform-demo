@@ -1,0 +1,21 @@
+console:
+  - changed-files:
+      - any-glob-to-any-file: "console/**"
+
+blueprints:
+  - changed-files:
+      - any-glob-to-any-file: "blueprints/**"
+
+domain-examples:
+  - changed-files:
+      - any-glob-to-any-file: "domain-examples/**"
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "docs/**"
+          - "**/*.md"
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file: ".github/**"

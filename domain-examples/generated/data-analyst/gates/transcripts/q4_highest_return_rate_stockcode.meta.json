@@ -1,0 +1,8 @@
+{
+  "scenario_id": "q4_highest_return_rate_stockcode",
+  "recordedAt": "2026-08-25T03:50:04.881Z",
+  "source": "record-transcripts.mjs",
+  "endpoint": "http://localhost:8081/invocations",
+  "sessionId": "rec-q4_highest_return_rate_stockcode-1787629795627",
+  "turns": 1
+}

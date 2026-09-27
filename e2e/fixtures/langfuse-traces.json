@@ -1,0 +1,53 @@
+{
+  "note": "Replay fixture for e2e (LANGFUSE_FIXTURE=<path>). Shape mirrors the Langfuse GET /api/public/traces response the console consumes: data[] rows with timestamp/userId/sessionId/tags/usage.total/latency. Rows cover every scoping class G13 asserts: platform-account agent, two different domain-deployed agents, and an unattributed row (no project tag — fail-closed, platform-visible only). Synthetic values, no real user data.",
+  "data": [
+    {
+      "timestamp": "2026-08-03T01:10:00.000Z",
+      "userId": "demo-user-1",
+      "sessionId": "lf-fixture-platform-1",
+      "tags": ["agentcore", "foundation-harness", "project:platform-assistant"],
+      "usage": { "total": 812 },
+      "latency": 2.4
+    },
+    {
+      "timestamp": "2026-08-03T01:09:00.000Z",
+      "userId": "demo-user-2",
+      "sessionId": "lf-fixture-platform-2",
+      "tags": ["agentcore", "foundation-harness", "project:platform-assistant"],
+      "usage": { "total": 455 },
+      "latency": 1.8
+    },
+    {
+      "timestamp": "2026-08-03T01:08:00.000Z",
+      "userId": "demo-user-3",
+      "sessionId": "lf-fixture-cs-1",
+      "tags": ["agentcore", "foundation-harness", "project:supportdesk"],
+      "usage": { "total": 1204 },
+      "latency": 3.1
+    },
+    {
+      "timestamp": "2026-08-03T01:07:00.000Z",
+      "userId": "demo-user-4",
+      "sessionId": "lf-fixture-cs-2",
+      "tags": ["agentcore", "foundation-harness", "project:supportdesk"],
+      "usage": { "total": 640 },
+      "latency": 2.0
+    },
+    {
+      "timestamp": "2026-08-03T01:06:00.000Z",
+      "userId": "demo-user-5",
+      "sessionId": "lf-fixture-ops-1",
+      "tags": ["agentcore", "workflow-orchestrator", "project:opsassistant"],
+      "usage": { "total": 990 },
+      "latency": 2.7
+    },
+    {
+      "timestamp": "2026-08-03T01:05:00.000Z",
+      "userId": "demo-user-6",
+      "sessionId": "lf-fixture-unattributed-1",
+      "tags": ["agentcore"],
+      "usage": { "total": 300 },
+      "latency": 1.2
+    }
+  ]
+}

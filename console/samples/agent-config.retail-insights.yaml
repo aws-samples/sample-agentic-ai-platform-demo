@@ -1,0 +1,38 @@
+# agent-config.yaml — retail-insights
+#
+# Config-as-code for a domain agent. A builder keeps this file in their app repo
+# and imports it in the Build wizard's compose step instead of re-filling the
+# form: the console parses it, checks every value against the governed
+# vocabulary (APPROVED registry models, known guardrail ids), and populates the
+# wizard. The platform baseline (identity, observability, org guardrails) is NOT
+# in this file — it is locked and merged by the platform on generate.
+
+name: retail-insights
+model: global.anthropic.claude-haiku-4-5-20251001-v1:0
+
+# A FILE REFERENCE, never inline prose — the instructions live in the repo, are
+# reviewed in a PR, and are versioned with the agent.
+system_prompt: app/chat_agent/instructions.md
+
+rag:
+  datasource: retail-product-reviews
+  index: retail-reviews-v3
+  retrieval:
+    top_k: 6
+    rerank: true
+
+memory:
+  retention_days: 30
+  scope: per-user
+
+# Domain-chosen guardrails. Org-enforced ones (pii-filter, security-scan-gate)
+# and the domain's enforced set are added by the platform whether or not they
+# appear here — omitting one does not switch it off.
+guardrails:
+  - pii-strict
+  - prompt-injection
+  - topic-restriction
+
+eval:
+  golden_dataset: eval/golden/retail-insights.jsonl
+  threshold: 0.8

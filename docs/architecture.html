@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agentic AI Platform — Golden-Path Architecture</title>
+<style>
+  :root{
+    --bg:#0a0e17; --surface:#131b2e; --surface2:#1a2338; --ink:#0b1120;
+    --border:rgba(255,255,255,.12); --text:#e6ebf5; --dim:#93a1b8; --muted:#5f6b80;
+    --accent:#adc6ff; --gold:#f2c14e; --green:#34d399; --amber:#f59e0b;
+    --plat:#a78bfa; --aws:#ff9900;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif;background:var(--bg);color:var(--text);padding:28px 24px 80px}
+  h1{font-size:1.6rem;font-weight:800;background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .sub{color:var(--dim);margin:6px 0 4px;font-size:.98rem}
+  .hint{color:var(--muted);font-size:.82rem;margin-bottom:16px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.76rem;color:var(--dim);margin:10px 0 18px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+  .aws-tag{font-size:.62rem;color:var(--aws);border:1px solid rgba(255,153,0,.4);border-radius:4px;padding:0 5px;background:rgba(255,153,0,.08);white-space:nowrap}
+
+  /* scroll canvas */
+  .scroll{overflow-x:auto;padding-bottom:16px;border:1px solid var(--border);border-radius:14px;background:#080c14}
+  .canvas{min-width:1900px;padding:18px 20px}
+
+  /* top hub bar */
+  .hub{border:1px solid rgba(167,139,250,.5);background:linear-gradient(90deg,rgba(167,139,250,.16),rgba(96,165,250,.12));border-radius:10px;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+  .hub b{color:#cdbef8;font-size:.9rem}
+  .hub .chip{background:var(--ink)}
+
+  /* publish-up arrows row */
+  .uprow{display:grid;grid-template-columns:repeat(7,1fr);gap:14px;height:26px;margin-bottom:2px}
+  .up{position:relative}
+  .up.on::after{content:"▲";position:absolute;left:50%;top:2px;transform:translateX(-50%);color:var(--plat);font-size:.7rem}
+  .up.on::before{content:"";position:absolute;left:50%;top:12px;height:14px;border-left:1.5px dashed rgba(167,139,250,.6)}
+
+  /* stage row */
+  .stages{display:grid;grid-template-columns:repeat(7,1fr);gap:14px;align-items:start}
+  .stage{position:relative}
+  .snum{font-size:.7rem;font-weight:800;letter-spacing:.06em;color:var(--gold)}
+  .stitle{font-weight:800;font-size:.9rem;margin:1px 0 3px;line-height:1.2}
+  .sdesc{color:var(--muted);font-size:.7rem;line-height:1.35;margin-bottom:8px;min-height:44px}
+  .box{border:1px solid var(--border);border-radius:10px;background:var(--surface);padding:10px;display:flex;flex-direction:column;gap:8px}
+  .box.env-dev{border-top:3px solid #38bdf8}
+  .box.env-ci{border-top:3px solid var(--amber)}
+  .box.env-np{border-top:3px solid #38bdf8}
+  .box.env-eval{border-top:3px solid var(--gold)}
+  .box.env-prod{border-top:3px solid var(--green)}
+  .box.env-online{border-top:3px solid var(--green)}
+  .box.env-human{border-top:3px solid var(--accent)}
+
+  .sec{border:1px solid var(--border);border-radius:8px;background:var(--surface2);padding:7px 8px}
+  .sec .h{font-size:.66rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;margin-bottom:5px;text-align:center}
+  .comp{display:flex;flex-direction:column;gap:4px}
+  .c{background:var(--ink);border:1px solid var(--border);border-radius:6px;padding:4px 7px;font-size:.72rem;text-align:center;line-height:1.15}
+  .c .svc{display:block;font-size:.6rem;color:var(--aws);margin-top:1px}
+  .c.plat{border-left:2px solid var(--amber)}
+  .c.dom{border-left:2px solid var(--green)}
+  .runtime{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+  .gate{background:rgba(242,193,78,.12);border:1px solid rgba(242,193,78,.45);border-radius:6px;padding:5px 7px;font-size:.72rem;text-align:center;color:#f5d98a;font-weight:600}
+
+  /* golden path connector line behind stages */
+  .flowlabel{display:flex;align-items:center;gap:8px;margin:14px 0 2px;color:var(--green);font-size:.78rem;font-weight:600}
+  .flowline{height:2px;background:linear-gradient(90deg,var(--green),rgba(52,211,153,.3));flex:1;border-radius:2px}
+  .arrowsrow{display:grid;grid-template-columns:repeat(7,1fr);gap:14px;margin-top:6px}
+  .arr{text-align:center;color:var(--green);font-size:.8rem}
+  .loopback{margin-top:12px;border:1px solid rgba(52,211,153,.4);background:rgba(52,211,153,.08);border-radius:10px;padding:10px 14px;font-size:.8rem;color:#a7f3d0}
+  .loopback b{color:#6ee7b7}
+</style>
+</head>
+<body>
+  <h1>Agentic AI Platform — Golden-Path Architecture</h1>
+  <p class="sub">The agent lifecycle as a governed golden path: <b>Build Time → CI → CD (non-prod) → Offline Eval → CD (prod) → Online Eval → Feedback &amp; Continuous Improvement ↺</b>. Every stage runs on the same Foundation Harness stack; components are labelled with the AWS / AgentCore service that implements them. The final stage <b>loops back</b> to Build Time — the lifecycle iterates, it doesn't end.</p>
+  <p class="hint">Scroll horizontally →. Amber blocks = platform-owned Foundation Harness; green = domain-owned; orange tag = the AWS/AgentCore service.</p>
+  <div class="legend">
+    <span><span class="sw" style="background:var(--amber)"></span> Foundation (platform-owned)</span>
+    <span><span class="sw" style="background:var(--green)"></span> Domain (team-owned)</span>
+    <span><span class="sw" style="background:var(--gold)"></span> Evaluation / promotion gate</span>
+    <span><span class="aws-tag">AWS svc</span> implementing service</span>
+  </div>
+
+  <div class="scroll">
+  <div class="canvas">
+
+    <!-- TOP HUB -->
+    <div class="hub">
+      <b>◆ Platform Hub (control plane)</b>
+      <span class="chip aws-tag">AgentCore Gateway</span>
+      <span class="chip aws-tag">Agent &amp; Tool Registry</span>
+      <span class="chip aws-tag">Bedrock model catalog</span>
+      <span class="chip aws-tag">CloudWatch + Langfuse obs</span>
+      <span class="chip aws-tag">Cedar policy</span>
+      <span style="color:var(--muted);font-size:.72rem">— single pane of glass; every stage publishes/pulls here</span>
+    </div>
+
+    <!-- publish-up arrows -->
+    <div class="uprow">
+      <div class="up"></div>
+      <div class="up on"></div>
+      <div class="up on"></div>
+      <div class="up"></div>
+      <div class="up on"></div>
+      <div class="up on"></div>
+      <div class="up"></div>
+    </div>
+
+    <!-- STAGES -->
+    <div class="stages">
+
+      <!-- 1 BUILD TIME -->
+      <div class="stage">
+        <div class="snum">STAGE 1</div>
+        <div class="stitle">Build Time</div>
+        <div class="sdesc">Compose the harness: pick a blueprint, write prompts/tools, wire skills. Two paths — local IDE or a cloud dev workspace with privileged (masked) data.</div>
+        <div class="box env-dev">
+          <div class="sec"><div class="h">Source (agent-as-code)</div><div class="comp">
+            <div class="c dom">Golden-path repo template<span class="svc">Git · Service Catalog</span></div>
+            <div class="c dom">Domain workspace repo<span class="svc">CodeCommit</span></div>
+          </div></div>
+          <div class="sec"><div class="h">Dev runtime</div><div class="runtime">
+            <div class="c dom">agent</div><div class="c dom">tools</div>
+          </div>
+          <div class="c" style="margin-top:4px">instructions.md · skills · MCP<span class="svc">AgentCore Runtime (dev)</span></div>
+          </div>
+          <div class="sec"><div class="h">Dev backend stack</div><div class="comp">
+            <div class="c plat">AI Gateway<span class="svc">AgentCore Gateway</span></div>
+            <div class="c plat">Eval runner<span class="svc">AgentCore Evaluations</span></div>
+            <div class="c plat">Observability<span class="svc">CloudWatch + Langfuse</span></div>
+            <div class="c plat">Guardrails<span class="svc">Bedrock Guardrails</span></div>
+          </div></div>
+        </div>
+      </div>
+
+      <!-- 2 CI -->
+      <div class="stage">
+        <div class="snum">STAGE 2</div>
+        <div class="stitle">Golden Path CI</div>
+        <div class="sdesc">Continuous integration: security &amp; code-quality scans, unit + non-eval tests, package, and publish artifacts to the registry.</div>
+        <div class="box env-ci">
+          <div class="sec"><div class="h">Pipeline steps</div><div class="comp">
+            <div class="c plat">Security scan<span class="svc">CodeGuru / Inspector</span></div>
+            <div class="c plat">Code quality scan<span class="svc">CodeGuru Reviewer</span></div>
+            <div class="c plat">Unit / non-eval tests<span class="svc">CodeBuild</span></div>
+            <div class="c plat">Pre-registration<span class="svc">Agent Registry</span></div>
+            <div class="c plat">Publish images<span class="svc">Amazon ECR</span></div>
+          </div></div>
+          <div class="sec"><div class="h">Publishes to hub</div><div class="comp">
+            <div class="c plat">Agent/Tool Registry<span class="svc">AgentCore</span></div>
+            <div class="c plat">Artifact store<span class="svc">ECR · S3</span></div>
+          </div></div>
+        </div>
+      </div>
+
+      <!-- 3 CD NON-PROD -->
+      <div class="stage">
+        <div class="snum">STAGE 3</div>
+        <div class="stitle">Golden Path CD · non-prod</div>
+        <div class="sdesc">Deploy into non-prod for end-to-end testing; allow long-running offline eval. Full foundation stack runs here.</div>
+        <div class="box env-np">
+          <div class="sec"><div class="h">Deploy</div><div class="comp">
+            <div class="c plat">Check registry</div>
+            <div class="c plat">Deploy<span class="svc">CDK · AgentCore</span></div>
+          </div></div>
+          <div class="sec"><div class="h">Non-prod runtime</div><div class="runtime">
+            <div class="c dom">agent</div><div class="c dom">tools</div>
+          </div><div class="c" style="margin-top:4px"><span class="svc">AgentCore Runtime (non-prod)</span></div></div>
+          <div class="sec"><div class="h">Non-prod backend stack</div><div class="comp">
+            <div class="c plat">Observability<span class="svc">CloudWatch + Langfuse</span></div>
+            <div class="c plat">Identity / IdP<span class="svc">AgentCore Identity + Cognito</span></div>
+            <div class="c plat">AI Gateway<span class="svc">AgentCore Gateway</span></div>
+            <div class="c plat">Memory<span class="svc">AgentCore Memory</span></div>
+            <div class="c plat">Guardrails<span class="svc">Bedrock Guardrails</span></div>
+          </div></div>
+        </div>
+      </div>
+
+      <!-- 4 OFFLINE EVAL -->
+      <div class="stage">
+        <div class="snum">STAGE 4</div>
+        <div class="stitle">Offline Evaluation</div>
+        <div class="sdesc">Trigger offline evaluation against non-prod using a golden dataset + conversation simulation. This is a promotion gate.</div>
+        <div class="box env-eval">
+          <div class="gate">◆ Promotion gate</div>
+          <div class="sec"><div class="h">Eval components</div><div class="comp">
+            <div class="c plat">Eval runner (offline)<span class="svc">AgentCore Evaluations</span></div>
+            <div class="c plat">Conversation simulation<span class="svc">Bedrock LLM-as-judge</span></div>
+            <div class="c dom">Golden dataset<span class="svc">S3 · domain-owned</span></div>
+            <div class="c plat">Metric library<span class="svc">Builtin + custom evaluators</span></div>
+          </div></div>
+          <div class="sec"><div class="h">Result</div><div class="comp">
+            <div class="c">Pass ≥ threshold → promote</div>
+            <div class="c">Fail → back to Build Time</div>
+          </div></div>
+        </div>
+      </div>
+
+      <!-- 5 CD PROD -->
+      <div class="stage">
+        <div class="snum">STAGE 5</div>
+        <div class="stitle">Golden Path CD · prod</div>
+        <div class="sdesc">Deploy into prod for BVT and go-live after full approval. Canary / blue-green rollout with auto-rollback.</div>
+        <div class="box env-prod">
+          <div class="sec"><div class="h">Deploy</div><div class="comp">
+            <div class="gate">Control gate (approval)</div>
+            <div class="c plat">Deploy · canary/blue-green<span class="svc">CDK · AgentCore</span></div>
+          </div></div>
+          <div class="sec"><div class="h">Prod runtime</div><div class="runtime">
+            <div class="c dom">agent</div><div class="c dom">tools</div>
+          </div><div class="c" style="margin-top:4px"><span class="svc">AgentCore Runtime (prod)</span></div></div>
+          <div class="sec"><div class="h">Prod backend stack</div><div class="comp">
+            <div class="c plat">Observability<span class="svc">CloudWatch + Langfuse</span></div>
+            <div class="c plat">Identity / IdP<span class="svc">AgentCore Identity + Cognito</span></div>
+            <div class="c plat">AI Gateway<span class="svc">AgentCore Gateway</span></div>
+            <div class="c plat">Memory<span class="svc">AgentCore Memory</span></div>
+            <div class="c plat">Guardrails + HITL<span class="svc">Bedrock Guardrails</span></div>
+          </div></div>
+        </div>
+      </div>
+
+      <!-- 6 ONLINE EVAL -->
+      <div class="stage">
+        <div class="snum">STAGE 6</div>
+        <div class="stitle">Online Evaluation</div>
+        <div class="sdesc">Score live production traffic continuously; raise alerts and metrics when any score drops below threshold.</div>
+        <div class="box env-online">
+          <div class="sec"><div class="h">Live scoring</div><div class="comp">
+            <div class="c plat">Server-side / online eval<span class="svc">AgentCore online-eval config</span></div>
+            <div class="c plat">Live-traffic sampling<span class="svc">samplingRate %</span></div>
+            <div class="c plat">Metrics + alerts<span class="svc">Bedrock-AgentCore/Evaluations (CW)</span></div>
+          </div></div>
+          <div class="sec"><div class="h">GenAI observability</div><div class="comp">
+            <div class="c plat">Eval dashboard<span class="svc">CloudWatch GenAI Obs</span></div>
+          </div></div>
+        </div>
+      </div>
+
+      <!-- 7 FEEDBACK & CONTINUOUS IMPROVEMENT -->
+      <div class="stage">
+        <div class="snum">STAGE 7</div>
+        <div class="stitle">Feedback &amp; Continuous Improvement</div>
+        <div class="sdesc">Not an end-state — the loop. Signals from production close back to Build Time so every agent keeps getting better (the AALOE operational-excellence cycle).</div>
+        <div class="box env-human">
+          <div class="sec"><div class="h">Signals in</div><div class="comp">
+            <div class="c plat">Online-eval scores &amp; drift<span class="svc">CloudWatch GenAI Obs</span></div>
+            <div class="c dom">End-user feedback / thumbs<span class="svc">app telemetry</span></div>
+            <div class="c">👤 SME review &amp; sign-off</div>
+            <div class="c plat">Cost / latency trends<span class="svc">cost attribution</span></div>
+          </div></div>
+          <div class="sec"><div class="h">Actions back to Build Time ↺</div><div class="comp">
+            <div class="c dom">Refine prompt / tools / skills</div>
+            <div class="c dom">Grow the golden dataset</div>
+            <div class="c plat">Re-tune eval thresholds &amp; metrics</div>
+          </div></div>
+          <div class="sec"><div class="h">At L4 (Adaptive)</div><div class="comp">
+            <div class="c" style="border-left:2px solid var(--plat)">AI automation auto-proposes fixes<span class="svc">self-optimizing</span></div>
+          </div></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- golden path flow line -->
+    <div class="flowlabel"><span>Golden path</span><span class="flowline"></span></div>
+    <div class="arrowsrow">
+      <div class="arr">▶</div><div class="arr">▶</div><div class="arr">▶</div>
+      <div class="arr">◆ gate</div><div class="arr">▶</div><div class="arr">◆ gate</div><div class="arr">↺ loop</div>
+    </div>
+
+    <!-- explicit closed-loop banner: Stage 7 feeds back to Stage 1 -->
+    <div class="loopback">↺ &nbsp;<b>Continuous improvement loop</b> — Stage 7 feeds signals &amp; actions back to Stage 1 (Build Time). The lifecycle never ends; it iterates. <span style="color:var(--muted)">This is AALOE — Agentic AI Lifecycle Operational Excellence: develop → measure → improve, continuously.</span></div>
+
+  </div>
+  </div>
+
+  <p class="hint" style="margin-top:16px">Every artifact that defines an agent (prompt, tools, harness bindings, deploy params) lives in Git and flows this path — reviewed, tested, evaluated, versioned, reversible. The same stack (AI Gateway · Identity · Memory · Observability · Guardrails · Eval) is present in dev, non-prod and prod; only data sensitivity and rollout strategy change. Served at <code>/architecture</code>.</p>
+</body>
+</html>

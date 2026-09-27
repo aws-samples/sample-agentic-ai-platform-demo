@@ -1,0 +1,12 @@
+{
+  "_comment": "Live AWS resource IDs for the it-helpdesk agent kit. Managed by scripts/provision-kb.mjs — do not edit by hand.",
+  "knowledgeBase": {
+    "id": "QMBGUOZPGL",
+    "name": "kb-it-helpdesk",
+    "dataSourceId": "QWGJN62LZI",
+    "collectionId": "gzycyn9buycvu0jmrhfh",
+    "collectionName": "agentic-kb-it-helpdesk",
+    "s3Bucket": "agentic-kb-it-helpdesk-217522444267",
+    "indexName": "kb-it-helpdesk-index"
+  }
+}

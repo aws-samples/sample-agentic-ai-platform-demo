@@ -1,0 +1,1 @@
+Highest country AOV: **£3,039.90 in Singapore**, measured as average valid-sale order value by country from **uci_retail.transactions, uci_retail.invoices**.

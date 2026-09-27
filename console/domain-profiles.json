@@ -1,0 +1,77 @@
+{
+  "_comment": "G8 domain profiles (decision 6): a thin curated palette per profile — blueprints/skills/tools/guardrailPack a domain team starts from, plus a runnable starter agent spec that create-project-from-profile feeds into the normal generate pipeline. A palette is a suggestion surface, NOT an access-control primitive: generation still resolves every pick through the APPROVED registry with domain visibility enforced server-side.",
+  "_templates_comment": "TLP-B4: wizard step-1 templates. Each template pre-wires a GENUINELY different project: blueprint (different deployable codebase), persona preset (different instructions.md), model (different load.py model_id), skill/tool picks (different SKILL.md modules + main.py tool stubs) and default guardrails (different harness manifest). Picks reference shared-domain registry entries only, so every domain can use every template. profileId links back to the G8 profile the template descends from (stamped on the project row).",
+  "templates": [
+    {
+      "id": "chatbot",
+      "name": "Chatbot",
+      "description": "Conversational assistant: chat blueprint, dialogue persona preset, browsing tool, fast conversational model, tone guardrail on by default.",
+      "blueprint": "chat-assistant",
+      "profileId": "support-agent",
+      "personaPreset": "You are a friendly conversational assistant. Answer questions clearly and concisely, ask a clarifying question when the request is ambiguous, and hand off to a human when a decision exceeds your authority.",
+      "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "skillIds": ["hr-policy"],
+      "toolIds": ["web_browser"],
+      "builtinTools": [],
+      "defaultGuardrails": ["tone-review"]
+    },
+    {
+      "id": "workflow",
+      "name": "Workflow",
+      "description": "Process automation: orchestrator blueprint, step-runner persona preset, code interpreter + analysis skill, deep-reasoning model, rate-limit guardrail on by default.",
+      "blueprint": "workflow-orchestrator",
+      "profileId": "workflow-agent",
+      "personaPreset": "You orchestrate multi-step tasks. Break each request into ordered steps, execute them one at a time with the available tools, and report the outcome of every step. If a step fails, stop and explain what failed instead of continuing blindly.",
+      "model": "global.anthropic.claude-sonnet-5",
+      "skillIds": ["data-analysis"],
+      "toolIds": ["code_interpreter"],
+      "builtinTools": ["code_interpreter"],
+      "defaultGuardrails": ["rate-limit"]
+    },
+    {
+      "id": "custom",
+      "name": "Custom",
+      "description": "No pre-wiring: pick the blueprint, persona, model, skills and tools yourself. Org- and domain-enforced guardrails still apply.",
+      "blueprint": null,
+      "profileId": null,
+      "personaPreset": "",
+      "model": null,
+      "skillIds": [],
+      "toolIds": [],
+      "builtinTools": [],
+      "defaultGuardrails": []
+    }
+  ],
+  "profiles": [
+    {
+      "id": "support-agent",
+      "name": "Support Agent",
+      "description": "Customer-facing assistant workspace: conversational blueprint, support skills and lookup tools. The starter agent answers product and order questions and escalates what it cannot resolve.",
+      "blueprints": ["chat-assistant"],
+      "skills": ["customer-support", "hr-policy"],
+      "tools": ["order_lookup", "product_catalogue", "web_browser"],
+      "guardrailPack": "bedrock-baseline",
+      "starterAgent": {
+        "blueprint": "chat-assistant",
+        "persona": "You are a customer support agent. Answer product and order questions clearly and kindly. Use the order lookup tool for order status rather than guessing. If a request needs a human decision (refund above policy, account changes), say so and hand off.",
+        "skillIds": ["customer-support"],
+        "toolIds": ["order_lookup", "web_browser"]
+      }
+    },
+    {
+      "id": "workflow-agent",
+      "name": "Workflow Agent",
+      "description": "Process-automation workspace: orchestrator blueprint, analysis skills and internal-system tools. The starter agent breaks a request into steps, runs them in order and reports what happened at each step.",
+      "blueprints": ["workflow-orchestrator"],
+      "skills": ["data-analysis", "it-troubleshooting"],
+      "tools": ["knowledge_base", "employee_directory", "code_interpreter"],
+      "guardrailPack": "bedrock-baseline",
+      "starterAgent": {
+        "blueprint": "workflow-orchestrator",
+        "persona": "You orchestrate multi-step tasks. Break each request into ordered steps, execute them one at a time using the available tools, and report the outcome of every step. If a step fails, stop and explain what failed instead of continuing blindly.",
+        "skillIds": ["data-analysis"],
+        "toolIds": ["knowledge_base", "code_interpreter"]
+      }
+    }
+  ]
+}

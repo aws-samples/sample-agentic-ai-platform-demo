@@ -1,0 +1,11 @@
+{
+  "source": "fixture (demo) — the real pipeline writes this JSON to S3 after a CI-triggered eval run; this file simulates that S3 object for the demo since no live S3 bucket is wired up here.",
+  "runId": "run-fixture-2026-08-11T00-00-00",
+  "scored": 5,
+  "total": 5,
+  "aggregate": {
+    "Builtin.Correctness": 0.92,
+    "Builtin.Helpfulness": 0.88
+  },
+  "s3Uri": "s3://demo-agentic-platform-evals/fixture/run-fixture-2026-08-11T00-00-00.json"
+}

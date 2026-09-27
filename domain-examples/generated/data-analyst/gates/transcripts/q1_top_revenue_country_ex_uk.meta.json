@@ -1,0 +1,8 @@
+{
+  "scenario_id": "q1_top_revenue_country_ex_uk",
+  "recordedAt": "2026-08-25T03:49:38.918Z",
+  "source": "record-transcripts.mjs",
+  "endpoint": "http://localhost:8081/invocations",
+  "sessionId": "rec-q1_top_revenue_country_ex_uk-1787629771617",
+  "turns": 1
+}

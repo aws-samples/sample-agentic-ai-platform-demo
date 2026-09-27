@@ -1,0 +1,43 @@
+{
+  "_comment": "Authoritative org guardrail policy, versioned in the platform repo and shipped with every console deployment. New projects inherit the default pack automatically; domain and project overrides may add or strengthen guardrails but can never remove org defaults. Exemptions require a 4-eyes platform review.",
+  "schemaVersion": 1,
+  "defaultPackId": "bedrock-baseline",
+  "guardrails": [
+    {
+      "id": "pii-filter",
+      "name": "PII content filter",
+      "description": "Detects and blocks personally identifiable information in prompts and responses before they leave the agent boundary."
+    },
+    {
+      "id": "security-scan-gate",
+      "name": "Security scan CI gate",
+      "description": "Every exported project pipeline runs a secret and dependency scan; releases are blocked on findings."
+    }
+  ],
+  "packs": [
+    {
+      "id": "bedrock-baseline",
+      "name": "Bedrock baseline",
+      "guardrails": ["pii-filter", "security-scan-gate"]
+    }
+  ],
+  "domainOptions": [
+    { "id": "tone-review", "name": "Customer-facing tone review", "description": "Adds a tone-of-voice review step for customer-facing agents." },
+    { "id": "pii-strict", "name": "Strict PII re-check (on top of the org baseline)", "description": "Second-pass PII detection with a stricter threshold than the org default." },
+    { "id": "rate-limit", "name": "Extra rate-limit guardrail", "description": "Per-session request ceiling beyond the platform quota." },
+    { "id": "multilingual-eval", "name": "Multilingual eval CI step", "description": "Runs the golden dataset in every supported locale before promotion." }
+  ],
+  "catalog": [
+    { "id": "pii-detection", "name": "PII Detection", "defaultAction": "Block", "defaultRunMode": "Pre-Agent Execution", "description": "Screens user input for personally identifiable information." },
+    { "id": "harmful-content", "name": "Harmful Content", "defaultAction": "Block", "defaultRunMode": "Pre-Agent Execution", "description": "Filters violent, hateful or otherwise harmful material." },
+    { "id": "jailbreaking", "name": "Jailbreaking", "defaultAction": "Block", "defaultRunMode": "Pre-Agent Execution", "description": "Detects attempts to override the agent's system instructions." },
+    { "id": "prompt-injection", "name": "Prompt Injection", "defaultAction": "Block", "defaultRunMode": "Pre-Agent Execution", "description": "Detects instructions smuggled through retrieved or user-supplied content." },
+    { "id": "topic-restriction", "name": "Topic Restriction", "defaultAction": "Flag", "defaultRunMode": "Post-Agent Execution", "description": "Flags responses that stray outside the agent's approved topics." }
+  ],
+  "enforcement": {
+    "orgDefaults": "Org defaults are locked on for every project; they cannot be removed or weakened at any level.",
+    "domainAdditions": "Domain leads may enforce additional guardrails for their domain; additions are strengthen-only.",
+    "projectConfiguration": "Projects compose the configurable controls (action, run mode, priority, message) when exporting a workspace.",
+    "exemptions": "A guardrail exemption is time-boxed and requires an independent platform reviewer (4-eyes); it never removes an org default silently."
+  }
+}

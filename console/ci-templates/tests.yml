@@ -1,0 +1,23 @@
+# platform-gate: v1 (org required check — do not remove or bypass)
+# Unit/TDD test gate: runs whatever test suite the repo carries (npm test,
+# node --test, or pytest — auto-detected by gates/run-tests.mjs). A repo with
+# no tests passes with a loud warning; the eval gate still applies regardless.
+name: tests
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run test suite
+        run: node gates/run-tests.mjs

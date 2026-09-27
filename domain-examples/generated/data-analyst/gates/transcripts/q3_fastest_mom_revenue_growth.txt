@@ -1,0 +1,1 @@
+2011-05 had the fastest month-over-month revenue growth at 43.27% of valid-sale revenue, based on monthly revenue from `uci_retail.transactions, uci_retail.invoices`.

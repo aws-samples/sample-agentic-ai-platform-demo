@@ -1,0 +1,53 @@
+[
+  {
+    "id": "concierge",
+    "name": "concierge",
+    "domain": "customer-support",
+    "profileId": null,
+    "members": [
+      {"principal": "alice", "bundle": "builder"},
+      {"principal": "carol", "bundle": "lead"}
+    ],
+    "agents": ["concierge"],
+    "createdBy": "backfill",
+    "createdAt": "2026-09-14T00:00:00.000Z"
+  },
+  {
+    "id": "supportdesk",
+    "name": "supportdesk",
+    "domain": "customer-support",
+    "profileId": null,
+    "members": [
+      {"principal": "alice", "bundle": "builder"},
+      {"principal": "carol", "bundle": "lead"}
+    ],
+    "agents": ["supportdesk"],
+    "createdBy": "backfill",
+    "createdAt": "2026-09-14T00:00:00.000Z",
+    "tokenBudget": 16000
+  },
+  {
+    "id": "data-analyst",
+    "name": "data-analyst",
+    "domain": "platform",
+    "profileId": null,
+    "members": [
+      {"principal": "melanie", "bundle": "admin"}
+    ],
+    "agents": ["data-analyst"],
+    "createdBy": "backfill",
+    "createdAt": "2026-09-14T00:00:00.000Z"
+  },
+  {
+    "id": "it-helpdesk",
+    "name": "it-helpdesk",
+    "domain": "platform",
+    "profileId": null,
+    "members": [
+      {"principal": "melanie", "bundle": "admin"}
+    ],
+    "agents": ["it-helpdesk"],
+    "createdBy": "backfill",
+    "createdAt": "2026-09-14T00:00:00.000Z"
+  }
+]

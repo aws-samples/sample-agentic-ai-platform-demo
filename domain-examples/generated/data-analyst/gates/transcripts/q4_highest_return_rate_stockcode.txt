@@ -1,0 +1,1 @@
+23005 — highest return rate among products with at least 1,000 units sold: 4.056834988379463 (405.68%) — source_table: uci_retail.transactions

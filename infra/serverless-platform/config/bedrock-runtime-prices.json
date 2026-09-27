@@ -1,0 +1,64 @@
+{
+  "version": 3,
+  "entries": [
+    {
+      "id": "aws-haiku-global-20260901183649-platform-cost-v1",
+      "activation": "active",
+      "inputTokenBasis": "uncached",
+      "currency": "USD",
+      "effectiveFrom": "2026-09-11T03:00:00.000Z",
+      "effectiveTo": "2027-01-01T00:00:00.000Z",
+      "region": "us-west-2",
+      "requestModelId": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "request": {
+        "bindingVersion": "aws-system-profile-2026-09-11",
+        "modelId": "bedrock-claude/anthropic.claude-haiku-4-5",
+        "foundationModelId": "anthropic.claude-haiku-4-5-20251001-v1:0",
+        "inferenceMode": "global",
+        "capacityMode": "on-demand",
+        "serviceTier": "default",
+        "performanceLatency": "standard",
+        "cacheMode": "no-explicit-checkpoints"
+      },
+      "source": {
+        "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonBedrockFoundationModels/current/us-west-2/index.json",
+        "retrievedAt": "2026-09-11T02:57:42.490Z"
+      },
+      "provenance": {
+        "catalogVersion": "20260901183649",
+        "publicationDate": "2026-09-01T18:36:49.000Z",
+        "termEffectiveDate": "2026-08-01T00:00:00.000Z",
+        "catalogSha256": "2408c8b69b89853fa215e33385c51d6f0f6aae57256da59d56cfb70e97dc7536",
+        "unit": "1M tokens",
+        "rateCodes": {
+          "input": "4JSTB8J9NP4VP73F.4799GE89SK.6YS6EN2CT7",
+          "output": "JRZBRVPV4WU854WK.4799GE89SK.6YS6EN2CT7",
+          "cacheRead": "JWC87WDBUGJS96NF.4799GE89SK.6YS6EN2CT7",
+          "cacheWrite5m": "73F7XT6NJRHUGT6P.4799GE89SK.6YS6EN2CT7",
+          "cacheWrite1h": "68HWT9R4XYRCD8UE.4799GE89SK.6YS6EN2CT7"
+        },
+        "cacheTtlSource": {
+          "url": "https://b0.p.awsstatic.com/pricing/2.0/meteredUnitMaps/bedrockfoundationmodels/USD/current/bedrockfoundationmodels.json",
+          "manifest": "plc-bedrockfoundationmodels-usd-20260901183649",
+          "sha256": "8a44f70a6dc69e1543eb7f2eecc0077577615abd36c69c1b3e78c67b1b150e87"
+        },
+        "profileMetadataSha256": "c30ee7430bf614737f7ac05b7bfd06b5d1edda229ff2ea1df5d21453612c728d",
+        "usageDocumentation": {
+          "url": "https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html",
+          "sha256": "6611ac3dec8da66c1e66994d1e9342faaa5621b765fb494275d580e21d5798e1"
+        },
+        "modelDocumentation": {
+          "url": "https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-haiku-4-5.html",
+          "sha256": "059fdce9c98fba91723fa86a03275cfdb9dc63c72048322da03d94745d35a92e"
+        }
+      },
+      "usdPerMillionTokens": {
+        "input": 1,
+        "output": 5,
+        "cacheRead": 0.1,
+        "cacheWrite5m": 1.25,
+        "cacheWrite1h": 2
+      }
+    }
+  ]
+}

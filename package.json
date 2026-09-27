@@ -1,0 +1,40 @@
+{
+  "name": "agentic-ai-platform-demo",
+  "private": true,
+  "description": "Agentic AI Platform demo \u2014 console + blueprints. Deps here are for the Amazon Bedrock AgentCore Registry integration (console/registry-client.mjs, scripts/registry/).",
+  "scripts": {
+    "test": "node --test console/*.test.mjs",
+    "owner-maintenance:test": "node --test scripts/owner-maintenance/gateway-profile-read.test.mjs",
+    "registry:seed": "node scripts/registry/seed.mjs",
+    "registry:tools-gateway": "node scripts/registry/setup-tools-gateway.mjs",
+    "infra:install": "npm --prefix infra/platform-registry ci",
+    "infra:test": "npm --prefix infra/platform-registry test",
+    "infra:build": "npm --prefix infra/platform-registry run build",
+    "infra:verify": "npm run infra:test && npm run infra:build",
+    "infra:synth": "npm --prefix infra/platform-registry run synth",
+    "infra:diff": "npm --prefix infra/platform-registry run diff",
+    "infra:deploy": "npm --prefix infra/platform-registry run deploy",
+    "infra:config": "npm --prefix infra/platform-registry run config",
+    "serverless:install": "npm --prefix infra/serverless-platform ci",
+    "serverless:test": "npm --prefix infra/serverless-platform test",
+    "serverless:test:task6": "npm --prefix infra/serverless-platform run test:task6",
+    "serverless:build": "npm --prefix infra/serverless-platform run build",
+    "serverless:verify": "npm run serverless:test && npm run serverless:build",
+    "serverless:synth": "npm --prefix infra/serverless-platform run synth",
+    "serverless:deploy:web": "npm --prefix infra/serverless-platform run deploy:web",
+    "platform:deploy:clean-account": "node scripts/deploy-clean-account.mjs",
+    "platform:verify": "npm test && npm run infra:verify && npm run serverless:verify",
+    "kb:install": "npm --prefix infra/knowledge-bases install",
+    "kb:build": "npm --prefix infra/knowledge-bases run build",
+    "kb:synth": "npm --prefix infra/knowledge-bases run synth",
+    "kb:diff": "npm --prefix infra/knowledge-bases run diff",
+    "kb:deploy": "npm --prefix infra/knowledge-bases run deploy",
+    "kb:destroy": "npm --prefix infra/knowledge-bases run destroy",
+    "platform:initialize:demo-workspaces": "npm --prefix infra/serverless-platform run initialize:demo-workspaces --"
+  },
+  "dependencies": {
+    "@aws-sdk/client-agent-registry": "^3.1110.0",
+    "@aws-sdk/client-agent-registry-control": "^3.1110.0",
+    "@aws-sdk/client-lambda": "3.1116.0"
+  }
+}

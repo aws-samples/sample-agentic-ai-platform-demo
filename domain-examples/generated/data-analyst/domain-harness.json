@@ -1,0 +1,91 @@
+{
+  "project": "data-analyst",
+  "domain": "platform",
+  "blueprint": "workflow-orchestrator",
+  "blueprintVersion": "1.0.0",
+  "model": "openai.gpt-5.4",
+  "modelRouting": {
+    "source": "amazon-bedrock",
+    "runtimeModelId": "openai.gpt-5.4",
+    "provider": "amazon-bedrock",
+    "wireApi": "responses",
+    "region": "us-west-2"
+  },
+  "modelParams": {},
+  "persona": "You are a data analyst agent. You answer business questions about the UCI Online Retail dataset by writing and running code in your sandbox workspace, querying the star-schema warehouse on Amazon Athena via the run_query CLI. Never invent a number — every figure must come from data queried this turn, with the source table cited.",
+  "framework": "codex-sdk",
+  "skills": [
+    {
+      "id": "sales-data",
+      "name": "Sales-data skill (UCI Online Retail star schema, NULL-exclusion rules)",
+      "version": "1.0.0",
+      "path": "app/workflow_agent/agent/skills/sales-data/SKILL.md"
+    }
+  ],
+  "tools": [
+    {
+      "id": "run_query",
+      "type": "inline_cli",
+      "path": "app/workflow_agent/agent/tools/run_query.py",
+      "description": "Read-only Presto/Trino SQL over the star schema via Amazon Athena (boto3); returns cited JSON rows",
+      "gateway": null
+    },
+    {
+      "id": "make_chart",
+      "type": "inline_cli",
+      "path": "app/workflow_agent/agent/tools/make_chart.py",
+      "description": "Render a chart from query results",
+      "gateway": null
+    },
+    {
+      "id": "upload_s3",
+      "type": "inline_cli",
+      "path": "app/workflow_agent/agent/tools/upload_s3.py",
+      "description": "Upload chart/report artifacts to S3",
+      "gateway": null
+    }
+  ],
+  "builtinTools": ["code_interpreter"],
+  "mcpServers": [],
+  "a2aAgents": [],
+  "dataPlane": {
+    "engine": "amazon-athena",
+    "glueDatabase": "uci_retail",
+    "athenaWorkgroup": "data_analyst_agent",
+    "s3Bucket": "data-analyst-agent-820242898417-us-west-2",
+    "s3DataPrefix": "athena/data/uci_retail/",
+    "s3QueryResultsPrefix": "athena/query-results/",
+    "region": "us-west-2",
+    "tables": ["transactions", "invoices", "products", "customers"],
+    "dataset": "UCI Online Retail (Dec 2010 - Dec 2011, CC BY 4.0)"
+  },
+  "memory": {
+    "provider": "agentcore-memory",
+    "memoryName": "data_analyst_agent_memory",
+    "eventExpiryDays": 90,
+    "strategies": ["USER_PREFERENCE", "SEMANTIC"],
+    "namespaces": ["/preferences/{actorId}/", "/facts/{actorId}/"],
+    "config": "app/workflow_agent/memory_config.json"
+  },
+  "invokeContract": {
+    "description": "Journey-deployed runtime (da-analyst-journey deploy/agentcore_runtime_state.json). The entrypoint main.py invoke() requires a structured payload — the agentcore CLI's {\"prompt\": ...} wrapper is rejected, so the console invokes InvokeAgentRuntime directly (SigV4).",
+    "runtimeArn": "arn:aws:bedrock-agentcore:us-west-2:820242898417:runtime/data_analyst_agent_dev-tMhan56gF2",
+    "qualifier": "data_analyst_live",
+    "basePayload": { "operation": "ask", "analyst_id": "maya" },
+    "promptField": "question",
+    "answerField": "answer"
+  },
+  "evaluation": {
+    "goldenDataset": "agentcore/datasets/golden.jsonl",
+    "scenarios": 7,
+    "notes": "Real 7-scenario golden set (single + multi-turn) with numeric assertions against the UCI Online Retail warehouse"
+  },
+  "template": "custom",
+  "description": "Data analyst agent for the UCI Online Retail warehouse — Codex SDK sandbox agent answering business questions via Amazon Athena (Glue db uci_retail).",
+  "guardrails": [
+    "pii-filter",
+    "security-scan-gate",
+    "sql-read-only",
+    "no-invented-numbers"
+  ]
+}

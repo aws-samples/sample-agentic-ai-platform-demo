@@ -1,0 +1,29 @@
+const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
+export function guardrailCatalogView(controls) {
+  if (!Array.isArray(controls) || controls.some(c => !c?.id || !c.name || typeof c.mandatory !== 'boolean')) throw new Error('Invalid guardrail catalog');
+  return `<div class="console-resource-header"><div><h2>Foundation guardrails <span class="chip">${controls.length}</span></h2>
+    <p>Controls inherited by every agent build. Mandatory controls cannot be disabled by a project.</p></div>
+    <button class="ghost" data-guardrail-refresh>Refresh</button></div>
+    <div class="console-metrics"><div><span>Mandatory controls</span><strong>${controls.filter(c=>c.mandatory).length}</strong></div>
+    <div><span>Configurable controls</span><strong>${controls.filter(c=>!c.mandatory).length}</strong></div>
+    <div><span>Scope</span><strong>Platform baseline</strong></div></div>
+    <div class="console-table-wrap"><table class="console-resource-table"><thead><tr><th>Guardrail</th><th>Requirement</th><th>Default action</th><th>Execution stage</th><th>Exceptions</th></tr></thead>
+    <tbody>${controls.map(c=>`<tr><td><b>${esc(c.name)}</b><div class="d">${esc(c.id)}</div></td><td><span class="badge ${c.mandatory?'badge-orange':'badge-blue'}">${c.mandatory?'Mandatory':'Configurable'}</span></td><td>${esc(c.action)}</td><td>${esc(c.runMode)}</td><td>${c.mandatory?'Not permitted':'Independent review'}</td></tr>`).join('')}</tbody></table></div>
+    <div class="status info">Build configuration is enforced by the Foundation Harness contract. Runtime attachment must be verified for each deployment.</div>`;
+}
+export function approvalCatalogView(catalog) {
+  return `<p>Policy scope: ${esc(catalog.domainId)} · Catalog v${esc(catalog.revision)} · Updated ${esc(catalog.updatedAt)}</p><p class="d">Tool-approval runtime: Not configured · drafts are not Gateway policies.</p><button class="ghost" data-hp-refresh>Refresh policies</button>
+  ${catalog.policies.length ? catalog.policies.map(p => `<article class="item policy-draft-row" data-policy="${esc(p.id)}"><h4>${esc(p.name)}</h4><p>Configuration ${p.enabled ? 'enabled' : 'disabled'} · ${p.mode === 'notify_only' ? 'Notification intent' : 'Approval required intent'}</p><p>${p.scope.kind === 'domain' ? 'All projects in this catalog domain' : 'Project: '+esc(p.scope.projectId)}</p><details><summary>Policy details</summary><dl><dt>ID</dt><dd>${esc(p.id)}</dd><dt>Policy version</dt><dd>${esc(p.version)}</dd><dt>Created</dt><dd>${esc(p.createdAt)}</dd><dt>Tool patterns (* wildcard)</dt><dd>${p.toolMatch.map(esc).join(', ')}</dd></dl></details></article>`).join('') : '<p>No approval policies in this scope.</p>'}`
+}
+
+export function runtimePolicyView(result) {
+  if(result?.ok!==true||result.schemaVersion!==1||result.source!=='agentcore-policy'||result.scope!=='shared-platform-gateways'||typeof result.complete!=='boolean'||!Array.isArray(result.gateways)||!result.gateways.length)throw new Error('Invalid policy inventory');
+  const rows=result.gateways.map(g=>{
+    if(!['UNKNOWN','NOT_ATTACHED','ATTACHED'].includes(g.binding)||typeof g.complete!=='boolean'||!Array.isArray(g.policies))throw new Error('Invalid gateway policy state');
+    const label=g.binding==='UNKNOWN'?'Configuration unavailable':g.binding==='NOT_ATTACHED'?'No Policy Engine attached':g.mode==='LOG_ONLY'?'Observe · LOG_ONLY':g.mode==='ENFORCE'?'Enforce mode configured':'Mode unknown';
+    const badge=g.complete&&g.binding==='ATTACHED'&&g.mode==='ENFORCE'&&g.status==='READY'&&g.engine?.status==='ACTIVE'?'badge-green':g.binding==='NOT_ATTACHED'?'badge-grey':'badge-orange';
+    const policies=g.policies.map(p=>`<details class="policy-native"><summary>${esc(p.name)} <span class="chip">${esc(p.status)}</span>${p.enforcementMode?` <span class="chip">${esc(p.enforcementMode)}</span>`:''}</summary><p>${esc(p.description||'')}</p><dl><dt>Policy ARN</dt><dd><code>${esc(p.arn)}</code></dd><dt>Updated</dt><dd>${esc(p.updatedAt||'Not reported')}</dd></dl>${p.statement?`<pre>${esc(p.statement)}</pre>${p.statementTruncated?'<p>Statement truncated for display; use AWS to view the full definition.</p>':''}`:'<p>No Cedar statement returned for this policy format.</p>'}</details>`).join('');
+    return `<article class="policy-gateway" data-policy-gateway="${esc(g.id)}"><div class="bar"><h4>${esc(g.label)}</h4><span class="badge ${badge}">${label}</span></div><p class="d"><code>${esc(g.id)}</code> · Gateway ${esc(g.status)} · ${esc(g.authorizerType||'Authentication unknown')}</p>${g.error?`<p role="status">Policy read incomplete (${esc(g.error)}). Readable records are shown below; coverage is unknown.</p>`:''}${g.binding==='NOT_ATTACHED'?'<p>No native tool-authorization policy is attached to this Gateway. IAM/JWT authentication still applies; configure a Policy Engine to evaluate tool actions and arguments.</p>':''}${g.engine?`<dl><dt>Policy Engine</dt><dd>${esc(g.engine.name||g.engine.id)} · ${esc(g.engine.status)}</dd><dt>Engine ARN</dt><dd><code>${esc(g.engine.arn)}</code></dd></dl>${g.complete?`<p>${g.policies.length} policies returned across all pages.</p>`:'<p>Policy inventory is partial.</p>'}${g.complete&&!g.policies.length&&g.mode==='ENFORCE'?'<p role="alert">This engine has no policies. ENFORCE defaults to deny; verify intended tool access before use.</p>':''}${policies}`:''}</article>`;
+  }).join('');
+  return `<div class="bar"><p class="d">AWS configuration checked ${esc(result.checkedAt)} · Shared Gateway scope</p><button class="ghost" data-runtime-policy-refresh>Refresh Gateway policies</button></div>${result.complete?'':'<p role="status">Some Gateway policy sources are unavailable; this is not an empty policy inventory.</p>'}${rows}`;
+}

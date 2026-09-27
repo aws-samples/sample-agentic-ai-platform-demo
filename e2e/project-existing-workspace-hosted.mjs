@@ -1,0 +1,43 @@
+// Submit the actual Build Agent form into an existing validation project; no test/inference call.
+import assert from 'node:assert/strict';
+import {readFile,writeFile} from 'node:fs/promises';
+import {chromium} from 'playwright';
+const base=process.env.DOMAIN_BOOTSTRAP_APP_URL?.replace(/\/$/,'');
+const dir=process.env.DOMAIN_BOOTSTRAP_EVIDENCE_DIR;
+const identities=JSON.parse(await readFile(process.env.DOMAIN_BOOTSTRAP_IDENTITIES_FILE,'utf8'));
+const verified=JSON.parse(await readFile(`${dir}/project-resource-scope-result.json`,'utf8'));
+assert.ok(base?.startsWith('https://')&&verified.passed);
+const project=verified.projects.find(p=>p.id==='scope-validation-b');assert.ok(project);
+const model=project.resourcePolicy.resources.find(r=>r.type==='Model');
+const blueprint=project.resourcePolicy.resources.find(r=>r.type==='Blueprint');
+const browser=await chromium.launch({headless:true});
+try{
+ const context=await browser.newContext({viewport:{width:1440,height:1100}});
+ await context.addInitScript(tokens=>sessionStorage.setItem('console.cognito.tokens',JSON.stringify(tokens)),identities.lead.tokens);
+ const page=await context.newPage();page.on('dialog',dialog=>dialog.accept());
+ const headers={authorization:`Bearer ${identities.lead.tokens.accessToken}`,'x-active-domain':project.domainId};
+ const list=async()=>{const r=await context.request.get(`${base}/api/projects?limit=50`,{headers});assert.equal(r.status(),200);return (await r.json()).items.map(p=>`${p.domainId}/${p.id}`).sort();};
+ const before=await list();const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto(base,{waitUntil:'domcontentloaded'});
+ await page.locator('[data-shellnav="bwbuild"]').click({timeout:60_000});
+ await page.locator('[data-door="blueprint"]').click({timeout:60_000});
+ await page.locator('#buildproject').selectOption(project.id,{timeout:60_000});
+ await page.locator(`[data-bp="${blueprint.id}"]`).click({timeout:60_000});
+ await page.locator('#n1').click();
+ await page.locator('#pname').fill('scope-ui-validation-agent',{timeout:60_000});
+ await page.locator('#persona').fill('Validate creation inside the selected project workspace.');
+ assert.equal(await page.locator('#model').inputValue(),model.id);
+ const created=page.waitForResponse(r=>r.url().endsWith('/api/agents')&&r.request().method()==='POST',{timeout:60_000});
+ const configured=page.waitForResponse(r=>r.url().includes('/api/agents/scope-ui-validation-agent')&&r.request().method()==='PUT',{timeout:60_000});
+ await page.locator('#gen').click();
+ const createResponse=await created;assert.equal(createResponse.status(),201,await createResponse.text());
+ const configureResponse=await configured;assert.equal(configureResponse.status(),200,await configureResponse.text());
+ const agent=(await configureResponse.json()).agent;
+ assert.equal(agent.projectId,project.id);assert.equal(agent.domainId,project.domainId);assert.equal(agent.modelId,model.id);
+ assert.equal(agent.status,'READY_FOR_TEST');assert.deepEqual(await list(),before);
+ await page.locator('#eval-dataset').waitFor({timeout:30_000});
+ await page.screenshot({path:`${dir}/existing-project-agent-created.png`,fullPage:true});
+ assert.deepEqual(errors,[]);
+ await writeFile(`${dir}/existing-project-agent-result.json`,JSON.stringify({passed:true,projectId:project.id,agentId:agent.id,modelId:agent.modelId,projectListUnchanged:true,noInferenceRequested:true,browserErrors:errors},null,2));
+ console.log('Actual Build Agent submission created and configured an agent inside the selected existing project, with no new project or inference.');
+}finally{await browser.close();}

@@ -1,0 +1,94 @@
+{
+  "$schema": "https://schema.agentcore.aws.dev/v1/agentcore.json",
+  "name": "chatagent",
+  "version": 1,
+  "managedBy": "CDK",
+  "tags": {
+    "agentcore:created-by": "agentcore-cli",
+    "agentcore:project-name": "chatagent"
+  },
+  "runtimes": [
+    {
+      "name": "chat_agent",
+      "build": "CodeZip",
+      "entrypoint": "main.py",
+      "codeLocation": "app/chat_agent/",
+      "runtimeVersion": "PYTHON_3_14",
+      "networkMode": "PUBLIC",
+      "protocol": "HTTP",
+      "authorizerType": "CUSTOM_JWT",
+      "authorizerConfiguration": {
+        "customJwtAuthorizer": {
+          "discoveryUrl": "https://cognito-idp.us-west-2.amazonaws.com/us-west-2_90QmPOgDz/.well-known/openid-configuration",
+          "allowedClients": [
+            "7d72mth9dp080jqkvc8kk586j8"
+          ]
+        }
+      },
+      "requestHeaderAllowlist": [
+        "X-Amzn-Bedrock-AgentCore-Runtime-Custom-user-id",
+        "X-Amzn-Bedrock-AgentCore-Runtime-Custom-user-name",
+        "X-Amzn-Bedrock-AgentCore-Runtime-Custom-user-email"
+      ]
+    }
+  ],
+  "memories": [
+    {
+      "name": "chat_agentMemory",
+      "eventExpiryDuration": 30,
+      "strategies": [
+        {
+          "type": "SEMANTIC",
+          "namespaceTemplates": [
+            "/users/{actorId}/facts"
+          ]
+        },
+        {
+          "type": "USER_PREFERENCE",
+          "namespaceTemplates": [
+            "/users/{actorId}/preferences"
+          ]
+        },
+        {
+          "type": "SUMMARIZATION",
+          "namespaceTemplates": [
+            "/summaries/{actorId}/{sessionId}"
+          ]
+        },
+        {
+          "type": "EPISODIC",
+          "namespaceTemplates": [
+            "/episodes/{actorId}/{sessionId}"
+          ],
+          "reflectionNamespaceTemplates": [
+            "/episodes/{actorId}"
+          ]
+        }
+      ]
+    }
+  ],
+  "knowledgeBases": [],
+  "credentials": [],
+  "evaluators": [],
+  "onlineEvalConfigs": [],
+  "agentCoreGateways": [],
+  "policyEngines": [
+    {
+      "name": "platform_content_guardrails",
+      "description": "Platform baseline enforcement point backing the content-guardrails org control (TLP-B11 #13). The engine attachment is what the compliance gate verifies; teams extend it with forbid policies for their domain — the baseline policy below is permissive so attaching it never changes runtime behavior.",
+      "policies": [
+        {
+          "name": "platform_baseline",
+          "description": "Baseline attachment policy — extend with domain-specific forbid policies.",
+          "statement": "permit(principal, action, resource);",
+          "validationMode": "FAIL_ON_ANY_FINDINGS"
+        }
+      ]
+    }
+  ],
+  "configBundles": [],
+  "abTests": [],
+  "harnesses": [],
+  "datasets": [],
+  "payments": []
+}

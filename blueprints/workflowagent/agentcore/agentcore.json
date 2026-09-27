@@ -1,0 +1,52 @@
+{
+  "$schema": "https://schema.agentcore.aws.dev/v1/agentcore.json",
+  "name": "workflowagent",
+  "version": 1,
+  "managedBy": "CDK",
+  "tags": {
+    "agentcore:created-by": "agentcore-cli",
+    "agentcore:project-name": "workflowagent"
+  },
+  "runtimes": [
+    {
+      "name": "workflow_agent",
+      "build": "CodeZip",
+      "entrypoint": "main.py",
+      "codeLocation": "app/workflow_agent/",
+      "runtimeVersion": "PYTHON_3_14",
+      "networkMode": "PUBLIC",
+      "protocol": "HTTP"
+    }
+  ],
+  "memories": [
+    {
+      "name": "workflow_agentMemory",
+      "eventExpiryDuration": 30,
+      "strategies": []
+    }
+  ],
+  "knowledgeBases": [],
+  "credentials": [],
+  "evaluators": [],
+  "onlineEvalConfigs": [],
+  "agentCoreGateways": [],
+  "policyEngines": [
+    {
+      "name": "platform_content_guardrails",
+      "description": "Platform baseline enforcement point backing the content-guardrails org control (TLP-B11 #13). The engine attachment is what the compliance gate verifies; teams extend it with forbid policies for their domain — the baseline policy below is permissive so attaching it never changes runtime behavior.",
+      "policies": [
+        {
+          "name": "platform_baseline",
+          "description": "Baseline attachment policy — extend with domain-specific forbid policies.",
+          "statement": "permit(principal, action, resource);",
+          "validationMode": "FAIL_ON_ANY_FINDINGS"
+        }
+      ]
+    }
+  ],
+  "configBundles": [],
+  "abTests": [],
+  "harnesses": [],
+  "datasets": [],
+  "payments": []
+}

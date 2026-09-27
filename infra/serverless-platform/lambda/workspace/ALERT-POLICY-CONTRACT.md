@@ -1,0 +1,13 @@
+# Platform alert configuration drafts
+
+GET /api/alerts and POST /api/governance/alert-drafts use the Governance JWT integration. Both require authenticated Admin/manageAlertPolicies and platform scope. No assumed nonadmin-to-admin writer, directory mutation, cross-domain scan or notification API.
+
+The existing table stores ALERT_POLICY#platform / CATALOG, entityType ALERT_POLICY_CATALOG, document JSON. schemaVersion1, positive revision, domainId platform, canonical updatedAt and policies; max100 records/128KiB. Each record has id/name/metric/threshold/severity(SEV1/2/3)/owner/runbook/raci{responsible,accountable,consulted,informed}/version/enabled/createdAt. Owner, runbook and RACI may be empty; no default role or recipient is invented. Metric/threshold/severity are saved descriptions/intent, not executable evaluator configuration. References are text, not fetched. No notification recipients or delivery channel schema.
+
+Missing item returns configured=false/revision0/policies[]/cursor:null. This is not a seeded catalog. Explicit first create requires expectedRevision0 and condition attribute_not_exists; successful save initializes revision1. No deployment seed. GET is one bounded strongly consistent item read; malformed/oversize/transport errors fail, never empty success.
+
+POST body exactly operation(create/update), expectedRevision, expectedPolicyVersion(null for create), policy(editable fields only), reason(10-1024 chars). enabled/version/createdAt are server-set. Only disabled records can be edited; no enable/delete/fire action. Updates increment both versions and preserve other rows/order. Catalog, audit and request replay result are one transaction with exact prior document CAS. Same request/canonical payload replays; differing payload conflicts. Audit records actor/resource/action/reason, not full responsibility content.
+
+Identity IAM permits exact ALERT_POLICY#platform GetItem and transaction-enclosed PutItem; existing audit/mutation privileges reused. Permissions boundary source lists same exact key in its matched read/write ceiling; compiled ceiling unchanged. No SNS/SES/Slack/CloudWatch alarm or runtime grants added.
+
+GET returns source workspace-alert-policy-catalog, configured/revision/updatedAt/policies, evaluation NOT_CONFIGURED and delivery NOT_CONFIGURED. UI clearly separates draft configuration/RACI notes from actual role assignment, alarm evaluation and delivery. Shared dirty guard, identity/epoch/removed-form fences, captured revision, reason and same-request unknown-result retry protect edits. Nonadmin live acceptance remains limited to available identities; tests must not manufacture grants.

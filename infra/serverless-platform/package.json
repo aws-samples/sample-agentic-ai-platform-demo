@@ -1,0 +1,52 @@
+{
+  "name": "agentic-platform-serverless-infra",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc --noEmit",
+    "configure:demo-operator": "node scripts/reconcile-demo-operator.mjs",
+    "reconcile:demo-operator": "node scripts/reconcile-demo-operator.mjs",
+    "test": "tsx --test",
+    "test:task6": "tsx --test test/deploy-workflow.test.mjs test/readme-contract.test.mjs scripts/predeploy-security-audit.test.mjs scripts/validate-deployed-tags.test.mjs",
+    "test:unit": "tsx --test",
+    "test:control-plane-service": "tsx --test test/control-plane-service.test.mjs",
+    "synth": "cdk synth",
+    "diff": "cdk diff",
+    "deploy:bootstrap": "cdk deploy GitHubBootstrapStack --require-approval broadening",
+    "deploy:web": "cdk deploy PlatformWebStack --require-approval never --outputs-file deployment-outputs.json",
+    "audit": "npm audit --audit-level=high",
+    "security:audit": "node scripts/predeploy-security-audit.mjs",
+    "blueprints:plan": "node --import tsx scripts/publish-platform-blueprints.mjs",
+    "blueprints:publish": "node --import tsx scripts/publish-platform-blueprints.mjs --apply",
+    "initialize:demo-workspaces": "node scripts/initialize-demo-workspaces.mjs"
+  },
+  "dependencies": {
+    "@aws-sdk/client-agent-registry": "3.1116.0",
+    "@aws-sdk/client-agent-registry-control": "3.1116.0",
+    "@aws-sdk/client-bedrock-agent": "3.1116.0",
+    "@aws-sdk/client-bedrock-agentcore": "3.1116.0",
+    "@aws-sdk/client-bedrock-agentcore-control": "3.1116.0",
+    "@aws-sdk/client-bedrock-runtime": "3.1116.0",
+    "@aws-sdk/client-cloudwatch": "3.1116.0",
+    "@aws-sdk/client-cognito-identity-provider": "3.1116.0",
+    "@aws-sdk/client-cost-explorer": "3.1116.0",
+    "@aws-sdk/client-dynamodb": "3.1116.0",
+    "@aws-sdk/client-lambda": "^3.1116.0",
+    "@aws-sdk/client-secrets-manager": "3.1116.0",
+    "@aws-sdk/client-sns": "3.1116.0",
+    "@aws-sdk/client-sts": "3.1116.0",
+    "@smithy/credential-provider-imds": "4.5.2",
+    "aws-cdk-lib": "2.266.0",
+    "cdk-nag": "3.0.2",
+    "constructs": "10.8.1",
+    "source-map-support": "0.5.21"
+  },
+  "devDependencies": {
+    "@types/node": "22.18.6",
+    "aws-cdk": "2.1138.0",
+    "esbuild": "0.28.2",
+    "tsx": "4.20.5",
+    "typescript": "5.9.2",
+    "yaml": "2.9.0"
+  }
+}

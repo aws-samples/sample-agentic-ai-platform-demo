@@ -1,0 +1,12 @@
+{
+  "_comment": "Live AWS resource IDs for the concierge agent kit. Managed by scripts/provision-kb.mjs — do not edit by hand.",
+  "knowledgeBase": {
+    "id": "TAD2BPHOX6",
+    "name": "kb-concierge",
+    "dataSourceId": "JBNXLMH4GB",
+    "collectionId": "jzqly2tmqrfvlhjmaoo4",
+    "collectionName": "agentic-kb-concierge",
+    "s3Bucket": "agentic-kb-concierge-217522444267",
+    "indexName": "kb-concierge-index"
+  }
+}

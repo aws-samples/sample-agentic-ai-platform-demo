@@ -1,0 +1,1 @@
+0.14810810810810812 of all invoices were cancellations (14.81% share), across all invoices, source_table: uci_retail.invoices.

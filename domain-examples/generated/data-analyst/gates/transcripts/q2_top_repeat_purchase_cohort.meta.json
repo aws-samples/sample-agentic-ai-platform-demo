@@ -1,0 +1,8 @@
+{
+  "scenario_id": "q2_top_repeat_purchase_cohort",
+  "recordedAt": "2026-08-25T03:49:47.401Z",
+  "source": "record-transcripts.mjs",
+  "endpoint": "http://localhost:8081/invocations",
+  "sessionId": "rec-q2_top_repeat_purchase_cohort-1787629778919",
+  "turns": 1
+}

@@ -1,0 +1,3 @@
+analyst_id,analyst_name,desk,focus,cognito_actor_id,memory_namespace_preferences,memory_namespace_facts,data_origin
+maya,Maya,Growth,growth/marketing/acquisition,maya,/preferences/maya/,/facts/maya/,uci-online-retail
+leo,Leo,Operations,operations/supply-chain/fulfillment,leo,/preferences/leo/,/facts/leo/,uci-online-retail

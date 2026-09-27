@@ -1,0 +1,12 @@
+{
+  "gateways": [
+    {
+      "name": "agentic-demo-llm-gateway",
+      "gatewayId": "GATEWAY_ID_PLACEHOLDER",
+      "gatewayArn": "arn:aws:bedrock-agentcore:REGION:ACCOUNT_ID:gateway/GATEWAY_ID_PLACEHOLDER",
+      "gatewayUrl": "https://GATEWAY_ID_PLACEHOLDER.gateway.bedrock-agentcore.REGION.amazonaws.com/mcp",
+      "region": "us-west-2",
+      "description": "AgentCore Gateway inference target deployed by infra/platform-registry"
+    }
+  ]
+}

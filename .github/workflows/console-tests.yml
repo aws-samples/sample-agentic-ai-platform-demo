@@ -1,0 +1,44 @@
+name: Console tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: console-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  console:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            infra/serverless-platform/package-lock.json
+      - name: Install console and hosted integration dependencies
+        run: |
+          npm ci --no-audit --no-fund
+          npm --prefix infra/serverless-platform ci --no-audit --no-fund
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install exported evaluation test dependency
+        run: python -m pip install "pytest>=8,<9"
+      - name: Run console regressions
+        run: npm test
+      - name: Verify governed Agent delivery
+        run: |
+          python -m unittest infra/serverless-platform/test/test_release_delivery.py
+          cd infra/serverless-platform
+          node --import tsx --test test/agent-delivery-stack.test.ts

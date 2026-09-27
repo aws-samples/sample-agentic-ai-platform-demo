@@ -1,0 +1,161 @@
+name: Governed Agent delivery
+on:
+  workflow_call:
+    inputs:
+      domain-id:
+        required: true
+        type: string
+      project-id:
+        required: true
+        type: string
+      agent-id:
+        required: true
+        type: string
+      artifact-bucket:
+        required: true
+        type: string
+      uploader-role:
+        required: true
+        type: string
+      pipeline-name:
+        required: true
+        type: string
+      aws-region:
+        required: false
+        default: us-west-2
+        type: string
+permissions:
+  contents: read
+jobs:
+  package:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install build tools
+        run: |
+          npm install -g @aws/agentcore@0.24.0
+          python -m pip install uv pytest
+          python -m pip install -r evaluation/requirements.txt
+      - name: Verify Foundation and business checks
+        run: |
+          node gates/check-guardrails.mjs
+          node gates/run-tests.mjs
+          node gates/run-eval.mjs
+      - name: Package the Agent once
+        run: agentcore package --directory . --runtime chat_agent
+      - name: Bind release artifact and evaluation evidence
+        id: release
+        env:
+          DOMAIN_ID: ${{ inputs.domain-id }}
+          PROJECT_ID: ${{ inputs.project-id }}
+          AGENT_ID: ${{ inputs.agent-id }}
+        run: |
+          python - <<'PY'
+          import hashlib,json,os,re,zipfile
+          from pathlib import Path
+          for key in ("DOMAIN_ID","PROJECT_ID","AGENT_ID"):
+              if not re.fullmatch(r"[a-z][a-z0-9_-]{0,63}",os.environ[key]):
+                  raise ValueError("Invalid ownership identifier")
+          package=Path("agentcore/chat_agent.zip").read_bytes()
+          evaluation=Path("evaluation/report.json").read_bytes()
+          report=json.loads(evaluation)
+          if report.get("status")!="PASSED" or not report.get("results"):
+              raise ValueError("Business evaluation has not passed")
+          digest=hashlib.sha256(package).hexdigest()
+          release={"version":1,"repository":os.environ["GITHUB_REPOSITORY"],
+                   "commitSha":os.environ["GITHUB_SHA"],"artifactSha256":digest,
+                   "evaluationSha256":hashlib.sha256(evaluation).hexdigest(),
+                   "domainId":os.environ["DOMAIN_ID"],"projectId":os.environ["PROJECT_ID"],
+                   "agentId":os.environ["AGENT_ID"]}
+          with zipfile.ZipFile("release.zip","w",compression=zipfile.ZIP_STORED) as archive:
+              archive.writestr("agent.zip",package)
+              archive.writestr("evaluation-report.json",evaluation)
+              archive.writestr("release.json",json.dumps(release))
+          with open(os.environ["GITHUB_OUTPUT"],"a") as output:
+              output.write("digest="+digest+"\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: governed-release
+          path: release.zip
+          if-no-files-found: error
+          retention-days: 7
+  publish:
+    needs: package
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    steps:
+      # A fresh runner never executes the caller's repository or build tools.
+      - uses: actions/download-artifact@v4
+        with:
+          name: governed-release
+          path: artifact
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install publisher SDK
+        run: python -m pip install 'boto3>=1.42,<2'
+      - name: Assume artifact upload role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ inputs.uploader-role }}
+          aws-region: ${{ inputs.aws-region }}
+      - name: Submit immutable release to the governed pipeline
+        env:
+          ARTIFACT_BUCKET: ${{ inputs.artifact-bucket }}
+          PIPELINE_NAME: ${{ inputs.pipeline-name }}
+          DOMAIN_ID: ${{ inputs.domain-id }}
+          PROJECT_ID: ${{ inputs.project-id }}
+          AGENT_ID: ${{ inputs.agent-id }}
+        run: |
+          python - <<'PY'
+          import boto3,hashlib,json,os,zipfile
+          from pathlib import Path
+          source=Path("artifact/release.zip")
+          with zipfile.ZipFile(source) as archive:
+              if sorted(archive.namelist()) != ["agent.zip","evaluation-report.json","release.json"]:
+                  raise ValueError("Unexpected release contents")
+              release=json.loads(archive.read("release.json"))
+              digest=hashlib.sha256(archive.read("agent.zip")).hexdigest()
+              expected={"version":1,"repository":os.environ["GITHUB_REPOSITORY"],
+                        "commitSha":os.environ["GITHUB_SHA"],"artifactSha256":digest,
+                        "evaluationSha256":hashlib.sha256(archive.read("evaluation-report.json")).hexdigest(),
+                        "domainId":os.environ["DOMAIN_ID"],"projectId":os.environ["PROJECT_ID"],
+                        "agentId":os.environ["AGENT_ID"]}
+              if release != expected: raise ValueError("Release identity mismatch")
+          stored=boto3.client("s3").put_object(
+              Bucket=os.environ["ARTIFACT_BUCKET"],Key="source/release.zip",
+              Body=source.read_bytes(),ServerSideEncryption="AES256")
+          version=stored.get("VersionId")
+          if not version: raise ValueError("Versioned artifact storage is required")
+          result=boto3.client("codepipeline").start_pipeline_execution(
+              name=os.environ["PIPELINE_NAME"],
+              variables=[{"name":"CommitSha","value":os.environ["GITHUB_SHA"]},
+                         {"name":"ArtifactSha256","value":digest}],
+              sourceRevisions=[{"actionName":"ReleaseArtifact",
+                                "revisionType":"S3_OBJECT_VERSION_ID","revisionValue":version}],
+              clientRequestToken=os.environ["GITHUB_RUN_ID"]+"-"+os.environ["GITHUB_RUN_ATTEMPT"])
+          evidence={"pipeline":os.environ["PIPELINE_NAME"],"executionId":result["pipelineExecutionId"],
+                    "commitSha":os.environ["GITHUB_SHA"],"artifactSha256":digest,
+                    "sourceVersionId":version}
+          print(json.dumps(evidence,indent=2))
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as out:
+              out.write("## Release submitted\n\n```json\n"+json.dumps(evidence,indent=2)+"\n```\n")
+              out.write("Submission is not deployment success. Check dev/preprod verification and the pending human production decision in the platform Console.\n")
+          PY

@@ -1,0 +1,54 @@
+# platform-telemetry: v1 — CI run telemetry backflow to the platform console.
+# Single closing reporter: the gate workflows (tests/compliance) stay
+# zero-credential; this workflow_run-triggered job reads their results via the
+# GitHub API (GITHUB_TOKEN, read-only), builds run-report.json, and is the ONE
+# place that touches AWS — an OIDC put to the platform's telemetry prefix
+# (s3://<telemetry bucket>/telemetry/runs/<run_id>.json), the same S3-broker
+# relay pattern as the HITL prod gate.
+# Honesty line: this is CI SELF-REPORTED observability — "reported by CI",
+# trust anchored only in the OIDC role→repo binding. It is NOT
+# platform-verified attestation.
+name: report-telemetry
+on:
+  workflow_run:
+    workflows: [eval-gate, tests, compliance, deploy-dev, promote]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Workflow run id to re-report"
+        required: true
+permissions:
+  id-token: write
+  contents: read
+  actions: read
+  deployments: read
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build run-report.json (GitHub API aggregation, read-only)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TRIGGER_RUN_ID: ${{ github.event.inputs.run_id || github.event.workflow_run.id }}
+        run: node gates/report-run.mjs
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_DEPLOY_REGION || 'us-west-2' }}
+      - name: Upload to the platform telemetry prefix
+        run: |
+          set -euo pipefail
+          BUCKET='${{ vars.TELEMETRY_BUCKET }}'
+          if [ -z "$BUCKET" ]; then BUCKET=$(node -p "JSON.parse(require('fs').readFileSync('gates/platform-gates.json','utf8')).telemetryBucket || ''"); fi
+          if [ -z "$BUCKET" ]; then echo "No telemetry bucket configured (repo var TELEMETRY_BUCKET or telemetryBucket in gates/platform-gates.json) — skipping upload honestly"; exit 0; fi
+          RUN_ID=$(node -p "JSON.parse(require('fs').readFileSync('run-report.json','utf8')).run_id")
+          aws s3api put-object --bucket "$BUCKET" \
+            --key "telemetry/runs/${RUN_ID}.json" \
+            --body run-report.json --content-type application/json
+          echo "Reported: s3://$BUCKET/telemetry/runs/${RUN_ID}.json"

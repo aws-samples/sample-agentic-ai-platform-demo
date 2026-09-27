@@ -1,0 +1,123 @@
+{
+  "AGENT": {
+    "registryArn": "arn:aws:agent-registry:us-west-2:123456789012:registry/Kg5Lpvu8XJorSs6D",
+    "recordArn": "arn:aws:agent-registry:us-west-2:123456789012:registry/Kg5Lpvu8XJorSs6D/record/fQjuycvUNRL1",
+    "recordId": "fQjuycvUNRL1",
+    "name": "a2a_expense_auditor",
+    "recordType": "AGENT",
+    "descriptors": {
+      "a2aAgentCard": {
+        "data": "{\"protocolVersion\":\"0.3.0\",\"name\":\"Expense Auditor\",\"description\":\"Audits expense reports against corporate policy and flags exceptions.\",\"url\":\"https://agents.finance.example/expense-auditor\",\"preferredTransport\":\"JSONRPC\",\"version\":\"1.2.0\",\"provider\":{\"organization\":\"Acme Finance\",\"url\":\"https://finance.acme.example\"},\"documentationUrl\":\"https://agents.finance.example/expense-auditor/docs\",\"capabilities\":{\"streaming\":true,\"pushNotifications\":false,\"stateTransitionHistory\":true},\"authentication\":{\"schemes\":[\"oauth2\"]},\"defaultInputModes\":[\"text/plain\",\"application/json\"],\"defaultOutputModes\":[\"text/plain\",\"application/json\"],\"skills\":[{\"id\":\"audit-report\",\"name\":\"Audit expense report\",\"description\":\"Check a submitted report against policy and produce an exception list. (illustrative)\",\"tags\":[\"finance\",\"policy\"],\"inputModes\":[\"application/json\"],\"outputModes\":[\"application/json\"],\"examples\":[\"Audit report EXP-2231 for the sales org\"]},{\"id\":\"policy-qa\",\"name\":\"Policy Q&A\",\"description\":\"Answer questions about the travel and expense policy. (illustrative)\",\"tags\":[\"finance\",\"qa\"],\"examples\":[\"What is the hotel cap for London?\"]}],\"x-platform\":{\"id\":\"expense-auditor\",\"domain\":\"shared\",\"governanceMode\":\"federated\",\"domainOwner\":\"Finance domain team\",\"access\":[\"admin\",\"builder\"],\"changelog\":\"Seed entry (platform-curated).\",\"createdBy\":\"Finance domain team\"}}",
+        "dataSchemaVersion": "0.3"
+      }
+    },
+    "recordVersion": "1.0.0",
+    "status": "APPROVED",
+    "createdAt": "2026-08-07T08:29:45.165Z",
+    "updatedAt": "2026-08-07T08:29:48.541Z",
+    "description": "Audits expense reports against corporate policy and flags exceptions.",
+    "displayName": "Expense Auditor",
+    "registryId": "Kg5Lpvu8XJorSs6D"
+  },
+  "CUSTOM": {
+    "registryArn": "arn:aws:agent-registry:us-west-2:123456789012:registry/Kg5Lpvu8XJorSs6D",
+    "recordArn": "arn:aws:agent-registry:us-west-2:123456789012:registry/Kg5Lpvu8XJorSs6D/record/4tRJBQAyHf7i",
+    "recordId": "4tRJBQAyHf7i",
+    "name": "blueprint_action_agent",
+    "recordType": "CUSTOM",
+    "descriptors": {
+      "custom": {
+        "data": "{\"resourceKind\":\"blueprint\",\"blueprintId\":\"action-agent\",\"displayName\":\"Action-Taking Agent\",\"useCase\":\"Side-effecting actions with approvals (A2A)\",\"icon\":\"⚡\",\"template\":{\"framework\":\"Strands\",\"deployTarget\":\"ECS Fargate\",\"build\":\"Container\",\"protocol\":\"A2A\",\"memory\":\"longAndShortTerm\",\"streaming\":false,\"identity\":true,\"guardrails\":true},\"compat\":{\"Claude Agent SDK\":{\"AWS Lambda\":\"Container-based agent loop needs a writable filesystem and long-lived sessions — Lambda's 15-minute cap and read-only runtime don't fit. Use AgentCore Runtime, ECS Fargate or EKS.\"},\"LangGraph\":{\"AWS Lambda\":\"Supervisor graphs are long-running and checkpoint mid-flight — they exceed Lambda's 15-minute invocation limit. Use a container target.\"}},\"git\":{\"repo\":\"github.com/aws-samples/sample-agentic-ai-platform-demo\",\"path\":\"blueprints/action-agent\",\"ref\":\"main\"},\"version\":\"1.0.0\",\"defaultVersion\":\"1.0.0\"}"
+      }
+    },
+    "recordVersion": "1.0.0",
+    "status": "APPROVED",
+    "createdAt": "2026-08-07T08:35:25.162Z",
+    "updatedAt": "2026-08-07T08:35:28.780Z",
+    "description": "Side-effecting actions with approvals (A2A)",
+    "displayName": "Action-Taking Agent",
+    "registryId": "Kg5Lpvu8XJorSs6D"
+  },
+  "SKILL": {
+    "registryArn": "arn:aws:agent-registry:us-west-2:123456789012:registry/Kg5Lpvu8XJorSs6D",
+    "recordArn": "arn:aws:agent-registry:us-west-2:123456789012:registry/Kg5Lpvu8XJorSs6D/record/iKaiNDcmknEZ",
+    "recordId": "iKaiNDcmknEZ",
+    "name": "skill_code_interpreter",
+    "recordType": "SKILL",
+    "descriptors": {
+      "agentSkillsDefinition": {
+        "data": "{\"id\":\"code_interpreter\",\"name\":\"code-interpreter\",\"description\":\"Managed sandbox for Python execution, math and charts.\",\"tags\":[\"shared\",\"agentcore_code_interpreter\"],\"x-platform\":{\"id\":\"code_interpreter\",\"domain\":\"shared\",\"governanceMode\":\"owned\",\"domainOwner\":\"Platform CoE\",\"tools\":[],\"toolType\":\"agentcore_code_interpreter\",\"gateway\":null,\"auth\":null,\"access\":[\"admin\",\"builder\"],\"changelog\":\"Seed entry (typed tool, recorded as a Skill-type registry entry — tools are not a first-class registry type in this phase).\",\"createdBy\":\"Platform CoE\"}}",
+        "dataSchemaVersion": "0.1.0",
+        "additionalData": {
+          "skillMd": {
+            "data": "---\nname: code-interpreter\ndescription: Managed sandbox for Python execution, math and charts.\n---\n\n# Code Interpreter\n\nManaged sandbox for Python execution, math and charts.\n\nTyped tool (agentcore_code_interpreter)."
+          }
+        }
+      }
+    },
+    "recordVersion": "1.0.0",
+    "status": "APPROVED",
+    "createdAt": "2026-08-07T08:34:57.411Z",
+    "updatedAt": "2026-08-07T08:35:00.630Z",
+    "description": "Managed sandbox for Python execution, math and charts.",
+    "displayName": "Code Interpreter",
+    "registryId": "Kg5Lpvu8XJorSs6D"
+  },
+  "CONTROL_DRAFT": {
+    "registryArn": "arn:aws:agent-registry:us-west-2:123456789012:registry/yjSLeCoKg7C4yE8a",
+    "recordArn": "arn:aws:agent-registry:us-west-2:123456789012:registry/yjSLeCoKg7C4yE8a/record/AnguEcMUi9Qt",
+    "recordId": "AnguEcMUi9Qt",
+    "name": "a2a_supply_chain_tracker",
+    "recordType": "AGENT",
+    "status": "DRAFT",
+    "createdAt": "2026-08-07T08:29:48.835Z",
+    "updatedAt": "2026-08-07T08:29:49.733Z",
+    "displayName": "Supply Chain Tracker",
+    "description": "Tracks shipments and predicts delivery delays across carriers.",
+    "descriptors": {
+      "a2aAgentCard": {
+        "data": "{\"protocolVersion\":\"0.3.0\",\"name\":\"Supply Chain Tracker\",\"description\":\"Tracks shipments and predicts delivery delays across carriers.\",\"url\":\"https://agents.ops.example/supply-chain\",\"preferredTransport\":\"JSONRPC\",\"version\":\"0.9.1\",\"provider\":{\"organization\":\"Acme Operations\",\"url\":\"https://ops.acme.example\"},\"documentationUrl\":\"https://agents.ops.example/supply-chain/docs\",\"capabilities\":{\"streaming\":false,\"pushNotifications\":true,\"stateTransitionHistory\":false},\"authentication\":{\"schemes\":[\"bearer\"]},\"defaultInputModes\":[\"text/plain\"],\"defaultOutputModes\":[\"text/plain\",\"application/json\"],\"skills\":[{\"id\":\"track-shipment\",\"name\":\"Track shipment\",\"description\":\"Locate a shipment and estimate arrival. (illustrative)\",\"tags\":[\"logistics\"],\"inputModes\":[\"text/plain\"],\"outputModes\":[\"application/json\"],\"examples\":[\"Where is PO-88231?\"]}],\"x-platform\":{\"id\":\"supply-chain-tracker\",\"domain\":\"operations\",\"governanceMode\":\"federated\",\"domainOwner\":\"Operations domain team\",\"access\":[\"admin\"],\"changelog\":\"Seed entry (platform-curated).\",\"createdBy\":\"Operations domain team\"}}",
+        "dataSchemaVersion": "0.3"
+      }
+    },
+    "recordVersion": "1.0.0",
+    "registryId": "yjSLeCoKg7C4yE8a"
+  },
+  "SEARCH_SAMPLE": {
+    "registryArn": "arn:aws:agent-registry:us-west-2:123456789012:registry/Kg5Lpvu8XJorSs6D",
+    "recordArn": "arn:aws:agent-registry:us-west-2:123456789012:registry/Kg5Lpvu8XJorSs6D/record/kAj0hUF7EQ2D",
+    "recordId": "kAj0hUF7EQ2D",
+    "name": "blueprint_claude_cos",
+    "recordType": "CUSTOM",
+    "descriptors": {
+      "custom": {
+        "data": "{\"resourceKind\":\"blueprint\",\"blueprintId\":\"claude-cos\",\"displayName\":\"Claude Agent SDK Assistant\",\"useCase\":\"Skills-driven agent (CLAUDE.md, filesystem, code)\",\"icon\":\"🧑‍💼\",\"template\":{\"framework\":\"Claude Agent SDK\",\"deployTarget\":\"AgentCore Runtime\",\"build\":\"Container\",\"protocol\":\"HTTP\",\"memory\":\"longAndShortTerm\",\"streaming\":true,\"identity\":true,\"guardrails\":true},\"compat\":{\"Claude Agent SDK\":{\"AWS Lambda\":\"Container-based agent loop needs a writable filesystem and long-lived sessions — Lambda's 15-minute cap and read-only runtime don't fit. Use AgentCore Runtime, ECS Fargate or EKS.\"},\"LangGraph\":{\"AWS Lambda\":\"Supervisor graphs are long-running and checkpoint mid-flight — they exceed Lambda's 15-minute invocation limit. Use a container target.\"}},\"git\":{\"repo\":\"github.com/aws-samples/sample-agentic-ai-platform-demo\",\"path\":\"blueprints/claude-cos\",\"ref\":\"main\"},\"version\":\"1.0.0\",\"defaultVersion\":\"1.0.0\"}"
+      }
+    },
+    "recordVersion": "1.0.0",
+    "status": "APPROVED",
+    "createdAt": "2026-08-07T08:35:14.743Z",
+    "updatedAt": "2026-08-07T08:35:17.930Z",
+    "description": "Skills-driven agent (CLAUDE.md, filesystem, code)",
+    "displayName": "Claude Agent SDK Assistant",
+    "registryId": "Kg5Lpvu8XJorSs6D"
+  },
+  "GATEWAY_TARGET_READY": {
+    "name": "aws-docs",
+    "targetId": "HHS00GC3VP",
+    "status": "READY",
+    "description": "AWS Knowledge MCP server (real public endpoint) — AWS docs search/read.",
+    "endpoint": "https://knowledge-mcp.global.api.aws",
+    "createdAt": "2026-08-07T09:06:33.149Z",
+    "updatedAt": "2026-08-07T09:07:02.000Z"
+  },
+  "GATEWAY_TARGET_FAILED": {
+    "name": "github-mcp",
+    "targetId": "IBODZYLPIO",
+    "status": "FAILED",
+    "description": "GitHub MCP (seed entry; illustrative endpoint).",
+    "endpoint": "https://mcp.example/github",
+    "createdAt": "2026-08-07T09:07:10.000Z",
+    "updatedAt": "2026-08-07T09:07:40.000Z"
+  }
+}

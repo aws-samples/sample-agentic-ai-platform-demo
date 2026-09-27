@@ -1,0 +1,26 @@
+# platform-gate: v1 (org required check — do not remove or bypass)
+# Compliance gate: (1) guardrail-config conformance — the platform gate files
+# and declared controls must be present and intact (gates/check-guardrails.mjs);
+# (2) secret scan over the full git history with gitleaks.
+name: compliance
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compliance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Guardrail conformance check
+        run: node gates/check-guardrails.mjs
+      - name: Secret scan (gitleaks)
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz | tar -xz gitleaks
+          ./gitleaks detect --source . --no-banner --redact --verbose

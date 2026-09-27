@@ -1,0 +1,160 @@
+{
+  "$schema": "https://schema.agentcore.aws.dev/v1/agentcore.json",
+  "name": "ithelpdesk",
+  "version": 1,
+  "managedBy": "CDK",
+  "tags": {
+    "agentcore:created-by": "agentcore-cli",
+    "agentcore:project-name": "ithelpdesk",
+    "domain-id": "platform",
+    "project-id": "it-helpdesk"
+  },
+  "runtimes": [
+    {
+      "name": "chat_agent",
+      "build": "CodeZip",
+      "entrypoint": "main.py",
+      "codeLocation": "app/chat_agent/",
+      "runtimeVersion": "PYTHON_3_14",
+      "networkMode": "PUBLIC",
+      "protocol": "HTTP",
+      "requestHeaderAllowlist": [
+        "X-Amzn-Bedrock-AgentCore-Runtime-Custom-user-id",
+        "X-Amzn-Bedrock-AgentCore-Runtime-Custom-user-name",
+        "X-Amzn-Bedrock-AgentCore-Runtime-Custom-user-email"
+      ],
+      "authorizerType": "CUSTOM_JWT",
+      "authorizerConfiguration": {
+        "customJwtAuthorizer": {
+          "discoveryUrl": "https://cognito-idp.us-west-2.amazonaws.com/us-west-2_14Yp24JXn/.well-known/openid-configuration",
+          "allowedClients": [
+            "6iup5ro4jfv98nsjgtgok79vll"
+          ]
+        }
+      },
+      "environmentVariables": {
+        "KB_ID": "QMBGUOZPGL"
+      }
+    }
+  ],
+  "memories": [
+    {
+      "name": "ithelpdeskMemory",
+      "eventExpiryDuration": 30,
+      "strategies": [
+        {
+          "type": "SEMANTIC",
+          "namespaceTemplates": [
+            "/users/{actorId}/facts"
+          ]
+        },
+        {
+          "type": "USER_PREFERENCE",
+          "namespaceTemplates": [
+            "/users/{actorId}/preferences"
+          ]
+        },
+        {
+          "type": "SUMMARIZATION",
+          "namespaceTemplates": [
+            "/summaries/{actorId}/{sessionId}"
+          ]
+        },
+        {
+          "type": "EPISODIC",
+          "namespaceTemplates": [
+            "/episodes/{actorId}/{sessionId}"
+          ],
+          "reflectionNamespaceTemplates": [
+            "/episodes/{actorId}"
+          ]
+        }
+      ]
+    }
+  ],
+  "knowledgeBases": [
+    {
+      "name": "kb-it-helpdesk",
+      "dataSources": [
+        {
+          "type": "S3",
+          "uri": "s3://agentic-kb-it-helpdesk-217522444267"
+        }
+      ]
+    }
+  ],
+  "credentials": [],
+  "evaluators": [
+    {
+      "name": "runbookAdherence",
+      "level": "TRACE",
+      "config": {
+        "llmAsAJudge": {
+          "model": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+          "instructions": "You are evaluating an IT helpdesk agent's response. Context: {context}. Score how well the agent follows IT-support runbook discipline: (a) diagnoses before prescribing, (b) walks the user through ONE step at a time rather than dumping a checklist, (c) uses tools for facts like SLA deadlines instead of guessing, (d) never asks for passwords or MFA codes, (e) escalates security-sensitive issues. Score 1 = ignores runbook discipline entirely, 5 = exemplary runbook-driven support.",
+          "ratingScale": {
+            "numerical": [
+              {
+                "value": 1,
+                "label": "Poor",
+                "definition": "Fails to meet expectations"
+              },
+              {
+                "value": 2,
+                "label": "Fair",
+                "definition": "Partially meets expectations"
+              },
+              {
+                "value": 3,
+                "label": "Good",
+                "definition": "Meets expectations"
+              },
+              {
+                "value": 4,
+                "label": "Very Good",
+                "definition": "Exceeds expectations"
+              },
+              {
+                "value": 5,
+                "label": "Excellent",
+                "definition": "Far exceeds expectations"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "onlineEvalConfigs": [],
+  "agentCoreGateways": [],
+  "policyEngines": [
+    {
+      "name": "platform_content_guardrails",
+      "description": "Platform baseline enforcement point backing the content-guardrails org control (TLP-B11 #13). The engine attachment is what the compliance gate verifies; teams extend it with forbid policies for their domain \u2014 the baseline policy below is permissive so attaching it never changes runtime behavior.",
+      "policies": [
+        {
+          "name": "ithelpdesk_platform_baseline",
+          "description": "Baseline attachment policy \u2014 extend with domain-specific forbid policies.",
+          "statement": "permit(principal, action, resource is AgentCore::Gateway);",
+          "validationMode": "IGNORE_ALL_FINDINGS"
+        }
+      ]
+    }
+  ],
+  "configBundles": [],
+  "abTests": [],
+  "harnesses": [],
+  "datasets": [
+    {
+      "name": "goldenITHelpdesk",
+      "schemaType": "AGENTCORE_EVALUATION_PREDEFINED_V1",
+      "description": "Golden IT-helpdesk scenarios for offline eval",
+      "config": {
+        "managed": {
+          "location": "datasets/goldenITHelpdesk.jsonl"
+        }
+      }
+    }
+  ],
+  "payments": []
+}

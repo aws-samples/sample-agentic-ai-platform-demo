@@ -1,0 +1,27 @@
+{
+  "_comment": "Platform-curated baseline model catalog: every model launched on Amazon Bedrock within the last six months (window reviewed 2026-09-19) that the platform approves for all baseline domains at deployment. Each entry needs launch-date evidence (AWS launch blog / model card). The deploy-time seed activates a model policy for each id found on the LLM gateway; ids not yet discovered by the gateway are skipped and logged, never invented. Models older than the window stay gateway-discoverable and can be onboarded individually by a platform admin.",
+  "schemaVersion": 1,
+  "reviewedAt": "2026-09-19",
+  "windowMonths": 6,
+  "models": [
+    { "id": "bedrock-claude/anthropic.claude-haiku-4-5", "launched": "2025-10-01", "evidence": "starter model — platform default, retained outside the window", "starter": true },
+    { "id": "bedrock-mantle/moonshotai.kimi-k3", "launched": "2026-09-18", "evidence": "aws.amazon.com/blogs/machine-learning/introducing-kimi-k3-on-amazon-bedrock" },
+    { "id": "bedrock-mantle/openai.gpt-6-astra", "launched": "2026-09-08", "evidence": "aws.amazon.com/about-aws/whats-new/2026/09/openai-gpt-6-astra-on-amazon-bedrock" },
+    { "id": "bedrock-mantle/xai.grok-4.6", "launched": "2026-08-19", "evidence": "Grok 4.6 GA on Bedrock 2026-08-19" },
+    { "id": "bedrock-mantle/openai.gpt-5.6-terra", "launched": "2026-07-13", "evidence": "GPT-5.6 Sol/Terra/Luna GA 2026-07-13" },
+    { "id": "bedrock-mantle/openai.gpt-5.6-luna", "launched": "2026-07-13", "evidence": "GPT-5.6 Sol/Terra/Luna GA 2026-07-13" },
+    { "id": "bedrock-mantle/xai.grok-4.3", "launched": "2026-06-15", "evidence": "Grok 4.3 GA on Bedrock 2026-06-15" },
+    { "id": "bedrock-mantle/google.gemma-4-31b", "launched": "2026-06-10", "evidence": "Gemma 4 family GA 2026-06-10" },
+    { "id": "bedrock-mantle/google.gemma-4-26b-a4b", "launched": "2026-06-10", "evidence": "Gemma 4 family GA 2026-06-10" },
+    { "id": "bedrock-mantle/google.gemma-4-e2b", "launched": "2026-06-10", "evidence": "Gemma 4 family GA 2026-06-10" },
+    { "id": "bedrock-mantle/openai.gpt-5.4", "launched": "2026-06-01", "evidence": "GPT-5.5/5.4 GA on Bedrock 2026-06-01" },
+    { "id": "bedrock-mantle/openai.gpt-5.4-2026-03-05", "launched": "2026-06-01", "evidence": "GPT-5.4 dated variant, same GA" },
+    { "id": "bedrock-mantle/zai.glm-5", "launched": "2026-03-18", "evidence": "aws-news 2026-03-18 minimax-m25-and-glm-5-models-now-available-on-amazon-bedrock" },
+    { "id": "bedrock-mantle/minimax.minimax-m2.5", "launched": "2026-03-18", "evidence": "aws-news 2026-03-18 minimax-m25-and-glm-5-models-now-available-on-amazon-bedrock" }
+  ],
+  "limits": {
+    "requestsPerMinute": 60,
+    "tokensPerMinute": 120000,
+    "connectionsPerSecond": 4
+  }
+}

@@ -1,0 +1,48 @@
+# platform-gate: v1 (org required check — do not remove or bypass)
+# Golden-dataset eval gate: on every PR, gates/run-eval.mjs scores the agent
+# against agentcore/datasets/golden.jsonl and fails below the threshold in
+# gates/platform-gates.json. The judge needs Bedrock via GitHub OIDC: the role
+# ARN comes from the repo variable AWS_EVAL_ROLE_ARN, or falls back to the
+# evalRoleArn in gates/platform-gates.json (an ARN is not a secret; the role
+# itself only trusts the platform's repo naming). If the role can't be assumed
+# the gate still runs its deterministic checks (assertion-only) and the
+# scorecard says exactly what was skipped — it never pretends to pass.
+name: eval-gate
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Resolve eval judge role
+        id: role
+        run: |
+          ARN='${{ vars.AWS_EVAL_ROLE_ARN }}'
+          if [ -z "$ARN" ]; then ARN=$(node -p "JSON.parse(require('fs').readFileSync('gates/platform-gates.json','utf8')).evalRoleArn || ''"); fi
+          echo "arn=$ARN" >> "$GITHUB_OUTPUT"
+      - name: Configure AWS credentials (OIDC)
+        if: steps.role.outputs.arn != ''
+        continue-on-error: true
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ steps.role.outputs.arn }}
+          aws-region: ${{ vars.AWS_EVAL_REGION || 'us-west-2' }}
+      - name: Run eval gate
+        run: node gates/run-eval.mjs --mode auto
+      - name: Post scorecard on PR
+        if: always() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -f eval-scorecard.md ]; then
+            gh pr comment "${{ github.event.pull_request.number }}" --body-file eval-scorecard.md || true
+          fi

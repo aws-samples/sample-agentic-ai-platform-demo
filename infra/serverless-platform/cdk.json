@@ -1,0 +1,14 @@
+{
+  "app": "npx tsx bin/app.ts",
+  "context": {
+    "@aws-cdk/aws-cloudfront:defaultSecurityPolicyTLSv1.2_2021": true,
+    "@aws-cdk/aws-iam:minimizePolicies": true,
+    "@aws-cdk/core:checkSecretUsage": true,
+    "@aws-cdk/core:validateSnapshotRemovalPolicy": true,
+    "starterBuilderModelId": "bedrock-claude/anthropic.claude-haiku-4-5",
+    "bedrockRuntimeProfileIds": [
+      "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "global.moonshotai.kimi-k3"
+    ]
+  }
+}

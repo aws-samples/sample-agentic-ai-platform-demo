@@ -1,0 +1,686 @@
+[
+  {
+    "id": "aws-docs",
+    "type": "MCPServer",
+    "name": "AWS Documentation MCP",
+    "description": "Query AWS service documentation.",
+    "governanceMode": "federated",
+    "domainOwner": "Platform CoE",
+    "domain": "shared",
+    "defaultVersion": "1.0.0",
+    "versions": [
+      {
+        "semver": "1.0.0",
+        "status": "APPROVED",
+        "content": {
+          "url": "https://mcp.aws.example/aws-docs",
+          "transport": "streamable_http",
+          "type": "remote_mcp",
+          "access": [
+            "admin",
+            "builder"
+          ],
+          "tools": [
+            {
+              "name": "search_documentation",
+              "description": "Search AWS docs by keyword. (illustrative)"
+            },
+            {
+              "name": "read_documentation",
+              "description": "Fetch an AWS docs page as markdown. (illustrative)"
+            },
+            {
+              "name": "recommend",
+              "description": "Related-page recommendations for a docs URL. (illustrative)"
+            }
+          ]
+        },
+        "changelog": "Seed entry (platform-curated).",
+        "createdBy": "Platform CoE",
+        "createdAt": "2026-07-25T00:00:00.000Z",
+        "decidedBy": "platform",
+        "decidedAt": "2026-07-25T00:00:00.000Z",
+        "autoChecks": []
+      }
+    ]
+  },
+  {
+    "id": "github-mcp",
+    "type": "MCPServer",
+    "name": "GitHub MCP",
+    "description": "Read repos, issues and PRs.",
+    "governanceMode": "federated",
+    "domainOwner": "Platform CoE",
+    "domain": "shared",
+    "defaultVersion": "1.0.0",
+    "versions": [
+      {
+        "semver": "1.0.0",
+        "status": "APPROVED",
+        "content": {
+          "url": "https://mcp.example/github",
+          "transport": "streamable_http",
+          "type": "remote_mcp",
+          "access": [
+            "admin",
+            "builder"
+          ],
+          "tools": [
+            {
+              "name": "search_repositories",
+              "description": "Search repositories by keyword. (illustrative)"
+            },
+            {
+              "name": "get_issue",
+              "description": "Fetch one issue with comments. (illustrative)"
+            },
+            {
+              "name": "list_pull_requests",
+              "description": "List PRs for a repository. (illustrative)"
+            }
+          ]
+        },
+        "changelog": "Seed entry (platform-curated).",
+        "createdBy": "Platform CoE",
+        "createdAt": "2026-07-25T00:00:00.000Z",
+        "decidedBy": "platform",
+        "decidedAt": "2026-07-25T00:00:00.000Z",
+        "autoChecks": []
+      }
+    ]
+  },
+  {
+    "id": "expense-auditor",
+    "type": "A2AAgent",
+    "name": "Expense Auditor",
+    "description": "Audits expense reports against corporate policy and flags exceptions.",
+    "governanceMode": "federated",
+    "domainOwner": "Finance domain team",
+    "domain": "shared",
+    "defaultVersion": "1.0.0",
+    "versions": [
+      {
+        "semver": "1.0.0",
+        "status": "APPROVED",
+        "content": {
+          "baseUrl": "https://agents.finance.example/expense-auditor",
+          "access": [
+            "admin",
+            "builder"
+          ],
+          "card": {
+            "name": "Expense Auditor",
+            "description": "Audits expense reports against corporate policy and flags exceptions.",
+            "version": "1.2.0",
+            "provider": {
+              "organization": "Acme Finance",
+              "url": "https://finance.acme.example"
+            },
+            "documentationUrl": "https://agents.finance.example/expense-auditor/docs",
+            "capabilities": {
+              "streaming": true,
+              "pushNotifications": false,
+              "stateTransitionHistory": true
+            },
+            "authentication": {
+              "schemes": [
+                "oauth2"
+              ]
+            },
+            "defaultInputModes": [
+              "text/plain",
+              "application/json"
+            ],
+            "defaultOutputModes": [
+              "text/plain",
+              "application/json"
+            ],
+            "skills": [
+              {
+                "id": "audit-report",
+                "name": "Audit expense report",
+                "description": "Check a submitted report against policy and produce an exception list. (illustrative)",
+                "tags": [
+                  "finance",
+                  "policy"
+                ],
+                "inputModes": [
+                  "application/json"
+                ],
+                "outputModes": [
+                  "application/json"
+                ],
+                "examples": [
+                  "Audit report EXP-2231 for the sales org"
+                ]
+              },
+              {
+                "id": "policy-qa",
+                "name": "Policy Q&A",
+                "description": "Answer questions about the travel and expense policy. (illustrative)",
+                "tags": [
+                  "finance",
+                  "qa"
+                ],
+                "examples": [
+                  "What is the hotel cap for London?"
+                ]
+              }
+            ]
+          }
+        },
+        "changelog": "Seed entry (platform-curated).",
+        "createdBy": "Finance domain team",
+        "createdAt": "2026-07-25T00:00:00.000Z",
+        "decidedBy": "platform",
+        "decidedAt": "2026-07-25T00:00:00.000Z",
+        "autoChecks": []
+      }
+    ]
+  },
+  {
+    "id": "supply-chain-tracker",
+    "type": "A2AAgent",
+    "name": "Supply Chain Tracker",
+    "description": "Tracks shipments and predicts delivery delays across carriers.",
+    "governanceMode": "federated",
+    "domainOwner": "Operations domain team",
+    "domain": "operations",
+    "defaultVersion": "1.0.0",
+    "versions": [
+      {
+        "semver": "1.0.0",
+        "status": "DRAFT",
+        "content": {
+          "baseUrl": "https://agents.ops.example/supply-chain",
+          "access": [
+            "admin"
+          ],
+          "card": {
+            "name": "Supply Chain Tracker",
+            "description": "Tracks shipments and predicts delivery delays across carriers.",
+            "version": "0.9.1",
+            "provider": {
+              "organization": "Acme Operations",
+              "url": "https://ops.acme.example"
+            },
+            "documentationUrl": "https://agents.ops.example/supply-chain/docs",
+            "capabilities": {
+              "streaming": false,
+              "pushNotifications": true,
+              "stateTransitionHistory": false
+            },
+            "authentication": {
+              "schemes": [
+                "bearer"
+              ]
+            },
+            "defaultInputModes": [
+              "text/plain"
+            ],
+            "defaultOutputModes": [
+              "text/plain",
+              "application/json"
+            ],
+            "skills": [
+              {
+                "id": "track-shipment",
+                "name": "Track shipment",
+                "description": "Locate a shipment and estimate arrival. (illustrative)",
+                "tags": [
+                  "logistics"
+                ],
+                "inputModes": [
+                  "text/plain"
+                ],
+                "outputModes": [
+                  "application/json"
+                ],
+                "examples": [
+                  "Where is PO-88231?"
+                ]
+              }
+            ]
+          }
+        },
+        "changelog": "Seed entry (platform-curated).",
+        "createdBy": "Operations domain team",
+        "createdAt": "2026-07-25T00:00:00.000Z",
+        "decidedBy": null,
+        "decidedAt": null,
+        "autoChecks": []
+      }
+    ]
+  },
+  {
+    "id": "it-troubleshooting",
+    "type": "Skill",
+    "name": "IT Troubleshooting",
+    "description": "Runbook-driven diagnosis, password/VPN/email fixes, escalation etiquette.",
+    "governanceMode": "owned",
+    "domainOwner": "Platform CoE",
+    "domain": "operations",
+    "defaultVersion": "1.0.0",
+    "versions": [
+      {
+        "semver": "1.0.0",
+        "status": "APPROVED",
+        "content": {
+          "tools": [
+            "knowledge_base",
+            "employee_directory"
+          ]
+        },
+        "changelog": "Seed entry (platform-authored SKILL.md module).",
+        "createdBy": "Platform CoE",
+        "createdAt": "2026-07-25T00:00:00.000Z",
+        "decidedBy": "platform",
+        "decidedAt": "2026-07-25T00:00:00.000Z",
+        "autoChecks": []
+      }
+    ]
+  },
+  {
+    "id": "customer-support",
+    "type": "Skill",
+    "name": "Customer Support",
+    "description": "Order lookup, returns eligibility, empathetic issue resolution.",
+    "governanceMode": "owned",
+    "domainOwner": "Platform CoE",
+    "domain": "customer-support",
+    "defaultVersion": "1.0.0",
+    "versions": [
+      {
+        "semver": "1.0.0",
+        "status": "APPROVED",
+        "content": {
+          "tools": [
+            "order_lookup",
+            "product_catalogue"
+          ]
+        },
+        "changelog": "Seed entry (platform-authored SKILL.md module).",
+        "createdBy": "Platform CoE",
+        "createdAt": "2026-07-25T00:00:00.000Z",
+        "decidedBy": "platform",
+        "decidedAt": "2026-07-25T00:00:00.000Z",
+        "autoChecks": []
+      }
+    ]
+  },
+  {
+    "id": "hr-policy",
+    "type": "Skill",
+    "name": "HR Policy",
+    "description": "PTO, benefits, leave and policy Q&A with safe-handling of personal data.",
+    "governanceMode": "owned",
+    "domainOwner": "Platform CoE",
+    "domain": "shared",
+    "defaultVersion": "1.0.0",
+    "versions": [
+      {
+        "semver": "1.0.0",
+        "status": "APPROVED",
+        "content": {
+          "tools": [
+            "knowledge_base"
+          ]
+        },
+        "changelog": "Seed entry (platform-authored SKILL.md module).",
+        "createdBy": "Platform CoE",
+        "createdAt": "2026-07-25T00:00:00.000Z",
+        "decidedBy": "platform",
+        "decidedAt": "2026-07-25T00:00:00.000Z",
+        "autoChecks": []
+      }
+    ]
+  },
+  {
+    "id": "data-analysis",
+    "type": "Skill",
+    "name": "Data Analysis",
+    "description": "Compute, summarize and chart tabular data via the code interpreter.",
+    "governanceMode": "owned",
+    "domainOwner": "Platform CoE",
+    "domain": "shared",
+    "defaultVersion": "1.0.0",
+    "versions": [
+      {
+        "semver": "1.0.0",
+        "status": "APPROVED",
+        "content": {
+          "tools": [
+            "code_interpreter"
+          ]
+        },
+        "changelog": "Seed entry (platform-authored SKILL.md module).",
+        "createdBy": "Platform CoE",
+        "createdAt": "2026-07-25T00:00:00.000Z",
+        "decidedBy": "platform",
+        "decidedAt": "2026-07-25T00:00:00.000Z",
+        "autoChecks": []
+      }
+    ]
+  },
+  {
+    "id": "knowledge_base",
+    "type": "Skill",
+    "name": "Knowledge Base",
+    "description": "Search internal docs, runbooks and FAQs.",
+    "governanceMode": "owned",
+    "domainOwner": "Platform CoE",
+    "domain": "operations",
+    "defaultVersion": "1.0.0",
+    "versions": [
+      {
+        "semver": "1.0.0",
+        "status": "APPROVED",
+        "content": {
+          "toolType": "agentcore_gateway",
+          "gateway": "it-operations",
+          "auth": "awsIam"
+        },
+        "changelog": "Seed entry (typed tool, recorded as a Skill-type registry entry — tools are not a first-class registry type in this phase).",
+        "createdBy": "Platform CoE",
+        "createdAt": "2026-07-25T00:00:00.000Z",
+        "decidedBy": "platform",
+        "decidedAt": "2026-07-25T00:00:00.000Z",
+        "autoChecks": []
+      }
+    ]
+  },
+  {
+    "id": "employee_directory",
+    "type": "Skill",
+    "name": "Employee Directory",
+    "description": "Look up employees, roles, on-call status.",
+    "governanceMode": "owned",
+    "domainOwner": "Platform CoE",
+    "domain": "operations",
+    "defaultVersion": "1.0.0",
+    "versions": [
+      {
+        "semver": "1.0.0",
+        "status": "APPROVED",
+        "content": {
+          "toolType": "agentcore_gateway",
+          "gateway": "it-operations",
+          "auth": "awsIam"
+        },
+        "changelog": "Seed entry (typed tool, recorded as a Skill-type registry entry — tools are not a first-class registry type in this phase).",
+        "createdBy": "Platform CoE",
+        "createdAt": "2026-07-25T00:00:00.000Z",
+        "decidedBy": "platform",
+        "decidedAt": "2026-07-25T00:00:00.000Z",
+        "autoChecks": []
+      }
+    ]
+  },
+  {
+    "id": "order_lookup",
+    "type": "Skill",
+    "name": "Order Lookup",
+    "description": "Order status, shipping, return eligibility.",
+    "governanceMode": "owned",
+    "domainOwner": "Platform CoE",
+    "domain": "customer-support",
+    "defaultVersion": "1.0.0",
+    "versions": [
+      {
+        "semver": "1.0.0",
+        "status": "APPROVED",
+        "content": {
+          "toolType": "agentcore_gateway",
+          "gateway": "customer-service",
+          "auth": "awsIam"
+        },
+        "changelog": "Seed entry (typed tool, recorded as a Skill-type registry entry — tools are not a first-class registry type in this phase).",
+        "createdBy": "Platform CoE",
+        "createdAt": "2026-07-25T00:00:00.000Z",
+        "decidedBy": "platform",
+        "decidedAt": "2026-07-25T00:00:00.000Z",
+        "autoChecks": []
+      }
+    ]
+  },
+  {
+    "id": "product_catalogue",
+    "type": "Skill",
+    "name": "Product Catalogue",
+    "description": "Search products, specs, inventory.",
+    "governanceMode": "owned",
+    "domainOwner": "Platform CoE",
+    "domain": "customer-support",
+    "defaultVersion": "1.0.0",
+    "versions": [
+      {
+        "semver": "1.0.0",
+        "status": "APPROVED",
+        "content": {
+          "toolType": "agentcore_gateway",
+          "gateway": "customer-service",
+          "auth": "awsIam"
+        },
+        "changelog": "Seed entry (typed tool, recorded as a Skill-type registry entry — tools are not a first-class registry type in this phase).",
+        "createdBy": "Platform CoE",
+        "createdAt": "2026-07-25T00:00:00.000Z",
+        "decidedBy": "platform",
+        "decidedAt": "2026-07-25T00:00:00.000Z",
+        "autoChecks": []
+      }
+    ]
+  },
+  {
+    "id": "code_interpreter",
+    "type": "Skill",
+    "name": "Code Interpreter",
+    "description": "Managed sandbox for Python execution, math and charts.",
+    "governanceMode": "owned",
+    "domainOwner": "Platform CoE",
+    "domain": "shared",
+    "defaultVersion": "1.0.0",
+    "versions": [
+      {
+        "semver": "1.0.0",
+        "status": "APPROVED",
+        "content": {
+          "toolType": "agentcore_code_interpreter",
+          "gateway": null,
+          "auth": null
+        },
+        "changelog": "Seed entry (typed tool, recorded as a Skill-type registry entry — tools are not a first-class registry type in this phase).",
+        "createdBy": "Platform CoE",
+        "createdAt": "2026-07-25T00:00:00.000Z",
+        "decidedBy": "platform",
+        "decidedAt": "2026-07-25T00:00:00.000Z",
+        "autoChecks": []
+      }
+    ]
+  },
+  {
+    "id": "web_browser",
+    "type": "Skill",
+    "name": "Web Browser",
+    "description": "Managed cloud browser for web navigation and extraction.",
+    "governanceMode": "owned",
+    "domainOwner": "Platform CoE",
+    "domain": "shared",
+    "defaultVersion": "1.0.0",
+    "versions": [
+      {
+        "semver": "1.0.0",
+        "status": "APPROVED",
+        "content": {
+          "toolType": "agentcore_browser",
+          "gateway": null,
+          "auth": null
+        },
+        "changelog": "Seed entry (typed tool, recorded as a Skill-type registry entry — tools are not a first-class registry type in this phase).",
+        "createdBy": "Platform CoE",
+        "createdAt": "2026-07-25T00:00:00.000Z",
+        "decidedBy": "platform",
+        "decidedAt": "2026-07-25T00:00:00.000Z",
+        "autoChecks": []
+      }
+    ]
+  },
+  {
+    "id": "servicenow-itsm",
+    "type": "MCPServer",
+    "name": "ServiceNow ITSM MCP",
+    "description": "Create and update ServiceNow incidents and look up change requests from agent workflows.",
+    "governanceMode": "federated",
+    "domainOwner": "Operations domain team",
+    "domain": "operations",
+    "defaultVersion": "1.0.0",
+    "versions": [
+      {
+        "semver": "1.0.0",
+        "status": "IN_REVIEW",
+        "content": {
+          "url": "https://mcp.internal.acme.example/servicenow",
+          "transport": "streamable_http",
+          "type": "remote_mcp",
+          "access": [
+            "admin",
+            "builder"
+          ],
+          "tools": [
+            {
+              "name": "create_incident",
+              "description": "Open a ServiceNow incident with caller, urgency and assignment group. (illustrative)"
+            },
+            {
+              "name": "get_incident",
+              "description": "Fetch an incident by number, including work notes. (illustrative)"
+            },
+            {
+              "name": "search_change_requests",
+              "description": "Find change requests by CI or planned window. (illustrative)"
+            }
+          ]
+        },
+        "changelog": "First submission. Wraps the ITSM REST API the ops team already calls from the access-provisioner pilot.",
+        "createdBy": "Operations domain team",
+        "createdAt": "2026-08-06T09:47:31.408Z",
+        "decidedBy": null,
+        "decidedAt": null,
+        "autoChecks": [
+          {
+            "name": "url-scheme-https",
+            "pass": true,
+            "detail": "URL uses https://"
+          },
+          {
+            "name": "transport-declared",
+            "pass": true,
+            "detail": "transport: streamable_http"
+          },
+          {
+            "name": "no-duplicate-url",
+            "pass": true,
+            "detail": "No duplicate URL found"
+          },
+          {
+            "name": "reachability-probe",
+            "pass": true,
+            "detail": "(illustrative) probe assumed reachable if URL scheme is valid — no live handshake performed"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "contract-review",
+    "type": "A2AAgent",
+    "name": "Contract Review Assistant",
+    "description": "Summarizes vendor contracts and flags clauses that deviate from the standard playbook.",
+    "governanceMode": "federated",
+    "domainOwner": "Legal domain team",
+    "domain": "shared",
+    "defaultVersion": "1.0.0",
+    "versions": [
+      {
+        "semver": "1.0.0",
+        "status": "IN_REVIEW",
+        "content": {
+          "baseUrl": "https://agents.legal.example/contract-review",
+          "access": [
+            "admin"
+          ],
+          "card": {
+            "name": "Contract Review Assistant",
+            "description": "Summarizes vendor contracts and flags clauses that deviate from the standard playbook.",
+            "version": "0.8.4",
+            "provider": {
+              "organization": "Acme Legal",
+              "url": "https://legal.acme.example"
+            },
+            "documentationUrl": "https://agents.legal.example/contract-review/docs",
+            "capabilities": {
+              "streaming": true,
+              "pushNotifications": false,
+              "stateTransitionHistory": true
+            },
+            "authentication": {
+              "schemes": [
+                "oauth2"
+              ]
+            },
+            "defaultInputModes": [
+              "text/plain",
+              "application/pdf"
+            ],
+            "defaultOutputModes": [
+              "text/plain",
+              "application/json"
+            ],
+            "skills": [
+              {
+                "id": "summarize-contract",
+                "name": "Summarize contract",
+                "description": "Produce a clause-by-clause summary of an uploaded contract. (illustrative)",
+                "tags": [
+                  "legal",
+                  "contracts"
+                ],
+                "examples": [
+                  "Summarize the MSA from Northwind dated May 3"
+                ]
+              },
+              {
+                "id": "flag-deviations",
+                "name": "Flag playbook deviations",
+                "description": "Compare terms against the negotiation playbook and list exceptions. (illustrative)",
+                "tags": [
+                  "legal",
+                  "risk"
+                ],
+                "examples": [
+                  "Which clauses in this NDA differ from our template?"
+                ]
+              }
+            ]
+          }
+        },
+        "changelog": "Submitted after the legal team's pilot wrapped. Card version is still pre-1.0 while the PDF input path settles.",
+        "createdBy": "Legal domain team",
+        "createdAt": "2026-08-10T15:12:44.771Z",
+        "decidedBy": null,
+        "decidedAt": null,
+        "autoChecks": [
+          {
+            "name": "agent-card-required-fields",
+            "pass": true,
+            "detail": "name/description/version present"
+          },
+          {
+            "name": "agent-card-auth-scheme",
+            "pass": true,
+            "detail": "auth schemes: oauth2"
+          }
+        ]
+      }
+    ]
+  }
+]

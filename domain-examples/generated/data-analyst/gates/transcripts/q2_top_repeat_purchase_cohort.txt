@@ -1,0 +1,1 @@
+2010-12 acquisition cohort has the highest repeat-purchase rate: 0.8745762711864407 (87.46%) of 885 customers; source_table: uci_retail.transactions, uci_retail.invoices.

@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Builder End-to-End Journey — Agentic AI Platform</title>
+<style>
+  :root {
+    --bg: #060a11;
+    --bg-2: #0a1019;
+    --panel: #0d141f;
+    --panel-2: #111a28;
+    --line: #1b2839;
+    --line-2: #263a52;
+    --text: #e9f0f9;
+    --muted: #8ba1ba;
+    --faint: #5c7188;
+    --built: #34d795;
+    --partial: #f2b544;
+    --planned: #6c86a8;
+    --red: #ff5d68;
+    --token: #57d9ff;
+    --a-builder: #58a6ff;
+    --a-ai: #bd8cff;
+    --a-plato: #2dd4bf;
+    --a-auto: #f0883e;
+    --a-sme: #f778ba;
+    --a-pteam: #e3cf6b;
+    --gutter: 152px;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    --sans: "Avenir Next", Avenir, "Futura", "Gill Sans", "Segoe UI", Helvetica, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: var(--bg); color: var(--text); font-family: var(--sans); }
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(1200px 500px at 20% -10%, rgba(45, 92, 160, .14), transparent 60%),
+      radial-gradient(900px 420px at 85% 0%, rgba(45, 212, 191, .07), transparent 60%),
+      var(--bg);
+    overflow-x: auto;
+  }
+  body::after { /* grain */
+    content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .05; z-index: 99;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  }
+  .app { max-width: 1720px; min-width: 1180px; margin: 0 auto; padding: 26px 30px 30px; }
+
+  /* ============ HEADER ============ */
+  header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 6px; }
+  .brand .kicker {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .32em; text-transform: uppercase;
+    color: var(--a-plato); margin-bottom: 8px;
+  }
+  .brand .kicker::before { content: "◈ "; color: var(--faint); }
+  h1 { font-size: 30px; font-weight: 600; letter-spacing: -.01em; }
+  h1 em { font-style: normal; color: var(--token); }
+  .brand .sub { color: var(--muted); font-size: 13.5px; margin-top: 6px; max-width: 640px; line-height: 1.5; }
+  .head-right { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; padding-bottom: 4px; }
+  .legend { display: flex; gap: 14px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .lg-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .lg-dot.built { background: var(--built); box-shadow: 0 0 8px rgba(52,215,149,.7); }
+  .lg-dot.partial { background: var(--partial); box-shadow: 0 0 8px rgba(242,181,68,.7); }
+  .lg-dot.planned { background: transparent; border: 1.5px dashed var(--planned); }
+  .lg-dot.redp { background: var(--red); box-shadow: 0 0 8px rgba(255,93,104,.7); }
+  .lg-dot.fbp { background: transparent; border: 1.5px dashed var(--a-plato); }
+  .controls { display: flex; gap: 10px; }
+  button.play {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
+    background: linear-gradient(180deg, #123047, #0c2234); color: var(--token);
+    border: 1px solid #1e4a67; border-radius: 8px; padding: 10px 18px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 9px; transition: all .2s;
+  }
+  button.play:hover { border-color: var(--token); box-shadow: 0 0 18px rgba(87,217,255,.25); transform: translateY(-1px); }
+  button.play .tri { width: 0; height: 0; border-left: 8px solid var(--token); border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+  button.play.playing .tri { border: none; width: 8px; height: 10px; border-left: 3px solid var(--token); border-right: 3px solid var(--token); }
+  button.ghost {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .1em; background: transparent;
+    color: var(--muted); border: 1px solid var(--line-2); border-radius: 8px; padding: 10px 14px; cursor: pointer; transition: all .2s;
+  }
+  button.ghost:hover { color: var(--text); border-color: var(--faint); }
+
+  /* ============ CAPTION BAR ============ */
+  .caption-bar {
+    height: 40px; margin: 14px 0 4px; display: flex; align-items: center; gap: 12px;
+    font-size: 14px; color: var(--muted); overflow: hidden;
+  }
+  .caption-bar .stage-chip {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .18em; color: var(--token);
+    border: 1px solid #1e4a67; background: rgba(18,48,71,.5); border-radius: 999px; padding: 4px 12px;
+    white-space: nowrap; flex: none;
+  }
+  .caption-bar .cap-text { transition: opacity .35s; }
+  .caption-bar.fading .cap-text { opacity: 0; }
+  .caption-bar .cap-text strong { color: var(--text); font-weight: 600; }
+
+  /* ============ MAIN LAYOUT ============ */
+  .main { display: grid; grid-template-columns: 1fr 372px; gap: 20px; align-items: start; }
+  .stage-area { position: relative; }
+
+  .board {
+    background: linear-gradient(180deg, rgba(16,24,38,.6), rgba(10,15,24,.85));
+    border: 1px solid var(--line); border-radius: 16px; overflow: hidden; position: relative;
+  }
+  .board::before { /* blueprint grid */
+    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+    background-image:
+      linear-gradient(rgba(85,125,175,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(85,125,175,.05) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+  .row { display: grid; grid-template-columns: var(--gutter) 1fr; position: relative; }
+  .gutter {
+    border-right: 1px solid var(--line); display: flex; align-items: center; justify-content: flex-start;
+    padding: 0 14px; font-family: var(--mono); font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--faint);
+  }
+  .gutter.tall { align-items: center; }
+
+  /* pipeline svg */
+  #pipeSvg { display: block; width: 100%; height: auto; }
+  .edge { stroke: var(--line-2); stroke-width: 2; fill: none; }
+  .edge.flow { stroke-dasharray: 3 9; stroke: #33506e; }
+  .edge-red { stroke: var(--red); stroke-width: 2; fill: none; opacity: .85; stroke-dasharray: 5 7; }
+  .edge-fb { stroke: var(--a-plato); stroke-width: 2; fill: none; opacity: .5; stroke-dasharray: 6 9; }
+  .node-shape { cursor: pointer; transition: filter .2s; }
+  .node-g:hover .node-shape { filter: url(#glow); }
+  .node-g { cursor: pointer; }
+  .node-fill { fill: #0e1826; }
+  .node-g.selected .node-shape, .node-g.walk .node-shape { filter: url(#glow); }
+  .node-g.selected .node-ring { stroke-width: 3; }
+  .n-num { font-family: var(--mono); font-size: 13px; fill: var(--muted); text-anchor: middle; pointer-events: none; }
+  .node-g.selected .n-num, .node-g:hover .n-num { fill: var(--text); }
+  .n-label { font-family: var(--sans); font-size: 12.5px; font-weight: 500; fill: var(--muted); text-anchor: middle; pointer-events: none; }
+  .node-g.selected .n-label, .node-g:hover .n-label, .node-g.walk .n-label { fill: var(--text); }
+  .n-status { font-family: var(--mono); font-size: 8px; letter-spacing: .1em; text-anchor: middle; pointer-events: none; }
+  .gate-tag { font-family: var(--mono); font-size: 8px; letter-spacing: .22em; fill: var(--faint); text-anchor: middle; pointer-events: none; }
+  .loop-lab { font-family: var(--mono); font-size: 9px; letter-spacing: .06em; fill: var(--red); opacity: .8; }
+  .fb-lab { font-family: var(--mono); font-size: 10px; letter-spacing: .08em; fill: var(--a-plato); opacity: .75; text-anchor: middle; }
+  #token { filter: url(#tokenGlow); }
+  .pulse-ring { fill: none; stroke: var(--token); stroke-width: 2; opacity: 0; pointer-events: none; }
+
+  /* ============ SWIM LANES ============ */
+  .lanes { border-top: 1px solid var(--line); }
+  .lane-row { display: grid; grid-template-columns: var(--gutter) 1fr; border-bottom: 1px solid rgba(27,40,57,.6); }
+  .lane-row:last-child { border-bottom: none; }
+  .lane-name { border-right: 1px solid var(--line); padding: 0 14px; display: flex; align-items: center; gap: 8px;
+    font-size: 11px; color: var(--muted); height: 34px; }
+  .lane-swatch { width: 8px; height: 8px; border-radius: 3px; flex: none; }
+  .lane-cells { display: grid; grid-template-columns: repeat(11, 1fr); }
+  .lane-cell { display: flex; align-items: center; justify-content: center; height: 34px; position: relative; }
+  .lane-cell.col-active { background: rgba(87,217,255,.05); }
+  .chip {
+    width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 8px; font-weight: 700; letter-spacing: .02em;
+    background: #0e1826; border: 1.5px solid; opacity: .5; transition: all .25s; cursor: pointer;
+  }
+  .chip.lit { opacity: 1; transform: scale(1.18); box-shadow: 0 0 12px var(--chip-c); }
+  .lane-row.dimmed .lane-name { opacity: .35; }
+
+  /* ============ EVIDENCE RAIL ============ */
+  .rail-row { border-top: 1px solid var(--line-2); background: linear-gradient(180deg, rgba(45,212,191,.05), rgba(45,212,191,.015)); }
+  .rail-gutter { color: var(--a-plato); }
+  .rail-cells { display: grid; grid-template-columns: repeat(11, 1fr); }
+  .rail-cell { height: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; position: relative; }
+  .rail-cell::before { content: ""; position: absolute; top: 0; left: 50%; width: 1px; height: 8px; background: linear-gradient(180deg, var(--line-2), transparent); }
+  .rail-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--a-plato); opacity: .35; transition: all .2s; }
+  .rail-cell.flash .rail-dot { opacity: 1; box-shadow: 0 0 12px var(--a-plato); transform: scale(1.5); }
+  .rail-count { font-family: var(--mono); font-size: 9px; color: var(--faint); transition: color .2s; }
+  .rail-cell.flash .rail-count { color: var(--a-plato); }
+
+  .ev-dot {
+    position: absolute; width: 6px; height: 6px; border-radius: 50%; background: var(--a-plato);
+    box-shadow: 0 0 8px rgba(45,212,191,.9); pointer-events: none; z-index: 5;
+  }
+
+  .footer-note {
+    margin-top: 14px; display: flex; align-items: center; gap: 12px;
+    font-size: 13px; color: var(--muted); line-height: 1.5;
+    border: 1px solid var(--line); border-left: 3px solid var(--a-plato); border-radius: 10px;
+    padding: 12px 16px; background: rgba(13,20,31,.7);
+  }
+  .footer-note .fn-icon { font-family: var(--mono); color: var(--a-plato); font-size: 16px; }
+  .footer-note strong { color: var(--text); }
+
+  /* ============ DETAIL PANEL ============ */
+  .detail {
+    background: linear-gradient(180deg, rgba(17,26,40,.85), rgba(11,17,27,.9));
+    border: 1px solid var(--line); border-radius: 16px; padding: 22px 22px 20px;
+    position: sticky; top: 20px; min-height: 560px;
+  }
+  .detail .d-kicker { font-family: var(--mono); font-size: 10px; letter-spacing: .26em; color: var(--faint); text-transform: uppercase; margin-bottom: 10px; }
+  .detail h2 { font-size: 19px; font-weight: 600; line-height: 1.3; margin-bottom: 4px; }
+  .detail .d-stagenum { color: var(--token); font-family: var(--mono); font-size: 13px; margin-right: 6px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 7px; margin: 10px 0 4px;
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; border-radius: 999px; padding: 5px 13px; border: 1px solid;
+  }
+  .badge.BUILT { color: var(--built); border-color: rgba(52,215,149,.4); background: rgba(52,215,149,.08); }
+  .badge.PARTIAL { color: var(--partial); border-color: rgba(242,181,68,.4); background: rgba(242,181,68,.08); }
+  .badge.PLANNED { color: var(--planned); border-color: rgba(108,134,168,.5); background: rgba(108,134,168,.08); }
+  .badge .b-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .d-note { font-size: 12px; color: var(--faint); font-family: var(--mono); margin-top: 2px; line-height: 1.5; }
+  .d-sec { margin-top: 16px; }
+  .d-sec h3 {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--faint); margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
+  }
+  .d-sec h3::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .d-sec ul { list-style: none; }
+  .d-sec ul li { font-size: 12.5px; color: #c3d2e4; line-height: 1.55; padding-left: 16px; position: relative; margin-bottom: 6px; }
+  .d-sec ul li::before { content: "▸"; position: absolute; left: 0; color: var(--a-plato); font-size: 10px; top: 3px; }
+  .d-sec code {
+    font-family: var(--mono); font-size: 11px; color: #9fd8ef;
+    background: rgba(87,217,255,.07); border: 1px solid rgba(87,217,255,.14);
+    padding: 0 5px; border-radius: 4px; white-space: nowrap;
+  }
+  .d-art {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    font-family: var(--mono); font-size: 11px; line-height: 1.5;
+  }
+  .d-art .art-in { color: var(--a-builder); }
+  .d-art .art-arrow { color: var(--faint); }
+  .d-art .art-out { color: var(--partial); }
+  .d-actors { display: flex; flex-wrap: wrap; gap: 8px; }
+  .d-actor {
+    display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text);
+    border: 1px solid var(--line-2); background: rgba(14,24,38,.8); border-radius: 999px; padding: 5px 12px 5px 6px;
+  }
+  .d-actor .da-av {
+    width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 7.5px; font-weight: 700; border: 1.5px solid; background: #0b1220;
+  }
+  .d-refs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .ref-chip {
+    font-family: var(--mono); font-size: 10px; letter-spacing: .06em; color: var(--a-plato);
+    border: 1px solid rgba(45,212,191,.35); background: rgba(45,212,191,.06);
+    border-radius: 5px; padding: 2px 7px;
+  }
+  .ref-src { font-family: var(--mono); font-size: 9.5px; color: var(--faint); }
+  .d-empty { color: var(--faint); font-size: 13px; line-height: 1.7; margin-top: 14px; }
+  .d-empty .hint { color: var(--muted); }
+  .d-nav { display: flex; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .d-nav button { flex: 1; }
+
+  @media (max-width: 1439px) {
+    .main { grid-template-columns: 1fr 330px; }
+    h1 { font-size: 25px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="kicker">Agentic AI Platform · Golden Path</div>
+      <h1>Builder End-to-End Journey <em>/</em> intake → production → operate loop</h1>
+      <div class="sub">From conversational intake to a governed production agent — and past it: production is the start of the operate loop, where real traffic, user feedback and monitoring feed tomorrow's golden dataset.</div>
+    </div>
+    <div class="head-right">
+      <div class="legend">
+        <span><i class="lg-dot built"></i>BUILT</span>
+        <span><i class="lg-dot partial"></i>PARTIAL</span>
+        <span><i class="lg-dot planned"></i>PLANNED</span>
+        <span><i class="lg-dot redp"></i>CI FAIL LOOP</span>
+        <span><i class="lg-dot fbp"></i>OPERATE LOOP</span>
+      </div>
+      <div class="controls">
+        <button class="play" id="playBtn"><span class="tri"></span><span id="playLabel">Play journey</span></button>
+        <button class="ghost" id="resetBtn">Reset</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="caption-bar" id="captionBar">
+    <span class="stage-chip" id="capChip">OVERVIEW</span>
+    <span class="cap-text" id="capText">The pipeline runs intake → production → operate loop. Click any stage for details, or press <strong>Play journey</strong> to walk a commit through it — including the <strong style="color:var(--red)">red fix-loop</strong> and the <strong style="color:var(--a-plato)">feedback loop back to dev</strong>.</span>
+  </div>
+
+  <div class="main">
+    <div class="stage-area" id="stageArea">
+      <div class="board">
+        <div class="row">
+          <div class="gutter tall" id="pipeGutter">Pipeline</div>
+          <svg id="pipeSvg" viewBox="0 0 1540 330" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
+        <div class="lanes" id="lanes"></div>
+        <div class="row rail-row">
+          <div class="gutter rail-gutter">Registry ·<br>Audit trail</div>
+          <div class="rail-cells" id="railCells"></div>
+        </div>
+      </div>
+      <div class="footer-note">
+        <span class="fn-icon">⛃</span>
+        <span><strong>Every stage emits evidence into the platform registry &amp; audit trail</strong> — governance is compiled in on day&nbsp;0. And the journey is a <strong>cycle, not a line</strong>: stage 11 feeds stage 05 with new golden scenarios.</span>
+      </div>
+    </div>
+
+    <aside class="detail" id="detailPanel"></aside>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================== DATA ============================== */
+const ACTORS = {
+  builder: { name: "Builder (human)",           abbr: "BU",  color: "var(--a-builder)", c: "#58a6ff" },
+  ai:      { name: "AI Coding Assistant",       abbr: "AI",  color: "var(--a-ai)",      c: "#bd8cff" },
+  plato:   { name: "Platform Console / Plato",  abbr: "PL",  color: "var(--a-plato)",   c: "#2dd4bf" },
+  auto:    { name: "Platform Automation (CI/CD)", abbr: "CD", color: "var(--a-auto)",   c: "#f0883e" },
+  sme:     { name: "SME / Approver",            abbr: "SME", color: "var(--a-sme)",     c: "#f778ba" },
+  pteam:   { name: "Platform Team",             abbr: "PT",  color: "var(--a-pteam)",   c: "#e3cf6b" }
+};
+const ACTOR_ORDER = ["builder", "ai", "plato", "auto", "sme", "pteam"];
+
+/* Stage panels cite real artifacts, commands, thresholds and requirement IDs
+   from this repo (README.md, gates/, agent.md).
+   Stages 4 and 7–11 describe the PLANNED design; the cited B-IDs are their
+   acceptance-criteria source of truth. */
+const STAGES = [
+  {
+    n: 1, name: "Project Intake", label: ["Project", "Intake"], gate: false, status: "BUILT",
+    caption: "L3 guided wizard or L4 Plato conversational discovery (real Bedrock chat) fills ONE profile schema.",
+    what: [
+      "L3: guided wizard captures the minimal generative set (~6–8 answers): domain, internal/external facing, tenancy, methodology, eval requirements, guardrails / RAI needs, team roles, runtime preference",
+      "L4: Plato conversational discovery fills the <strong>same schema</strong> — two entry points, one schema, deterministic downstream",
+      "Rule: an intake answer must change a generated file; anything else is documentation, not intake"
+    ],
+    artIn: "Builder intent (form or conversation)",
+    artOut: "Structured project profile (machine-readable JSON)",
+    actors: ["builder", "plato"], refs: ["L3-01"], note: null
+  },
+  {
+    n: 2, name: "Template Selection / Blueprint Synthesis", label: ["Template /", "Blueprint"], gate: false, status: "BUILT",
+    caption: "Deterministic scoring routes the profile: standard → golden template (L3), novel → synthesized blueprint (L4).",
+    what: [
+      "Deterministic scoring in the export composer routes the profile — the routing decision is not an LLM call",
+      "Standard profile → golden template selection (L3 floor); novel profile → blueprint synthesis (L4 ceiling)",
+      "<code>CLAUDE.md</code> is generated: the Domain-vs-Foundation ownership contract the AI coding assistant works under"
+    ],
+    artIn: "Structured project profile",
+    artOut: "Blueprint + CLAUDE.md contract",
+    actors: ["plato"], refs: ["L2-09", "L3-01"], note: null
+  },
+  {
+    n: 3, name: "Export to GitHub", label: ["Export to", "GitHub"], gate: false, status: "BUILT",
+    caption: "Platform stamps a governed repo: harness, gates/, platform-gates.json floor, 3 CI workflows, IaC, branch protection.",
+    what: [
+      "Repo created with agent scaffold + harness: <code>CLAUDE.md</code>, <code>AGENTS.md</code>, <code>instructions.md</code> (editable persona)",
+      "<code>gates/</code> provisioned: <code>run-eval.mjs</code>, <code>run-tests.mjs</code>, <code>check-guardrails.mjs</code> + <code>platform-gates.json</code> — the org floor: eval threshold <strong>0.8</strong>, judge model, protected-files list",
+      "CI wired: <code>eval.yml</code> · <code>tests.yml</code> · <code>compliance.yml</code> (incl. gitleaks secret scan); judge assumes an AWS role via GitHub <strong>OIDC</strong> — no stored secrets",
+      "IaC (<code>agentcore/cdk/</code>) + golden dataset <code>golden.jsonl</code> + branch protection with eval / tests / compliance as required checks"
+    ],
+    artIn: "Blueprint + CLAUDE.md",
+    artOut: "Governed repo, ready to clone",
+    actors: ["auto"], refs: ["L3-01", "L1-05"], note: "Verified with real exported repos"
+  },
+  {
+    n: 4, name: "Environment Provisioning + Onboarding One-Pager", label: ["Env Provision +", "One-Pager"], gate: false, status: "PLANNED",
+    caption: "Non-prod environment wiring bootstrapped — and the onboarding one-pager is generated HERE, at bootstrap, not after prod.",
+    what: [
+      "Environment wiring auto-provisioned: observability (CloudWatch + Langfuse dual OTEL export), identity (Cognito CUSTOM_JWT authorizer), gateway config — one invocation verifies all three surfaces (B1-03)",
+      "IaC flavor is an intake-driven template option: CDK/CFN or Terraform awscc; resource-coverage verification is B1-04, the first task of Batch 1",
+      "Onboarding one-pager auto-generated from provisioning metadata: endpoints, profiles, how to run / trigger CI / deploy, dashboard links, escalation paths — <strong>moved from Batch 3 to bootstrap scope</strong> (B3-01)"
+    ],
+    artIn: "Governed repo + IaC config",
+    artOut: "Wired non-prod environment + team one-pager",
+    actors: ["auto"], refs: ["B1-03", "B1-04", "B3-01"],
+    note: "One-pager relocated to bootstrap per owner review 2026-08-06"
+  },
+  {
+    n: 5, name: "Local Development + Local Quality Gates", label: ["Local Dev +", "Local Gates"], gate: false, status: "BUILT",
+    caption: "Builder + AI assistant inside the org harness; the exact gate set CI will enforce runs locally before any push.",
+    what: [
+      "<code>agentcore dev --logs</code> (background server) + <code>agentcore dev \"&lt;prompt&gt;\"</code> one-shots; hot reload verified on a fresh clone",
+      "Transcript contract: <code>gates/transcripts/&lt;scenario_id&gt;.txt</code>, one per <code>golden.jsonl</code> scenario (recorder helper <code>record-transcripts.mjs</code> — DF-06)",
+      "<code>node gates/run-eval.mjs --mode assert</code> (deterministic checks) or <code>--mode judge</code> (Bedrock judge scores the golden assertions)",
+      "<code>node gates/run-tests.mjs</code> + <code>node gates/check-guardrails.mjs</code> — same config source of truth CI reads"
+    ],
+    artIn: "Cloned repo + builder's own AI assistant",
+    artOut: "Locally-green commit",
+    actors: ["builder", "ai"], refs: ["L3-01", "L2-05", "DF-01", "DF-06"],
+    note: "Template gaps queued: DF-01 (assert-mode scoreable units), DF-06 (transcript recorder)"
+  },
+  {
+    n: 6, name: "CI — Dual Ownership", label: ["CI · Dual", "Ownership"], gate: true, status: "BUILT",
+    caption: "Platform-enforced floor + builder-selected tests. The red fix-loop below is THIS stage's failure path.",
+    what: [
+      "Platform floor from <code>platform-gates.json</code>: eval gate ≥ <strong>0.8</strong> in judge mode (org floor 0.5), judge via GitHub <strong>OIDC</strong> role, protected files locked (workflows + gate runners)",
+      "3 required checks: <code>eval.yml</code> — judge scoring, <strong>scorecard posted as a PR comment</strong>; <code>tests.yml</code>; <code>compliance.yml</code> — guardrail conformance + gitleaks secret scan",
+      "Builder-selected tests chosen at intake run alongside the platform floor — dual ownership",
+      "Red path: CI red → issue auto-opened → fix commit → re-run → green; every fix lands as evidence (auto-issue wiring pending — DF-03)"
+    ],
+    artIn: "Push / pull request",
+    artOut: "Green PR + scorecard comment + CI evidence in registry",
+    actors: ["auto", "builder", "ai"], refs: ["L1-05", "L3-02", "DF-03", "B2-06"],
+    note: "Real Actions verdicts; red→green loop ~2.5 min on a fresh clone. Red path PARTIAL"
+  },
+  {
+    n: 7, name: "CD Non-Prod", label: ["CD", "Non-Prod"], gate: false, status: "PLANNED",
+    caption: "Green merge auto-deploys to non-prod — AgentCore Runtime or ECS per intake — obs / identity / gateway verified live.",
+    what: [
+      "Auto-deploy on CI green; a red build deploys nothing; deploy event + artifact version recorded as evidence (B1-01)",
+      "Runtime pluggable per the intake answer: AgentCore Runtime (live in us-west-2 today) or ECS — no manual edits to generated IaC (B1-02)",
+      "One invocation of the deployed agent verifies all three surfaces: traces in observability, JWT authorizer enforced, model calls routed through the gateway config (B1-03)"
+    ],
+    artIn: "Merged green PR",
+    artOut: "Running non-prod agent + deploy evidence",
+    actors: ["auto"], refs: ["B1-01", "B1-02", "B1-03"], note: null
+  },
+  {
+    n: 8, name: "Offline Eval Gate", label: ["Offline", "Eval Gate"], gate: true, status: "PLANNED",
+    caption: "Eval against the non-prod deployment produces a versioned promotion evidence pack — same gates/ SoT as local & CI.",
+    what: [
+      "Evidence pack fields: <strong>scores, dataset hash, transcript refs, candidate commit SHA</strong> (B2-01)",
+      "Freshness is gated, not just score: evidence generated from a different SHA is rejected — no green-on-stale-transcripts (B2-02)",
+      "A below-threshold candidate is marked FAILED and cannot proceed on the normal path",
+      "One eval-config source of truth: the same <code>gates/</code> + <code>platform-gates.json</code> drive local, CI and promotion — no second copy to drift (B2-06)"
+    ],
+    artIn: "Non-prod deployment + golden datasets",
+    artOut: "Versioned promotion evidence pack",
+    actors: ["auto", "sme"], refs: ["B2-01", "B2-02", "B2-06"], note: "SME / Approver reviews the pack"
+  },
+  {
+    n: 9, name: "Staging + Shadow Eval", label: ["Staging +", "Shadow Eval"], gate: false, status: "PLANNED",
+    caption: "Pre-prod SHADOW eval on live-like traffic — distinct from the post-prod online eval at stage 11.",
+    what: [
+      "Candidate deploys to staging; <strong>shadow eval</strong> scores it on live-like traffic before any real user depends on it (B2-03)",
+      "Scores + traces land in the observability pipeline, filterable per agent; drift / quality metrics visible",
+      "Named <em>shadow</em> eval deliberately: stage 11 runs <em>online</em> eval on real production traffic — different data, different purpose"
+    ],
+    artIn: "Evidence-packed candidate",
+    artOut: "Shadow eval scores + traces",
+    actors: ["auto", "pteam"], refs: ["B2-03"], note: null
+  },
+  {
+    n: 10, name: "Prod Promotion", label: ["Prod", "Promotion"], gate: true, status: "PLANNED",
+    caption: "Explicit one-click approval, approver ≠ submitter, evidence attached — never auto. Overrides are audited exceptions.",
+    what: [
+      "The pass path still waits for a human: one click by an authorized approver who is <strong>not the submitter</strong> (R-002 pattern); submitter self-approval gets a 4xx (B2-04)",
+      "Approval record fields: <strong>who, when, evidence ref</strong> — lands in the audit trail",
+      "Failed gates overridable only as an audited exception: <strong>who + why + evidence reference</strong>, distinct audit event type, all overrides listable from the audit trail alone (B2-05)",
+      "The promoted agent auto-registers into the console Fleet"
+    ],
+    artIn: "Evidence pack (offline + shadow)",
+    artOut: "Production agent + approval record",
+    actors: ["sme", "pteam"], refs: ["B2-04", "B2-05"], note: null
+  },
+  {
+    n: 11, name: "Operate & Improve — Continuous", label: ["Operate &", "Improve ↺"], gate: false, status: "PLANNED",
+    caption: "Production is the START of the operate loop, not the end: online eval, user feedback, continuous monitoring — feeding stage 05 again.",
+    what: [
+      "<strong>Online eval</strong> scores sampled REAL production traffic; scores flow to the observability pipeline, filterable per agent (B3-04)",
+      "<strong>User feedback</strong> captured on live sessions — thumbs / ratings / escalations — attached to session + trace ids (B3-05)",
+      "<strong>Continuous monitoring</strong>: drift, quality, latency, cost, traces; threshold breaches alert the platform admin (B3-07)",
+      "<strong>Feedback → golden promotion</strong>: a reviewed real conversation becomes a new <code>golden.jsonl</code> scenario via PR — a new commit enters stage 05 and the cycle repeats (B3-06)"
+    ],
+    artIn: "Production traffic + user feedback",
+    artOut: "Feedback dataset → new golden scenarios (loops to stage 05)",
+    actors: ["auto", "pteam", "builder"], refs: ["B3-04", "B3-05", "B3-06", "B3-07"],
+    note: "Production feedback becomes tomorrow's golden dataset"
+  }
+];
+
+const STATUS_META = {
+  BUILT:   { icon: "✅", word: "BUILT",   color: "#34d795" },
+  PARTIAL: { icon: "🟡", word: "PARTIAL", color: "#f2b544" },
+  PLANNED: { icon: "🔨", word: "PLANNED", color: "#6c86a8" }
+};
+
+/* ============================ GEOMETRY ============================ */
+const VBW = 1540, VBH = 330, COLW = VBW / 11;
+const MAIN_Y = 96, R = 30, GR = 36; // circle radius, gate half-diagonal
+const FB_Y = 288;                    // feedback-loop bottom line
+const colX = i => (i - 0.5) * COLW; // stage number 1..11
+const MAIN_SEQ = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; // all stages on the main line
+
+/* ============================ BUILD SVG =========================== */
+const svg = document.getElementById("pipeSvg");
+const S = (tag, attrs, parent) => {
+  const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (const k in attrs) el.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(el);
+  return el;
+};
+
+svg.innerHTML = `
+<defs>
+  <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+    <feGaussianBlur stdDeviation="5" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="tokenGlow" x="-200%" y="-200%" width="500%" height="500%">
+    <feGaussianBlur stdDeviation="4" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#33506e"/>
+  </marker>
+  <marker id="arrRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#ff5d68"/>
+  </marker>
+  <marker id="arrFb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#2dd4bf"/>
+  </marker>
+</defs>`;
+
+const gEdges = S("g", {}, svg);
+const gLoop = S("g", {}, svg);
+const gFb = S("g", {}, svg);
+const gNodes = S("g", {}, svg);
+const gFx = S("g", {}, svg);
+
+/* --- main edges (static chevron arrowheads convey flow direction) --- */
+for (let k = 0; k < MAIN_SEQ.length - 1; k++) {
+  const a = MAIN_SEQ[k], b = MAIN_SEQ[k + 1];
+  const pad = (STAGES[a - 1].gate ? GR : R) + 6, pad2 = (STAGES[b - 1].gate ? GR : R) + 8;
+  const x1 = colX(a) + pad, x2 = colX(b) - pad2;
+  S("path", { d: `M ${x1} ${MAIN_Y} L ${x2} ${MAIN_Y}`, class: "edge flow", "marker-end": "url(#arr)" }, gEdges);
+}
+
+/* --- red fix-loop: a self-loop below CI (stage 6) --- */
+const x6 = colX(6);
+const loopOutD = `M ${x6 - 14} ${MAIN_Y + 28} C ${x6 - 66} ${MAIN_Y + 80}, ${x6 - 62} 196, ${x6 - 8} 218`;
+const loopRetD = `M ${x6 + 8} 218 C ${x6 + 62} 196, ${x6 + 66} ${MAIN_Y + 80}, ${x6 + 14} ${MAIN_Y + 28}`;
+S("path", { d: loopOutD, class: "edge-red", "marker-end": "url(#arrRed)" }, gLoop);
+S("path", { d: loopRetD, class: "edge-red", "marker-end": "url(#arrRed)" }, gLoop);
+/* hidden center-to-bottom loop paths for the token */
+const loopOutToken = S("path", { d: `M ${x6} ${MAIN_Y} C ${x6 - 64} ${MAIN_Y + 74}, ${x6 - 60} 192, ${x6} 222`, fill: "none", stroke: "none" }, gLoop);
+const loopRetToken = S("path", { d: `M ${x6} 222 C ${x6 + 60} 192, ${x6 + 64} ${MAIN_Y + 74}, ${x6} ${MAIN_Y}`, fill: "none", stroke: "none" }, gLoop);
+
+const labOut = S("text", { x: x6 - 178, y: 238, class: "loop-lab" }, gLoop);
+labOut.textContent = "CI red → issue auto-opened";
+const labRet = S("text", { x: x6 + 34, y: 238, class: "loop-lab" }, gLoop);
+labRet.textContent = "fix commit → re-run CI";
+
+/* --- operate loop: stage 11 feeds stage 5 (feedback → golden dataset) --- */
+const x5 = colX(5), x11 = colX(11);
+const fbPath = S("path", {
+  id: "fbLoop",
+  d: `M ${x11 + 38} ${MAIN_Y + 10} C ${x11 + 66} ${MAIN_Y + 56}, ${x11 + 66} ${FB_Y - 40}, ${x11 - 10} ${FB_Y} L ${x5 + 10} ${FB_Y} C ${x5 - 52} ${FB_Y}, ${x5 - 52} ${MAIN_Y + 96}, ${x5 - 16} ${MAIN_Y + 32}`,
+  class: "edge-fb", "marker-end": "url(#arrFb)"
+}, gFb);
+const fbLab = S("text", { x: (x5 + x11) / 2 + 60, y: FB_Y - 10, class: "fb-lab", id: "fbLoopLabel" }, gFb);
+fbLab.textContent = "↺ production feedback becomes tomorrow's golden dataset — new scenarios re-enter stage 05";
+
+/* --- nodes --- */
+const nodeEls = {};
+STAGES.forEach(st => {
+  const x = colX(st.n), y = MAIN_Y;
+  const meta = STATUS_META[st.status];
+  const g = S("g", { class: "node-g", "data-stage": st.n }, gNodes);
+  let shape;
+  if (st.gate) {
+    shape = S("path", {
+      d: `M ${x} ${y - GR} L ${x + GR} ${y} L ${x} ${y + GR} L ${x - GR} ${y} Z`,
+      class: "node-shape node-fill", stroke: meta.color, "stroke-width": 2.5,
+      "stroke-dasharray": st.status === "PLANNED" ? "5 4" : "none"
+    }, g);
+    S("text", { x, y: y - GR - 10, class: "gate-tag" }, g).textContent = "GATE";
+  } else {
+    shape = S("circle", {
+      cx: x, cy: y, r: R, class: "node-shape node-fill",
+      stroke: meta.color, "stroke-width": 2.5,
+      "stroke-dasharray": st.status === "PLANNED" ? "5 4" : "none"
+    }, g);
+  }
+  shape.classList.add("node-ring");
+  S("text", { x, y: y + 4.5, class: "n-num" }, g).textContent = String(st.n).padStart(2, "0");
+  const labelY = y + (st.gate ? GR : R) + 20;
+  st.label.forEach((line, i) => {
+    S("text", { x, y: labelY + i * 15, class: "n-label" }, g).textContent = line;
+  });
+  // status dot above node
+  const sd = S("circle", { cx: x + (st.gate ? GR - 4 : R - 6), cy: st.gate ? y - GR + 8 : y - R + 6, r: 4.5, fill: meta.color }, g);
+  if (st.status === "PLANNED") { sd.setAttribute("fill", "none"); sd.setAttribute("stroke", meta.color); sd.setAttribute("stroke-dasharray", "2 2"); }
+  g.addEventListener("click", () => selectStage(st.n, true));
+  nodeEls[st.n] = g;
+});
+
+/* --- commit token (exists only during Play mode) --- */
+const token = S("circle", { id: "token", r: 7, fill: "var(--token)", stroke: "none", cx: -20, cy: -20, opacity: 0 }, gFx);
+
+/* ========================== SWIM LANES ============================ */
+const lanesEl = document.getElementById("lanes");
+ACTOR_ORDER.forEach(key => {
+  const a = ACTORS[key];
+  const row = document.createElement("div");
+  row.className = "lane-row"; row.dataset.actor = key;
+  const name = document.createElement("div");
+  name.className = "lane-name";
+  name.innerHTML = `<span class="lane-swatch" style="background:${a.c}"></span>${a.name}`;
+  row.appendChild(name);
+  const cells = document.createElement("div");
+  cells.className = "lane-cells";
+  for (let s = 1; s <= 11; s++) {
+    const cell = document.createElement("div");
+    cell.className = "lane-cell"; cell.dataset.stage = s; cell.dataset.actor = key;
+    if (STAGES[s - 1].actors.includes(key)) {
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      chip.style.borderColor = a.c; chip.style.color = a.c; chip.style.setProperty("--chip-c", a.c);
+      chip.textContent = a.abbr;
+      chip.title = a.name + " — active at stage " + s;
+      chip.addEventListener("click", () => selectStage(s, true));
+      cell.appendChild(chip);
+    }
+    cells.appendChild(cell);
+  }
+  row.appendChild(cells);
+  lanesEl.appendChild(row);
+});
+
+/* ========================== EVIDENCE RAIL ========================= */
+const railCellsEl = document.getElementById("railCells");
+const railCounts = new Array(12).fill(0);
+const railCells = [];
+for (let s = 1; s <= 11; s++) {
+  const c = document.createElement("div");
+  c.className = "rail-cell"; c.dataset.stage = s;
+  c.innerHTML = `<span class="rail-dot"></span><span class="rail-count">0</span>`;
+  c.addEventListener("click", () => selectStage(s, true));
+  railCellsEl.appendChild(c);
+  railCells[s] = c;
+}
+
+const stageArea = document.getElementById("stageArea");
+function svgPointToArea(x, y) {
+  const r = svg.getBoundingClientRect(), ar = stageArea.getBoundingClientRect();
+  return { x: r.left - ar.left + (x / VBW) * r.width, y: r.top - ar.top + (y / VBH) * r.height };
+}
+function emitEvidence(stageN) {
+  const from = svgPointToArea(colX(stageN), MAIN_Y);
+  const cell = railCells[stageN];
+  const cr = cell.getBoundingClientRect(), ar = stageArea.getBoundingClientRect();
+  const to = { x: cr.left - ar.left + cr.width / 2, y: cr.top - ar.top + cr.height / 2 };
+  const dot = document.createElement("div");
+  dot.className = "ev-dot";
+  dot.style.left = (from.x - 3) + "px"; dot.style.top = (from.y - 3) + "px";
+  stageArea.appendChild(dot);
+  const anim = dot.animate(
+    [
+      { transform: "translate(0,0) scale(1)", opacity: 1 },
+      { transform: `translate(${(to.x - from.x) * 0.15}px, ${(to.y - from.y) * 0.5}px) scale(.9)`, opacity: 0.95, offset: 0.5 },
+      { transform: `translate(${to.x - from.x}px, ${to.y - from.y}px) scale(.5)`, opacity: 0.9 }
+    ],
+    { duration: 850, easing: "cubic-bezier(.45,.05,.55,.95)" }
+  );
+  anim.onfinish = () => {
+    dot.remove();
+    railCounts[stageN]++;
+    cell.querySelector(".rail-count").textContent = railCounts[stageN];
+    cell.classList.add("flash");
+    setTimeout(() => cell.classList.remove("flash"), 450);
+  };
+}
+
+/* ================= COMMIT TOKEN (PLAY MODE ONLY) ================== */
+/* No ambient animation: the pipeline is static until "Play journey".  */
+function stagePoint(n) {
+  return { x: colX(n), y: MAIN_Y };
+}
+function lineSeg(a, b) {
+  const p1 = stagePoint(a), p2 = stagePoint(b);
+  const len = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+  return { len, at: t => ({ x: p1.x + (p2.x - p1.x) * t, y: p1.y + (p2.y - p1.y) * t }) };
+}
+function pathSeg(pathEl) {
+  const len = pathEl.getTotalLength();
+  return { len, at: t => pathEl.getPointAtLength(t * len) };
+}
+const STATUS_TOKEN_FILL = { BUILT: "#34d795", PARTIAL: "#f2b544" };
+function setTokenStyle(status, red) {
+  if (red) {
+    token.setAttribute("fill", "#ff8b93");
+    token.setAttribute("stroke", "none");
+    token.removeAttribute("stroke-dasharray");
+  } else if (status === "PLANNED") {
+    token.setAttribute("fill", "#0b1220");
+    token.setAttribute("stroke", "#8ba1ba");
+    token.setAttribute("stroke-width", "2");
+    token.setAttribute("stroke-dasharray", "3 3");
+  } else {
+    token.setAttribute("fill", STATUS_TOKEN_FILL[status] || "var(--token)");
+    token.setAttribute("stroke", "none");
+    token.removeAttribute("stroke-dasharray");
+  }
+}
+function pulseNode(n) {
+  const st = STAGES[n - 1];
+  const x = colX(n), y = MAIN_Y;
+  const ring = S("circle", { cx: x, cy: y, r: st.gate ? GR : R, class: "pulse-ring" }, gFx);
+  const t0 = performance.now();
+  const r0 = st.gate ? GR : R;
+  (function grow(now) {
+    const t = (now - t0) / 700;
+    if (t >= 1) { ring.remove(); return; }
+    ring.setAttribute("r", r0 + 22 * t);
+    ring.setAttribute("opacity", 0.8 * (1 - t));
+    requestAnimationFrame(grow);
+  })(t0);
+}
+/* one bright draw of the operate loop — used once when Play completes */
+function pulseFeedbackLoop() {
+  const len = fbPath.getTotalLength();
+  const p = S("path", {
+    d: fbPath.getAttribute("d"), fill: "none", stroke: "#2dd4bf", "stroke-width": 3,
+    "stroke-dasharray": len, "stroke-dashoffset": len, filter: "url(#glow)", "pointer-events": "none"
+  }, gFx);
+  const draw = p.animate(
+    [{ strokeDashoffset: len }, { strokeDashoffset: 0 }],
+    { duration: 1800, easing: "ease-in-out", fill: "forwards" }
+  );
+  draw.onfinish = () => {
+    const fade = p.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 900, delay: 500, fill: "forwards" });
+    fade.onfinish = () => p.remove();
+  };
+  fbLab.animate([{ opacity: .75 }, { opacity: 1 }, { opacity: .75 }], { duration: 2300 });
+}
+
+/* ========================= DETAIL PANEL =========================== */
+const detailEl = document.getElementById("detailPanel");
+let selected = null;
+
+function renderIntro() {
+  detailEl.innerHTML = `
+    <div class="d-kicker">Stage detail</div>
+    <h2>Select a stage</h2>
+    <p class="d-empty">Click any node on the pipeline — or any avatar chip in the swim lanes — to see
+      <span class="hint">what happens (real commands, artifacts, thresholds), who acts, and the requirement IDs behind it.</span></p>
+    <div class="d-sec"><h3>Reading the map</h3>
+      <ul>
+        <li><strong style="color:var(--text)">Diamonds</strong> are gates — CI (06), Offline Eval (08), Prod Promotion (10).</li>
+        <li>The <strong style="color:var(--red)">red loop</strong> under CI is its failure path: red → issue → fix commit → green.</li>
+        <li>The <strong style="color:var(--a-plato)">teal return arrow</strong> from 11 back to 05 is the operate loop — production feedback becomes tomorrow's golden dataset.</li>
+        <li>Press <strong style="color:var(--token)">Play journey</strong> to walk a commit token through the pipeline, one stage at a time.</li>
+        <li>Every stage drops evidence into the <strong style="color:var(--a-plato)">registry rail</strong> below.</li>
+      </ul>
+    </div>
+    <div class="d-sec"><h3>Delivery status</h3>
+      <ul>
+        <li>Stages 1–3, 5–6 · <strong style="color:var(--built)">BUILT</strong> and verified (stage 6 red path <strong style="color:var(--partial)">PARTIAL</strong> — auto-issue pending, DF-03)</li>
+        <li>Stage 4 · <strong style="color:var(--planned)">PLANNED</strong> — env provisioning + one-pager at bootstrap (Batch 1)</li>
+        <li>Stages 7–11 · <strong style="color:var(--planned)">PLANNED</strong> — Batches 1–3; each panel cites its B-requirement IDs</li>
+      </ul>
+    </div>`;
+}
+
+function renderStage(n) {
+  const st = STAGES[n - 1];
+  const meta = STATUS_META[st.status];
+  const actorsHtml = st.actors.map(k => {
+    const a = ACTORS[k];
+    return `<span class="d-actor"><span class="da-av" style="border-color:${a.c};color:${a.c}">${a.abbr}</span>${a.name}</span>`;
+  }).join("");
+  const refsHtml = st.refs && st.refs.length
+    ? `<div class="d-sec"><h3>Traceability</h3><div class="d-refs">${st.refs.map(r => `<span class="ref-chip">${r}</span>`).join("")}<span class="ref-src">agent.md</span></div></div>`
+    : "";
+  detailEl.innerHTML = `
+    <div class="d-kicker">Stage detail — ${st.gate ? "gate" : "stage"}</div>
+    <h2><span class="d-stagenum">${String(n).padStart(2, "0")}</span>${st.name}</h2>
+    <div class="badge ${st.status}"><span class="b-dot"></span>${st.status} ${meta.icon}</div>
+    ${st.note ? `<div class="d-note">↳ ${st.note}</div>` : ""}
+    <div class="d-sec"><h3>What happens</h3><ul>${st.what.map(i => `<li>${i}</li>`).join("")}</ul></div>
+    <div class="d-sec"><h3>Artifacts in → out</h3>
+      <div class="d-art"><span class="art-in">${st.artIn}</span><span class="art-arrow">→</span><span class="art-out">${st.artOut}</span></div>
+    </div>
+    <div class="d-sec"><h3>Who acts</h3><div class="d-actors">${actorsHtml}</div></div>
+    ${refsHtml}
+    <div class="d-nav">
+      <button class="ghost" id="prevStage" ${n === 1 ? "disabled style='opacity:.3'" : ""}>← ${n > 1 ? String(n - 1).padStart(2, "0") : ""}</button>
+      <button class="ghost" id="nextStage" ${n === 11 ? "disabled style='opacity:.3'" : ""}>${n < 11 ? String(n + 1).padStart(2, "0") : ""} →</button>
+    </div>`;
+  const prev = document.getElementById("prevStage"), next = document.getElementById("nextStage");
+  if (prev && n > 1) prev.addEventListener("click", () => selectStage(n - 1, true));
+  if (next && n < 11) next.addEventListener("click", () => selectStage(n + 1, true));
+}
+
+function selectStage(n, userInitiated) {
+  selected = n;
+  if (userInitiated) stopPlay();
+  // node highlight
+  Object.values(nodeEls).forEach(g => g.classList.remove("selected"));
+  if (n) nodeEls[n].classList.add("selected");
+  // lane highlight
+  document.querySelectorAll(".lane-cell").forEach(c => c.classList.toggle("col-active", n != null && +c.dataset.stage === n));
+  document.querySelectorAll(".chip").forEach(ch => ch.classList.remove("lit"));
+  document.querySelectorAll(".lane-row").forEach(r => r.classList.remove("dimmed"));
+  if (n) {
+    const st = STAGES[n - 1];
+    document.querySelectorAll(`.lane-cell[data-stage="${n}"] .chip`).forEach(ch => ch.classList.add("lit"));
+    document.querySelectorAll(".lane-row").forEach(r => {
+      if (!st.actors.includes(r.dataset.actor)) r.classList.add("dimmed");
+    });
+    renderStage(n);
+    setCaption(`STAGE ${String(n).padStart(2, "0")}`, `<strong>${st.name}</strong> — ${st.caption}`);
+  } else {
+    renderIntro();
+    setCaption("OVERVIEW", `The pipeline runs intake → production → operate loop. Click any stage for details, or press <strong>Play journey</strong> to walk a commit through it — including the <strong style="color:var(--red)">red fix-loop</strong> and the <strong style="color:var(--a-plato)">feedback loop back to dev</strong>.`);
+  }
+}
+
+/* =========================== CAPTION BAR ========================== */
+const capBar = document.getElementById("captionBar");
+const capChip = document.getElementById("capChip");
+const capText = document.getElementById("capText");
+function setCaption(chip, html) {
+  capBar.classList.add("fading");
+  setTimeout(() => {
+    capChip.textContent = chip;
+    capText.innerHTML = html;
+    capBar.classList.remove("fading");
+  }, 200);
+}
+
+/* =========================== PLAY MODE ============================ */
+/* State-synced walkthrough: the token visits one stage at a time,     */
+/* dwells while the panel/caption show that stage, demonstrates the    */
+/* red fix-loop exactly once at CI, stops at stage 11 and pulses the   */
+/* operate loop once — the journey is a cycle, not a line.             */
+const playBtn = document.getElementById("playBtn");
+const playLabel = document.getElementById("playLabel");
+const DWELL = 2500;        // ms resting at each stage
+const PLAY_SPEED = 220;    // svg-units per second while moving
+let playing = false, finished = false;
+let playScript = null, playPos = 0;
+let stepTimer = null, rafId = null;
+
+function visitStage(step) {
+  const n = step.n, st = STAGES[n - 1];
+  const p = stagePoint(n);
+  token.setAttribute("cx", p.x); token.setAttribute("cy", p.y);
+  token.setAttribute("opacity", 1);
+  setTokenStyle(st.status, false); /* rest color = stage status; red only while travelling the branch */
+  Object.values(nodeEls).forEach(g => g.classList.remove("walk"));
+  nodeEls[n].classList.add("walk");
+  pulseNode(n);
+  emitEvidence(n);
+  selectStage(n, false);
+  if (step.caption) setCaption(step.caption.chip, step.caption.html);
+}
+
+function buildScript() {
+  const steps = [];
+  const visit = (n, extra) => steps.push(Object.assign({ type: "visit", n, dwell: DWELL }, extra));
+  const move = (seg, extra) => steps.push(Object.assign({ type: "move", seg }, extra));
+  visit(1);
+  for (const [a, b] of [[1, 2], [2, 3], [3, 4], [4, 5], [5, 6]]) { move(lineSeg(a, b)); visit(b); }
+  /* red fix-loop demo — exactly once, at CI */
+  move(pathSeg(loopOutToken), { red: true, caption: { chip: "CI ✗ RED", html: `CI fails — eval gate scored below the <strong>0.8</strong> floor. An issue is auto-opened and the commit takes the <strong style="color:var(--red)">red fix path</strong>.` } });
+  steps.push({ type: "pause", dwell: 1700, caption: { chip: "FIX IN PROGRESS", html: `Builder + AI assistant push a <strong>fix commit</strong> on the PR — the failure log is actionable enough for assistant self-service.` } });
+  move(pathSeg(loopRetToken), { red: true, caption: { chip: "FIX → RE-RUN", html: `The fix commit lands — CI <strong>re-runs</strong> the full gate set: eval, tests, compliance.` } });
+  visit(6, { dwell: 2000, caption: { chip: "CI ✓ GREEN", html: `<strong>Build is green</strong> — platform floor and builder-selected gates pass; the scorecard is posted as a PR comment. The commit continues toward deployment.` } });
+  for (const [a, b] of [[6, 7], [7, 8], [8, 9], [9, 10], [10, 11]]) { move(lineSeg(a, b)); visit(b); }
+  steps.push({ type: "complete" });
+  return steps;
+}
+
+function runStep() {
+  const step = playScript[playPos];
+  if (!step) return;
+  if (step.type === "visit") {
+    visitStage(step);
+    stepTimer = setTimeout(() => { playPos++; runStep(); }, step.dwell);
+  } else if (step.type === "pause") {
+    if (step.caption) setCaption(step.caption.chip, step.caption.html);
+    stepTimer = setTimeout(() => { playPos++; runStep(); }, step.dwell);
+  } else if (step.type === "move") {
+    if (step.red) setTokenStyle(null, true);
+    if (step.caption) setCaption(step.caption.chip, step.caption.html);
+    const dur = (step.seg.len / PLAY_SPEED) * 1000;
+    const t0 = performance.now();
+    (function frame(now) {
+      const t = Math.min((now - t0) / dur, 1);
+      const p = step.seg.at(t);
+      token.setAttribute("cx", p.x); token.setAttribute("cy", p.y);
+      if (t < 1) { rafId = requestAnimationFrame(frame); }
+      else { rafId = null; playPos++; runStep(); }
+    })(t0);
+  } else { /* complete — at stage 11, pulse the operate loop once */
+    finished = true;
+    playing = false;
+    playBtn.classList.remove("playing");
+    playLabel.textContent = "Replay";
+    pulseFeedbackLoop();
+    setCaption("CYCLE ↺", `<strong>Journey complete — and it doesn't end here.</strong> Production feedback becomes tomorrow's golden dataset: a reviewed conversation lands as a new <strong>golden.jsonl</strong> scenario via PR and re-enters stage 05. A cycle, not a line. Press <strong>Replay</strong> to watch again.`);
+    token.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 900, delay: 2400, fill: "forwards" });
+  }
+}
+
+function startPlay() {
+  if (finished || !playScript) {
+    playScript = buildScript(); playPos = 0; finished = false;
+    token.getAnimations().forEach(a => a.cancel());
+  }
+  playing = true;
+  playBtn.classList.add("playing");
+  playLabel.textContent = "Pause";
+  runStep();
+}
+function stopPlay() {
+  if (!playing) return;
+  playing = false;
+  if (stepTimer) { clearTimeout(stepTimer); stepTimer = null; }
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  playBtn.classList.remove("playing");
+  playLabel.textContent = "Resume";
+  Object.values(nodeEls).forEach(g => g.classList.remove("walk"));
+}
+function resetPlay() {
+  stopPlay();
+  playScript = null; playPos = 0; finished = false;
+  token.setAttribute("opacity", 0);
+  token.getAnimations().forEach(a => a.cancel());
+  playLabel.textContent = "Play journey";
+}
+playBtn.addEventListener("click", () => { playing ? stopPlay() : startPlay(); });
+document.getElementById("resetBtn").addEventListener("click", () => { resetPlay(); selectStage(null, false); });
+
+/* keyboard nav */
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight" && selected != null && selected < 11) selectStage(selected + 1, true);
+  else if (e.key === "ArrowLeft" && selected != null && selected > 1) selectStage(selected - 1, true);
+  else if (e.key === "Escape") selectStage(null, true);
+});
+
+renderIntro();
+</script>
+</body>
+</html>

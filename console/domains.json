@@ -1,0 +1,35 @@
+[
+  {
+    "id": "platform",
+    "name": "Platform",
+    "owner": "Platform team",
+    "description": "Platform-owned agents: the platform assistant the platform team builds and operates on its own paved road.",
+    "ownerGroup": "idp-group:platform-team",
+    "tokenBudget": null,
+    "agents": [
+      "it-helpdesk",
+      "data-analyst"
+    ]
+  },
+  {
+    "id": "customer-support",
+    "name": "Customer Support",
+    "owner": "Carol Diaz",
+    "description": "Customer-facing support agents: orders, returns, product Q&A.",
+    "ownerGroup": "idp-group:customer-support-builders",
+    "tokenBudget": 24000,
+    "agents": [
+      "supportdesk",
+      "concierge"
+    ]
+  },
+  {
+    "id": "operations",
+    "name": "Operations",
+    "owner": "Operations domain team",
+    "description": "Internal operations agents: IT support, access provisioning, workflow automation.",
+    "ownerGroup": "idp-group:operations-builders",
+    "tokenBudget": null,
+    "agents": []
+  }
+]

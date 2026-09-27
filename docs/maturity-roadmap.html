@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Enterprise Agentic AI — Maturity Roadmap</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+  :root{
+    --bg:#0a0e17; --surface:#131b2e; --surface2:#1a2338; --border:rgba(255,255,255,.09);
+    --text:#e2e8f0; --dim:#8892a4; --muted:#5a6578; --accent:#adc6ff;
+    --l1:#ef4444; --l2:#f59e0b; --l3:#34d399; --l4:#a78bfa;
+    --plat:#a78bfa; --dom:#34d399;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;max-width:1180px;margin:0 auto;padding:36px 26px 120px}
+  h1{font-size:2rem;font-weight:800;background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  h2{font-size:1.5rem;margin:10px 0 4px}
+  h3{font-size:1.05rem;color:var(--accent);margin:20px 0 8px}
+  p{margin:8px 0;color:var(--text)}
+  .sub{color:var(--dim);font-size:1.05rem;margin-bottom:8px}
+  .lead{color:var(--dim)}
+  code{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;font-size:.85em;color:#c7d6f5}
+  a{color:var(--accent)}
+  .banner{background:linear-gradient(135deg,rgba(96,165,250,.1),rgba(167,139,250,.1));border:1px solid rgba(167,139,250,.25);border-radius:12px;padding:16px 20px;margin:18px 0}
+
+  /* maturity ladder */
+  .ladder{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0 8px}
+  .rung{border:1px solid var(--border);border-radius:12px;padding:14px 16px;background:var(--surface);border-top:3px solid var(--muted);cursor:pointer;transition:.15s;text-decoration:none;color:inherit;display:block}
+  .rung:hover{background:var(--surface2);transform:translateY(-2px)}
+  .rung.l1{border-top-color:var(--l1)} .rung.l2{border-top-color:var(--l2)}
+  .rung.l3{border-top-color:var(--l3)} .rung.l4{border-top-color:var(--l4)}
+  .rung .lv{font-size:.66rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .rung .nm{font-size:1.05rem;font-weight:800;margin:3px 0}
+  .rung .cap{font-size:.8rem;color:var(--dim)}
+  .rung.l1 .lv{color:var(--l1)} .rung.l2 .lv{color:var(--l2)}
+  .rung.l3 .lv{color:var(--l3)} .rung.l4 .lv{color:var(--l4)}
+
+  section.stage{border:1px solid var(--border);border-radius:16px;padding:24px 26px;margin:26px 0;background:var(--surface)}
+  section.stage.l1{border-left:4px solid var(--l1)} section.stage.l2{border-left:4px solid var(--l2)}
+  section.stage.l3{border-left:4px solid var(--l3)} section.stage.l4{border-left:4px solid var(--l4)}
+  .tag{font-size:.64rem;text-transform:uppercase;letter-spacing:.09em;padding:3px 10px;border-radius:5px;font-weight:800;display:inline-block}
+  .tag.l1{color:var(--l1);background:rgba(239,68,68,.12)} .tag.l2{color:var(--l2);background:rgba(245,158,11,.12)}
+  .tag.l3{color:var(--l3);background:rgba(52,211,153,.12)} .tag.l4{color:var(--l4);background:rgba(167,139,250,.12)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:14px 0}
+  .card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+  .card h4{font-size:.82rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px}
+  ul{margin:6px 0 6px 18px} li{margin:3px 0;font-size:.92rem;color:var(--dim)}
+  li b{color:var(--text)}
+  .diagram{background:#0b1120;border:1px solid var(--border);border-radius:12px;padding:16px;margin:16px 0;overflow-x:auto}
+  .diagram .cap{color:var(--muted);font-size:.76rem;margin-bottom:8px}
+  table{width:100%;border-collapse:collapse;font-size:.86rem;margin:10px 0}
+  th{text-align:left;color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;padding:7px 10px;border-bottom:1px solid var(--border)}
+  td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:top}
+  td:first-child{color:var(--dim);white-space:nowrap;font-weight:600}
+  .newpill{display:inline-block;background:rgba(52,211,153,.14);color:var(--dom);border:1px solid rgba(52,211,153,.3);border-radius:5px;padding:1px 7px;font-size:.7rem;margin-left:6px}
+  .unlock{border-left:3px solid var(--accent);background:rgba(173,198,255,.06);padding:10px 14px;border-radius:0 8px 8px 0;margin:12px 0;font-size:.92rem}
+  .footer{color:var(--muted);font-size:.82rem;margin-top:36px;border-top:1px solid var(--border);padding-top:16px}
+
+  /* ---- Platform Components Overview: layered block diagram (AWS-style) ---- */
+  .pco{display:grid;grid-template-columns:132px 1fr 132px;gap:8px;margin:18px 0 8px;align-items:stretch}
+  .rail{border-radius:10px;padding:12px 10px;color:#fff;display:flex;flex-direction:column;gap:8px}
+  .rail .rh{font-weight:800;font-size:.82rem;margin-bottom:2px}
+  .rail .ri{font-size:.76rem;opacity:.92;line-height:1.35}
+  .rail.left{background:linear-gradient(180deg,#2f6b5e,#255449)}
+  .rail.right{background:linear-gradient(180deg,#b8860b,#8a6508)}
+  .stack{display:flex;flex-direction:column;gap:8px}
+  .blk{border:1px solid var(--border);border-radius:9px;background:var(--surface2);padding:9px 12px}
+  .blk .bt{font-weight:700;font-size:.82rem;text-align:center;color:var(--text)}
+  .blk .bi{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:6px}
+  .chip{font-size:.72rem;padding:2px 9px;border-radius:5px;background:#0b1120;border:1px solid var(--border);color:var(--dim)}
+  .band{border-radius:9px;padding:10px 12px;text-align:center}
+  .band .bt{font-weight:800;font-size:.82rem;color:#fff}
+  .band.play{background:linear-gradient(90deg,#334155,#1e293b);color:#fff}
+  .band.ops{background:linear-gradient(90deg,#2f6b5e,#3b6ea5 55%,#b8860b);margin-top:8px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  /* ownership tint: amber border = platform-owned (foundation), green = domain-owned */
+  .own-plat{border-left:3px solid var(--l2)} .own-dom{border-left:3px solid var(--l3)}
+  .legend{display:flex;gap:16px;font-size:.76rem;color:var(--dim);margin:6px 0 0;flex-wrap:wrap}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .sw{width:11px;height:11px;border-radius:3px;display:inline-block}
+
+  /* ---- evolving multi-account architecture diagrams (AWS blog style) ---- */
+  .arch{background:#080c14;border:1px solid var(--border);border-radius:12px;padding:16px;margin:16px 0;overflow-x:auto}
+  .arch .cap{color:var(--muted);font-size:.76rem;margin-bottom:10px}
+  .accts{display:flex;gap:14px;align-items:stretch;min-width:min-content}
+  .acct{border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;min-width:180px;background:rgba(255,255,255,.015);position:relative}
+  .acct .an{font-size:.72rem;font-weight:800;letter-spacing:.02em;margin-bottom:2px;display:flex;align-items:center;gap:6px}
+  .acct .ao{font-size:.62rem;color:var(--muted);margin-bottom:8px}
+  .acct.plat{border-color:rgba(167,139,250,.55)} .acct.plat .an{color:#cbb9f6}
+  .acct.gov{border-color:rgba(245,158,11,.55)} .acct.gov .an{color:#f5c46b}
+  .acct.dom{border-color:rgba(52,211,153,.5)} .acct.dom .an{color:#6ee7b7}
+  .acct.raw{border-color:var(--muted);border-style:dashed} .acct.raw .an{color:var(--dim)}
+  .acct.new{box-shadow:0 0 0 2px rgba(52,211,153,.25)}
+  .acct .newf{position:absolute;top:-9px;right:8px;font-size:.58rem;font-weight:800;letter-spacing:.05em;background:var(--l3);color:#04140d;padding:1px 7px;border-radius:4px}
+  .svcs{display:flex;flex-direction:column;gap:5px}
+  .svc{background:var(--ink,#0b1120);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:.72rem;line-height:1.2}
+  .svc small{display:block;font-size:.6rem;color:var(--aws,#ff9900);margin-top:1px}
+  .svc.plat{border-left:2px solid var(--l2)} .svc.dom{border-left:2px solid var(--l3)}
+  /* not-yet: ops-maturity components that only light up at L3 (shown greyed/dashed at L2) */
+  .svc.notyet{border:1px dashed var(--muted);color:var(--muted);opacity:.65;background:transparent}
+  .svc.notyet small{color:var(--muted)}
+  .partial{font-size:.62rem;color:var(--l2);font-weight:700;letter-spacing:.03em}
+  .envrow{display:flex;gap:6px;margin-top:6px}
+  .env{flex:1;border:1px dashed var(--border);border-radius:6px;padding:5px 6px;font-size:.64rem;text-align:center;color:var(--dim)}
+  .env b{color:var(--text);display:block;font-size:.68rem}
+  .flowto{display:flex;flex-direction:column;justify-content:center;color:var(--muted);font-size:1.1rem;padding:0 2px}
+  .archnote{font-size:.72rem;color:var(--muted);margin-top:10px;line-height:1.5}
+  .archnote b{color:var(--dim)}
+</style>
+<style id="print">@media print{body{max-width:none}.diagram,.pco,.arch{page-break-inside:avoid}}</style>
+<style>
+</style>
+</head>
+<body>
+
+<h1>Enterprise Agentic AI Platform</h1>
+<p class="sub">A progressive maturity roadmap — from ad-hoc agent sprawl to a self-evolving, platform-as-agent operating model.</p>
+
+<div class="banner">
+  An enterprise agentic-AI platform matures across four levels — <b>L1 Ad Hoc Agents → L2 Platform Foundation → L3 Self-Service Scale → L4 Adaptive Platform</b> — and the account topology + platform building blocks grow with it. Each level below shows a detailed multi-account architecture so you can see the platform grow stage by stage.
+</div>
+
+<!-- ============ HERO: one-glance platform components overview ============ -->
+<section class="stage" style="border-left-color:var(--accent)">
+  <h2>The platform at a glance</h2>
+  <p class="lead">Our point of view in one picture: a governed set of building blocks. <b>Responsible AI</b> and <b>Observability</b> wrap everything; the middle is the capability stack (gateways → hubs → runtime → data &amp; memory); <b>Operations</b> runs underneath. The platform team owns the amber blocks (the <b>Foundation Harness</b>); domain teams differentiate in the green blocks (their <b>Domain Harness</b>).</p>
+  <div class="pco">
+    <div class="rail left">
+      <div class="rh">Responsible&nbsp;AI</div>
+      <div class="ri">Security</div><div class="ri">Governance</div><div class="ri">Privacy</div>
+      <div class="ri">Guardrails</div><div class="ri">Explainability</div>
+    </div>
+    <div class="stack">
+      <div class="band play"><div class="bt">Playground · Self-Service Console</div></div>
+      <div class="row2">
+        <div class="blk own-plat"><div class="bt">Model Gateway</div><div class="bi"><span class="chip">routing</span><span class="chip">auth</span><span class="chip">cost</span></div></div>
+        <div class="blk own-plat"><div class="bt">Agent &amp; Tool Gateway</div><div class="bi"><span class="chip">MCP</span><span class="chip">A2A</span><span class="chip">3P</span></div></div>
+      </div>
+      <div class="row2">
+        <div class="blk own-plat"><div class="bt">Model Hub</div><div class="bi"><span class="chip">embedding</span><span class="chip">text-gen</span><span class="chip">other</span></div></div>
+        <div class="blk own-plat"><div class="bt">Agent &amp; Tool Hub / Registry</div><div class="bi"><span class="chip">blueprints</span><span class="chip">skills</span><span class="chip">versioning</span></div></div>
+      </div>
+      <div class="row2">
+        <div class="blk own-plat"><div class="bt">Model Hosting</div><div class="bi"><span class="chip">Bedrock</span><span class="chip">SageMaker</span></div></div>
+        <div class="blk own-dom"><div class="bt">Agent &amp; Tool Runtime</div><div class="bi"><span class="chip">AgentCore Runtime</span><span class="chip">containers</span><span class="chip">serverless</span></div></div>
+      </div>
+      <div class="row2">
+        <div class="blk own-dom"><div class="bt">Data</div><div class="bi"><span class="chip">datasets</span><span class="chip">vector</span><span class="chip">graph</span><span class="chip">ingestion</span></div></div>
+        <div class="blk own-dom"><div class="bt">Memory &amp; Context</div><div class="bi"><span class="chip">session</span><span class="chip">long-term</span><span class="chip">per-user</span></div></div>
+      </div>
+      <div class="band ops"><div class="bt">Operations&nbsp;&nbsp;·&nbsp;&nbsp;Evaluation · Version Control · Config · Automation · Cost Tracking · Access Control · Usage Limits</div></div>
+    </div>
+    <div class="rail right">
+      <div class="rh">Observability</div>
+      <div class="ri">Auditing &amp; logging</div><div class="ri">Monitoring</div>
+      <div class="ri">Tracing</div><div class="ri">User feedback</div>
+    </div>
+  </div>
+  <div class="legend">
+    <span><span class="sw" style="background:var(--l2)"></span> Foundation Harness — <b>platform team owned</b></span>
+    <span><span class="sw" style="background:var(--l3)"></span> Domain Harness — <b>domain team owned</b></span>
+    <span><span class="sw" style="background:#2f6b5e"></span> Responsible AI rail</span>
+    <span><span class="sw" style="background:#b8860b"></span> Observability rail</span>
+  </div>
+  <p class="lead" style="font-size:.84rem;margin-top:10px">The rest of this page shows how these blocks get <b>stood up progressively</b> — which appear at each maturity level, and how the multi-account topology grows with them.</p>
+</section>
+
+<div class="ladder">
+  <a class="rung l1" href="#l1"><div class="lv">Level 01</div><div class="nm">Ad Hoc Agents</div><div class="cap">Isolated pilots — can we build one at all?</div></a>
+  <a class="rung l2" href="#l2"><div class="lv">Level 02</div><div class="nm">Platform Foundation</div><div class="cap">Central gateway + basic governance</div></a>
+  <a class="rung l3" href="#l3"><div class="lv">Level 03</div><div class="nm">Self-Service Scale</div><div class="cap">Blueprints, shared control plane, quality gates</div></a>
+  <a class="rung l4" href="#l4"><div class="lv">Level 04</div><div class="nm">Adaptive Platform</div><div class="cap">AI-assisted, self-optimizing (north-star)</div></a>
+</div>
+<p class="lead" style="font-size:.86rem"><b>Use maturity to choose the next realistic step.</b> The progression: <i>build at all → govern consistently → scale safely across teams → continuously self-optimize.</i> &nbsp;<span style="color:var(--muted)">Note: L4 is a north-star maturity level, not a promise for the first implementation.</span></p>
+
+<!-- =================== L1 =================== -->
+<section class="stage l1" id="l1">
+  <span class="tag l1">Level 01 · Ad Hoc Agents</span>
+  <h2>Isolated pilots and experimentation</h2>
+  <p class="lead">Teams spin up agents wherever they can — a notebook, a laptop, a lone AWS account. Local prompts and custom code, inconsistent security/access controls, limited tool or knowledge reuse. This is where most enterprises start, and where the deck's four problems originate.</p>
+  <div class="unlock"><b>Characteristics:</b> isolated pilots · local prompts &amp; custom code · inconsistent security/access controls · limited tool or knowledge reuse. &nbsp;<b>🎯 Target action:</b> establish a shared platform mandate and minimum controls.</div>
+  <div class="grid2">
+    <div class="card"><h4>Symptoms</h4><ul>
+      <li><b>Agent sprawl</b> — duplicated effort, zero reuse</li>
+      <li><b>Shadow AI</b> — agents outside sanctioned channels</li>
+      <li><b>Cost blindness</b> — no per-agent token attribution</li>
+      <li><b>Observability gap</b> — no unified tracing</li>
+    </ul></div>
+    <div class="card"><h4>Account topology</h4><ul>
+      <li>No formal design — one account per team, or shared dev sandboxes</li>
+      <li>Secrets in code, manual deploys, no environments</li>
+      <li>Model access direct-to-Bedrock, ungoverned</li>
+    </ul></div>
+  </div>
+  <div class="arch"><div class="cap">L1 architecture — every team in its own account, each calling Bedrock directly. No shared plane, no registry, no governance.</div>
+    <div class="accts">
+      <div class="acct raw"><div class="an">🟥 Team A account</div><div class="ao">no environments</div>
+        <div class="svcs">
+          <div class="svc dom">Agent on a laptop / notebook<small>hand-rolled</small></div>
+          <div class="svc dom">Own tools + secrets in code</div>
+          <div class="svc">→ direct model calls<small>Amazon Bedrock</small></div>
+        </div>
+      </div>
+      <div class="acct raw"><div class="an">🟥 Team B account</div><div class="ao">no environments</div>
+        <div class="svcs">
+          <div class="svc dom">Ad-hoc agent<small>duplicated effort</small></div>
+          <div class="svc">→ direct model calls<small>Amazon Bedrock</small></div>
+        </div>
+      </div>
+      <div class="acct raw"><div class="an">🟥 Team C account</div><div class="ao">shadow AI</div>
+        <div class="svcs">
+          <div class="svc dom">Unsanctioned agent<small>outside IT channels</small></div>
+          <div class="svc">→ direct model calls<small>Amazon Bedrock</small></div>
+        </div>
+      </div>
+    </div>
+    <div class="archnote"><b>What's missing:</b> no shared registry (nobody knows what agents/tools/skills exist), no gateway or cost attribution, no shared observability, no policy. Every account reinvents everything → sprawl, shadow AI, cost blindness.</div>
+  </div>
+</section>
+
+<!-- =================== L2 =================== -->
+<section class="stage l2" id="l2">
+  <span class="tag l2">Level 02 · Platform Foundation</span>
+  <h2>First shared services — a partial control plane</h2>
+  <p class="lead">A platform team stands up the first shared services in a dedicated <b>Platform account</b>: an <b>AI Registry</b> (unified agent · MCP · skill/tool registry), an optional <b>AI Gateway</b> (routing, auth, rate-limit, cost attribution), <b>approved production runtimes</b>, and <b>basic governance / audit logging</b>. Teams can adopt these shared services — but the control plane is <b>not fully built yet</b>: there's no self-service, no prebuilt eval pipeline, no policy-as-code. The platform team still builds and operates most agents by hand.</p>
+  <div class="unlock"><b>Characteristics:</b> unified AI Registry (agent/MCP/skill) · optional model gateway &amp; routing · approved production runtimes · basic governance, audit &amp; cost attribution. &nbsp;<b>🎯 Target action:</b> standardize templates, onboarding, and release gates (→ complete the control plane at L3).</div>
+  <div class="grid2">
+    <div class="card"><h4>New platform building blocks <span class="newpill">new</span></h4><ul>
+      <li><b>AI Registry</b> — one registry for agents, MCP servers, and skills/tools (discovery + versioning)</li>
+      <li><b>AI Gateway (optional)</b> — routing, auth, rate limiting, cost/token attribution — not yet mandatory</li>
+      <li><b>Approved runtimes</b> — sanctioned production execution</li>
+      <li><b>Basic governance</b> — audit logging + centralised observability + identity</li>
+    </ul></div>
+    <div class="card"><h4>Operating pattern &amp; what's still missing</h4><ul>
+      <li><b>Centralised</b> — platform team builds &amp; operates most agents</li>
+      <li>Best for &lt;20 agents / low domain-team capability</li>
+      <li><b>Not yet:</b> self-service blueprints, prebuilt eval pipeline, policy-as-code, automated gates, multi-env</li>
+    </ul></div>
+  </div>
+  <div class="arch"><div class="cap">L2 architecture — the first shared platform services emerge (a partial control plane). Teams can use them, but the plane isn't fully built yet — key ops-maturity pieces are still missing.</div>
+    <div class="accts">
+      <div class="acct plat new" style="min-width:320px"><span class="newf">NEW</span><div class="an">🟪 Platform account</div><div class="ao">shared services · <span class="partial">PARTIAL control plane</span></div>
+        <div class="svcs">
+          <div class="svc plat">AI Registry<small>unified: agent · MCP · skill/tool registry — discovery + versioning</small></div>
+          <div class="svc plat">AI Gateway (optional path)<small>routing · auth · rate-limit · cost — not yet mandatory</small></div>
+          <div class="svc plat">Approved runtimes<small>sanctioned production execution</small></div>
+          <div class="svc plat">Basic governance<small>audit logging + observability + identity</small></div>
+        </div>
+        <div class="an" style="margin-top:10px;font-size:.66rem;color:var(--muted)">CONTROL PLANE NOT YET COMPLETE — these arrive at L3</div>
+        <div class="svcs">
+          <div class="svc notyet">✗ Self-service blueprints<small>none — platform team builds each agent</small></div>
+          <div class="svc notyet">✗ Prebuilt eval pipeline<small>no automated quality gate</small></div>
+          <div class="svc notyet">✗ Policy-as-code<small>manual review, not enforced</small></div>
+          <div class="svc notyet">✗ Automated CI/CD gates &amp; multi-env<small>manual promotion</small></div>
+        </div>
+      </div>
+      <div class="flowto">←→</div>
+      <div class="acct dom"><div class="an">🟩 Domain account A</div><div class="ao">single env · platform-operated</div>
+        <div class="svcs">
+          <div class="svc dom">Agent<small>AgentCore Runtime</small></div>
+          <div class="svc">uses shared registry + governance; may route via gateway <b>or</b> call the model directly</div>
+        </div>
+      </div>
+      <div class="acct dom"><div class="an">🟩 Domain account B</div><div class="ao">single env · platform-operated</div>
+        <div class="svcs">
+          <div class="svc dom">Agent<small>AgentCore Runtime</small></div>
+          <div class="svc">registers to the AI Registry; governance/observability shared</div>
+        </div>
+      </div>
+    </div>
+    <div class="archnote"><b>Unlocked:</b> shared services teams can adopt — a unified <b>AI Registry</b> (agents/MCP/skills), an optional gateway, approved runtimes, and basic governance/cost visibility. <b>Not yet:</b> the control plane is <b>partial</b> — no self-service blueprints, no prebuilt eval pipeline, no policy-as-code, no automated gates or multi-environment separation. The platform team still <b>manually builds, promotes and operates</b> most agents (Centralised pattern). Completing the control plane is what L3 does.</div>
+  </div>
+</section>
+
+<!-- =================== L3 =================== -->
+<section class="stage l3" id="l3">
+  <span class="tag l3">Level 03 · Self-Service Scale</span>
+  <h2>Approved blueprints, shared control plane, automated quality gates</h2>
+  <p class="lead">The platform becomes a <b>product</b>. A <b>Governance / Landing-Zone account</b> provisions a full set of environment accounts (<b>dev → UAT → prod</b>) per domain, on demand, from <b>approved architectural blueprints</b>. Domain teams self-serve on a <b>shared control plane for all agents</b>, ship through <b>automated evaluation and quality gates</b>, and run <b>federated domain-owned runtimes</b>. The governance account vends replicated per-team account sets — and it is exactly what the demo console implements.</p>
+  <div class="unlock"><b>Characteristics:</b> approved architectural blueprints · shared control plane for all agents · automated evaluation &amp; quality gates · federated domain-owned runtimes. &nbsp;<b>🎯 Target action:</b> scale reuse, automate evidence, and improve domain ownership.</div>
+  <div class="grid2">
+    <div class="card"><h4>New platform building blocks <span class="newpill">new</span></h4><ul>
+      <li><b>Approved blueprints</b> — chat / workflow / RAG / MCP Foundation Harness templates</li>
+      <li><b>Governance account</b> — Service-Catalog-style account vending, IaC, team→account map</li>
+      <li><b>Automated quality gates</b> — Cedar policy + Guardrails + eval as promotion gate</li>
+      <li><b>Golden-path CI/CD</b> — commit → test → eval → stage → deploy (agent-as-code)</li>
+      <li><b>Federated domain-owned runtimes</b> — teams own their data-plane lifecycle</li>
+    </ul></div>
+    <div class="card"><h4>Operating pattern</h4><ul>
+      <li><b>Federated</b> / <b>Hybrid</b> — central control plane + federated application plane</li>
+      <li>Per-domain accounts, per-environment gating (dev/UAT/prod)</li>
+      <li>Data stays in the domain's account; only telemetry flows up</li>
+      <li>Evidence (eval results, traces) automated, not hand-collected</li>
+    </ul></div>
+  </div>
+
+  <div class="arch"><div class="cap">L3 architecture — a Governance account vends full per-domain account sets (dev/UAT/prod); the Platform control plane stays central, execution is federated.</div>
+    <div class="accts">
+      <div class="acct gov new"><span class="newf">NEW</span><div class="an">🟧 Governance / Landing-Zone account</div><div class="ao">central IT · account vending</div>
+        <div class="svcs">
+          <div class="svc plat">Account Vending<small>Control Tower · Service Catalog · CloudFormation</small></div>
+          <div class="svc plat">Blueprint Catalog<small>Foundation Harness templates (self-service console)</small></div>
+          <div class="svc plat">Team → Account map<small>DynamoDB</small></div>
+        </div>
+        <div class="archnote" style="margin-top:6px">↓ provisions &amp; instantiates</div>
+      </div>
+      <div class="acct plat"><div class="an">🟪 Platform account</div><div class="ao">central control plane · <span style="color:var(--l3);font-weight:700">NOW COMPLETE</span></div>
+        <div class="svcs">
+          <div class="svc plat">AI Gateway<small>AgentCore Gateway (from L2)</small></div>
+          <div class="svc plat">AI Registry<small>agent · MCP · skill/tool (from L2)</small></div>
+        </div>
+        <div class="an" style="margin-top:8px;font-size:.66rem;color:var(--l3)">✓ OPS-MATURITY COMPONENTS NOW LIT UP (were missing at L2)</div>
+        <div class="svcs">
+          <div class="svc dom">✓ Self-service blueprint catalog<small>Foundation Harness templates</small></div>
+          <div class="svc dom">✓ Prebuilt evaluation pipeline<small>AgentCore Evaluations — the promotion gate</small></div>
+          <div class="svc dom">✓ Policy-as-code<small>Cedar + Bedrock Guardrails, enforced at gateway</small></div>
+          <div class="svc dom">✓ Automated CI/CD gates + multi-env<small>golden-path pipeline</small></div>
+        </div>
+      </div>
+      <div class="acct dom new"><span class="newf">NEW</span><div class="an">🟩 Domain account (per business unit)</div><div class="ao">application plane · federated · multi-env</div>
+        <div class="svcs">
+          <div class="svc dom">Full Foundation Harness per env<small>Runtime · Memory · Identity · Skills</small></div>
+        </div>
+        <div class="envrow">
+          <div class="env"><b>dev</b>synthetic data · verbose trace · guardrails: warn</div>
+          <div class="env"><b>UAT</b>PII-masked · prod-parity · SME sign-off</div>
+          <div class="env"><b>prod</b>real data · canary/blue-green · HITL</div>
+        </div>
+        <div class="archnote" style="margin-top:6px">gate 1 (eval + policy) → gate 2 (SME + eval) between envs · traces + registers up to Platform</div>
+      </div>
+    </div>
+    <div class="archnote"><b>Unlocked:</b> many domain teams ship independently and safely — the platform team is no longer the bottleneck. Data stays in the domain's account; only telemetry flows up. This is exactly what the demo console provisions: a governance account vending per-domain dev/UAT/prod account sets.</div>
+  </div>
+
+  <h3>The golden-path lifecycle (agent-as-code)</h3>
+  <p class="lead">Within L3, every agent moves through a governed pipeline that <b>loops</b>: build → CI → CD → eval → operate → feed back. Everything that defines an agent (prompt, tools, harness bindings, deploy params) lives in Git — reviewed, tested, evaluated, versioned, reversible. This is <b>AALOE</b> — Agentic AI Lifecycle Operational Excellence: develop → measure → improve, continuously.</p>
+  <div class="diagram"><div class="cap">L3 — golden path (a loop): build → CI → non-prod → offline eval → prod → online eval → feedback &amp; continuous improvement ↺ back to build</div>
+    <pre class="mermaid">
+flowchart LR
+  BT["1 · Build Time<br/>compose harness,<br/>prompts, tools, skills"]:::step
+  CI["2 · Golden Path CI<br/>security + quality scan,<br/>unit tests, package,<br/>publish to registry"]:::step
+  CD1["3 · CD (non-prod)<br/>deploy to dev/UAT,<br/>end-to-end tests"]:::step
+  OE["4 · Offline Eval<br/>golden dataset,<br/>LLM-as-judge,<br/>promotion gate"]:::gate
+  CD2["5 · CD (prod)<br/>control gate + deploy,<br/>canary / blue-green"]:::step
+  ON["6 · Online Eval<br/>live-traffic scoring,<br/>alert on threshold"]:::gate
+  FB["7 · Feedback &amp; Continuous<br/>Improvement ↺<br/>online-eval + user feedback +<br/>SME review → refine"]:::loop
+  BT-->CI-->CD1-->OE-->CD2-->ON-->FB
+  OE -.fail: back to build.-> BT
+  FB -.signals + actions.-> BT
+  classDef step fill:#1a2338,stroke:#34d399,color:#e2e8f0;
+  classDef gate fill:#1a2338,stroke:#f59e0b,color:#e2e8f0;
+  classDef loop fill:#1a2338,stroke:#34d399,color:#e2e8f0,stroke-width:2px;
+    </pre>
+  </div>
+
+  <table>
+    <tr><th>Capability</th><th>Platform building block</th><th>AWS / AgentCore service</th></tr>
+    <tr><td>Blueprint templates</td><td>Foundation Harness catalog</td><td>Service Catalog · Git golden-path repo</td></tr>
+    <tr><td>Account vending</td><td>Governance account</td><td>Control Tower · CloudFormation · DynamoDB map</td></tr>
+    <tr><td>Runtime</td><td>Sandboxed execution</td><td>AgentCore Runtime (microVM)</td></tr>
+    <tr><td>Identity</td><td>Per-user auth + memory scoping</td><td>AgentCore Identity + Cognito CUSTOM_JWT</td></tr>
+    <tr><td>Memory</td><td>Session + long-term</td><td>AgentCore Memory</td></tr>
+    <tr><td>Policy / guardrails</td><td>Policy-as-code</td><td>Cedar · Bedrock Guardrails</td></tr>
+    <tr><td>Observability</td><td>Dual-backend traces</td><td>CloudWatch + Langfuse (OTEL)</td></tr>
+    <tr><td>Evaluation</td><td>Promotion gate</td><td>AgentCore Evaluations · golden dataset</td></tr>
+  </table>
+</section>
+
+<!-- =================== L4 =================== -->
+<section class="stage l4" id="l4">
+  <span class="tag l4">Level 04 · Adaptive Platform</span>
+  <h2>AI-assisted, self-optimizing — the north-star</h2>
+  <p class="lead">At L4 the platform stops being passive infrastructure and starts to <b>optimize itself</b>. AI automation runs across the lifecycle: <b>AI-assisted onboarding and scaffolding</b>, <b>auto-tuning of evaluation and tools</b>, <b>intelligent operational optimization</b>, and <b>continuous autonomous improvement</b>. The same L3 topology stays; what's new is that AI now drives the toil out of running it. This is a <b>north-star maturity level, not a promise for the first implementation.</b></p>
+  <div class="unlock"><b>Characteristics:</b> AI-assisted onboarding &amp; scaffolding · auto-tuning of evaluation &amp; tools · intelligent operational optimization · continuous autonomous improvement. &nbsp;<b>🎯 Target action:</b> reduce platform friction and improve continuously.</div>
+  <div class="grid2">
+    <div class="card"><h4>AI automation layered on L3 <span class="newpill">new</span></h4><ul>
+      <li><b>AI-assisted onboarding &amp; scaffolding</b> — describe intent → composed harness + golden-path repo</li>
+      <li><b>Auto-tuning of eval &amp; tools</b> — the platform proposes prompt/model/tool changes from eval signal</li>
+      <li><b>Intelligent ops optimization</b> — model routing, cost, and rollout tuned automatically</li>
+      <li><b>Continuous autonomous improvement</b> — feedback-driven lifecycle updates (self-optimizing flywheel)</li>
+    </ul></div>
+    <div class="card"><h4>Where the automation acts</h4><ul>
+      <li>Onboarding: turns a requirement into a composed Foundation + Domain Harness</li>
+      <li>Build: generates the golden-path repo (config + guidance) and opens the PR</li>
+      <li>Pipeline: runs the L3 CI / eval-gate / deploy as guided or automated steps</li>
+      <li>Operate: monitors online eval and proposes prompt/model improvements</li>
+    </ul></div>
+  </div>
+  <div class="arch"><div class="cap">L4 architecture — same L3 topology, now with an AI automation layer ("platform as agent") that assists onboarding and continuously optimizes the running platform.</div>
+    <div class="accts">
+      <div class="acct raw"><div class="an">👤 Domain developer</div><div class="ao">Slack / IDE</div>
+        <div class="svcs"><div class="svc dom">"I need an agent that…"</div></div>
+      </div>
+      <div class="flowto">↔</div>
+      <div class="acct plat new"><span class="newf">NEW</span><div class="an">🟪 AI automation layer</div><div class="ao">"platform as agent" · self-optimizing</div>
+        <div class="svcs">
+          <div class="svc plat">AI-assisted onboarding &amp; scaffolding<small>describe intent → composed harness</small></div>
+          <div class="svc plat">Auto-tuning of eval &amp; tools<small>proposes prompt / model / tool changes</small></div>
+          <div class="svc plat">Intelligent ops optimization<small>routing · cost · rollout</small></div>
+          <div class="svc">drives ↓ on your behalf · learns ↑ from online-eval</div>
+        </div>
+      </div>
+      <div class="flowto">→</div>
+      <div class="acct plat"><div class="an">🟪 Platform control plane (L3)</div><div class="ao">unchanged</div>
+        <div class="svcs">
+          <div class="svc plat">Blueprint Catalog</div>
+          <div class="svc plat">Evaluation pipeline</div>
+          <div class="svc plat">AI Gateway · Registry · Observability</div>
+        </div>
+      </div>
+      <div class="flowto">→</div>
+      <div class="acct dom"><div class="an">🟩 Domain account</div><div class="ao">dev/UAT/prod (L3)</div>
+        <div class="svcs">
+          <div class="svc dom">Deployed agent (golden-path repo)<small>AgentCore Runtime</small></div>
+          <div class="svc">↩ automation proposes prompt/model fixes from online-eval signal</div>
+        </div>
+      </div>
+    </div>
+    <div class="archnote"><b>Unlocked:</b> continuous self-optimization. AI assists onboarding, auto-tunes evaluation and tools, optimizes operations, and proposes improvements from online-eval signal — reducing platform friction. The topology doesn't change; <b>AI automation drives the toil out of running it.</b> North-star, not a first-implementation promise.</div>
+  </div>
+  <div class="diagram"><div class="cap">The platform flywheel — each new agent spins the wheel: it reuses what exists and leaves behind blueprints, skills, eval sets and traces that make the next agent faster and better</div>
+    <pre class="mermaid">
+flowchart LR
+  AGENT(["🤖 Each new agent<br/>(compounds the platform)"]):::agent
+  R["Reuse<br/>blueprints + skills"]:::f --> Q["Quality<br/>continuous eval"]:::f --> S["Speed<br/>self-service CI/CD"]:::f --> D["Data<br/>unified tracing"]:::f --> I["Insights<br/>cost + perf analytics"]:::f --> E["Evolution<br/>feedback-driven updates"]:::f --> R
+  R -.stands on.-> AGENT
+  AGENT -.leaves behind.-> D
+  AGENT -.published to.-> Q
+  classDef f fill:#1a2338,stroke:#a78bfa,color:#e2e8f0;
+  classDef agent fill:#22343f,stroke:#34d399,color:#e2e8f0,stroke-width:2px;
+    </pre>
+  </div>
+</section>
+
+<!-- =================== how topology grows =================== -->
+<section class="stage" style="border-left-color:var(--accent)">
+  <h2>How the account topology grows</h2>
+  <p class="lead">The agentic landing zone expands as maturity increases. Durable shared accounts (Platform, Governance) persist; per-domain environment accounts are vended and decommissioned on demand. The right-hand column shows what changes for the <b>agents themselves</b> at each level.</p>
+  <table>
+    <tr><th>Level</th><th>Accounts</th><th>Control plane</th><th>How agents are built &amp; run</th></tr>
+    <tr><td><span class="tag l1">L1</span></td><td>Ad-hoc, one per team (or none)</td><td>None</td><td>Each team hand-builds isolated agents; direct model calls, no reuse</td></tr>
+    <tr><td><span class="tag l2">L2</span></td><td>+ <b>Platform account</b></td><td><b>Partial</b> — gateway · approved runtimes · registry · basic governance (no blueprints / eval pipeline / policy-as-code yet)</td><td>Agents run in single-env domain accounts; <b>platform team manually builds &amp; promotes</b> most of them</td></tr>
+    <tr><td><span class="tag l3">L3</span></td><td>+ <b>Governance account</b> + per-domain <b>dev/UAT/prod</b> sets</td><td><b>Complete</b> — blueprints · prebuilt eval pipeline · policy-as-code · automated gates now lit up</td><td><b>Domain teams self-serve</b> agents from blueprints; golden-path CI/CD with eval as the promotion gate; federated domain-owned runtimes</td></tr>
+    <tr><td><span class="tag l4">L4</span></td><td>Same topology + <b>AI automation layer</b></td><td>Self-optimizing on top of L3</td><td>AI assists onboarding/scaffolding &amp; auto-proposes improvements to running agents; humans approve</td></tr>
+  </table>
+  <div class="unlock"><b>Consistent thread across all levels:</b> reproducibility (agent-as-code in Git), auditability (trace → commit → deploy), reusability (blueprints + skill registry), environment parity (dev/UAT/prod from one IaC), separation of concerns (accounts enforce boundaries), and provider-agnosticism (gateway abstracts the model).</div>
+</section>
+
+<p class="footer">
+  Sourced from the <i>Enterprise Agentic AI Platform</i> deck (maturity model, harness split, multi-account topology, operating patterns). Served by the console at <code>/roadmap</code>.
+</p>
+
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: "dark",
+    themeVariables: { fontFamily: "-apple-system,Segoe UI,Inter,sans-serif", fontSize: "13px" },
+    flowchart: { curve: "basis", nodeSpacing: 40, rankSpacing: 50 } })
+</script>
+</body>
+</html>

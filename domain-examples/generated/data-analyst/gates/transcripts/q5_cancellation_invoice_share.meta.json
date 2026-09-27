@@ -1,0 +1,8 @@
+{
+  "scenario_id": "q5_cancellation_invoice_share",
+  "recordedAt": "2026-08-25T03:50:10.774Z",
+  "source": "record-transcripts.mjs",
+  "endpoint": "http://localhost:8081/invocations",
+  "sessionId": "rec-q5_cancellation_invoice_share-1787629804882",
+  "turns": 1
+}

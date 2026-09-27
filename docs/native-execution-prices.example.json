@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "entries": [
+    {
+      "id": "candidate-haiku45-direct-public-20260911",
+      "activation": "candidate",
+      "modelId": "bedrock-claude/anthropic.claude-haiku-4-5",
+      "providerModelId": "anthropic.claude-haiku-4-5-20251001-v1:0",
+      "region": "us-west-2",
+      "inputTokenBasis": "uncached",
+      "currency": "USD",
+      "effectiveFrom": "2026-09-11T00:00:00.000Z",
+      "effectiveTo": "2026-09-12T00:00:00.000Z",
+      "source": {
+        "url": "https://platform.claude.com/docs/en/about-claude/pricing",
+        "retrievedAt": "2026-09-11T00:00:00.000Z"
+      },
+      "route": {
+        "attestationId": "UNATTESTED-candidate-global-route",
+        "modelId": "bedrock-claude/anthropic.claude-haiku-4-5",
+        "providerModelId": "anthropic.claude-haiku-4-5-20251001-v1:0",
+        "provider": "bedrock",
+        "gatewayRegion": "us-west-2",
+        "billingRegion": "global",
+        "inferenceMode": "global",
+        "serviceTier": "standard",
+        "cacheMode": "explicit-counters"
+      },
+      "usdPerMillionTokens": {
+        "input": 1,
+        "output": 5,
+        "cacheRead": 0.1,
+        "cacheWrite5m": 1.25,
+        "cacheWrite1h": 2
+      }
+    }
+  ]
+}

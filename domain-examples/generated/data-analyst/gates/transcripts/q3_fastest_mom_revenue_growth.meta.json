@@ -1,0 +1,8 @@
+{
+  "scenario_id": "q3_fastest_mom_revenue_growth",
+  "recordedAt": "2026-08-25T03:49:55.627Z",
+  "source": "record-transcripts.mjs",
+  "endpoint": "http://localhost:8081/invocations",
+  "sessionId": "rec-q3_fastest_mom_revenue_growth-1787629787401",
+  "turns": 1
+}

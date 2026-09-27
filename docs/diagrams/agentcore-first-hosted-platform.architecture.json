@@ -1,0 +1,284 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "AgentCore-First Architecture",
+    "output": "agentcore-first-hosted-platform.html",
+    "quality_profile": "showcase",
+    "viewBox": [1500, 820],
+    "views": [
+      {
+        "id": "admin-control-plane",
+        "label": "Admin control plane",
+        "focus": [
+          "platform-admins",
+          "web-console",
+          "cognito",
+          "platform-api",
+          "agent-registry",
+          "agentcore-gateway",
+          "agentcore-policy",
+          "platform-state"
+        ],
+        "note": "Domains, registry governance, model and tool access, approvals and audit are administered through one authenticated control plane."
+      },
+      {
+        "id": "agent-delivery",
+        "label": "Agent delivery",
+        "focus": [
+          "web-console",
+          "platform-api",
+          "agent-registry",
+          "agentcore-runtime",
+          "agentcore-memory",
+          "agentcore-evalobs"
+        ],
+        "note": "The build journey resolves governed resources, provisions AgentCore services, evaluates the agent and records deployment evidence."
+      },
+      {
+        "id": "runtime-request",
+        "label": "Runtime request",
+        "focus": [
+          "platform-admins",
+          "web-console",
+          "platform-api",
+          "agentcore-gateway",
+          "agentcore-policy",
+          "agentcore-runtime",
+          "agentcore-memory",
+          "agentcore-evalobs"
+        ],
+        "note": "Live requests are authorized, routed through governed models and tools, executed in Runtime, enriched by Memory and observed end to end."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "platform-admins",
+      "type": "external",
+      "label": "Platform users",
+      "sublabel": "Admins, builders and end users",
+      "pos": [30, 340],
+      "size": [150, 70]
+    },
+    {
+      "id": "cognito",
+      "type": "security",
+      "label": "Amazon Cognito",
+      "sublabel": "Hosted sign-in, JWT and groups",
+      "tag": "Identity for now",
+      "pos": [240, 90],
+      "size": [180, 76]
+    },
+    {
+      "id": "web-console",
+      "type": "frontend",
+      "label": "Platform web console",
+      "sublabel": "CloudFront + private S3",
+      "tag": "Cognito PKCE",
+      "pos": [240, 340],
+      "size": [190, 76]
+    },
+    {
+      "id": "platform-api",
+      "type": "backend",
+      "label": "Platform API and workflows",
+      "sublabel": "API Gateway, Lambda, Step Functions",
+      "tag": "Domain-scoped",
+      "pos": [520, 340],
+      "size": [210, 82]
+    },
+    {
+      "id": "agent-registry",
+      "type": "database",
+      "label": "AWS Agent Registry",
+      "sublabel": "Agents, skills, MCP, A2A and blueprints",
+      "tag": "Discovery + lifecycle",
+      "pos": [520, 90],
+      "size": [220, 82]
+    },
+    {
+      "id": "agentcore-gateway",
+      "type": "cloud",
+      "label": "AgentCore Gateway",
+      "sublabel": "Model inference and governed tools",
+      "tag": "LLM + MCP gateway",
+      "pos": [860, 90],
+      "size": [210, 82]
+    },
+    {
+      "id": "agentcore-policy",
+      "type": "security",
+      "label": "AgentCore Policy",
+      "sublabel": "Domain, model and tool authorization",
+      "tag": "Enforcement",
+      "pos": [1200, 90],
+      "size": [210, 82]
+    },
+    {
+      "id": "agentcore-runtime",
+      "type": "cloud",
+      "label": "AgentCore Runtime",
+      "sublabel": "Managed agent execution",
+      "tag": "HTTP, MCP and A2A",
+      "pos": [860, 340],
+      "size": [210, 82]
+    },
+    {
+      "id": "agentcore-memory",
+      "type": "database",
+      "label": "AgentCore Memory",
+      "sublabel": "Session and long-term strategies",
+      "tag": "Actor scoped",
+      "pos": [860, 590],
+      "size": [210, 82]
+    },
+    {
+      "id": "agentcore-evalobs",
+      "type": "cloud",
+      "label": "AgentCore Eval & Observability",
+      "sublabel": "Quality gates, traces and metrics",
+      "tag": "Evidence",
+      "pos": [1200, 340],
+      "size": [230, 82]
+    },
+    {
+      "id": "platform-state",
+      "type": "database",
+      "label": "Platform workflow state",
+      "sublabel": "DynamoDB + S3 artifacts",
+      "tag": "Metadata only",
+      "pos": [520, 590],
+      "size": [220, 82]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "AWS account and primary region: us-west-2",
+      "wraps": [
+        "cognito",
+        "platform-api",
+        "agent-registry",
+        "agentcore-gateway",
+        "agentcore-policy",
+        "agentcore-runtime",
+        "agentcore-memory",
+        "agentcore-evalobs",
+        "platform-state"
+      ],
+      "pad": 26
+    }
+  ],
+  "connections": [
+    {
+      "id": "users-to-web",
+      "from": "platform-admins",
+      "to": "web-console",
+      "label": "HTTPS",
+      "variant": "emphasis"
+    },
+    {
+      "id": "cognito-to-web",
+      "from": "cognito",
+      "to": "web-console",
+      "label": "OIDC + PKCE",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "web-to-api",
+      "from": "web-console",
+      "to": "platform-api",
+      "label": "JWT /api/*",
+      "variant": "emphasis"
+    },
+    {
+      "id": "api-to-registry",
+      "from": "platform-api",
+      "to": "agent-registry",
+      "label": "register + govern",
+      "variant": "emphasis",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "api-to-gateway",
+      "from": "platform-api",
+      "to": "agentcore-gateway",
+      "label": "publish + discover",
+      "variant": "emphasis"
+    },
+    {
+      "id": "gateway-to-policy",
+      "from": "agentcore-gateway",
+      "to": "agentcore-policy",
+      "label": "authorize",
+      "variant": "security"
+    },
+    {
+      "id": "api-to-runtime",
+      "from": "platform-api",
+      "to": "agentcore-runtime",
+      "label": "deploy + invoke",
+      "variant": "emphasis",
+      "labelAt": [795, 442]
+    },
+    {
+      "id": "runtime-to-gateway",
+      "from": "agentcore-runtime",
+      "to": "agentcore-gateway",
+      "label": "models + tools"
+    },
+    {
+      "id": "runtime-to-memory",
+      "from": "agentcore-runtime",
+      "to": "agentcore-memory",
+      "label": "session context",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [965, 506]
+    },
+    {
+      "id": "runtime-to-evalobs",
+      "from": "agentcore-runtime",
+      "to": "agentcore-evalobs",
+      "label": "traces + evaluations"
+    },
+    {
+      "id": "api-to-state",
+      "from": "platform-api",
+      "to": "platform-state",
+      "label": "workflow state",
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "violet",
+      "title": "AgentCore owns the AI plane",
+      "items": [
+        "Agent Registry is authoritative for agents, skills, MCP, A2A and blueprints.",
+        "Gateway and Policy govern access; Runtime, Memory and Eval/Observability execute and evidence workloads."
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Supporting AWS stays narrow",
+      "items": [
+        "Cognito provides human identity for this release.",
+        "DynamoDB and S3 hold domain, workflow, audit and artifact metadata outside AgentCore."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Full hosted parity",
+      "items": [
+        "Every visible UI action has a JWT-protected, durable API.",
+        "Mutations are domain-scoped, audited, idempotent and tagged auto-delete=no."
+      ]
+    }
+  ]
+}

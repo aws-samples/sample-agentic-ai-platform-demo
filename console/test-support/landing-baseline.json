@@ -1,0 +1,284 @@
+{
+  "sourceCommit": "6e80e8e75107b4f1d73df816f657ba3e16921063",
+  "GOLDEN_PATH": [
+    {
+      "id": "login",
+      "label": "Login",
+      "full": "Login — identity from your IdP",
+      "own": "plat",
+      "view": null,
+      "story": "Every session starts at the company IdP. Role and domain are resolved server-side — the console never trusts the client.",
+      "plat": [
+        "SSO federation: Okta / Entra ID / Cognito",
+        "Server-issued session token on every API call",
+        "Role & domain resolved from the directory"
+      ],
+      "dom": [
+        "Sign in with your normal company account"
+      ]
+    },
+    {
+      "id": "blueprint",
+      "label": "Blueprint",
+      "full": "Select an approved Blueprint",
+      "own": "plat",
+      "view": "blueprints",
+      "story": "The paved road starts with a versioned, registry-governed template — framework and hosting are choices, not projects.",
+      "plat": [
+        "Curated blueprint library, versioned in the AI Registry",
+        "Framework × hosting compatibility matrix",
+        "Foundation Harness baked in: identity · memory · observability · guardrails"
+      ],
+      "dom": [
+        "Pick the template that fits the use case"
+      ]
+    },
+    {
+      "id": "compose",
+      "label": "Compose",
+      "full": "Compose the Domain Harness",
+      "own": "dom",
+      "view": "compose",
+      "story": "The domain team adds only what is theirs: a persona and approved parts. Nobody re-solves identity, memory or ops.",
+      "plat": [
+        "Approved skills, tools, MCP servers and models to reuse",
+        "Project scaffolding generated from the blueprint"
+      ],
+      "dom": [
+        "Persona and instructions",
+        "Pick domain skills, tools and knowledge",
+        "Own the generated code"
+      ]
+    },
+    {
+      "id": "evaluate",
+      "label": "Evaluate",
+      "full": "Evaluate — the promotion gate",
+      "own": "both",
+      "view": "fleet",
+      "story": "A golden-dataset eval scores the agent before anyone approves it. Evidence, not vibes.",
+      "plat": [
+        "Eval pipeline and scoring infrastructure",
+        "Results recorded as promotion evidence"
+      ],
+      "dom": [
+        "Author the golden dataset",
+        "Decide the quality bar for their agents"
+      ]
+    },
+    {
+      "id": "approve",
+      "label": "Approve",
+      "full": "Approve — governance decides",
+      "own": "plat",
+      "view": "governance",
+      "story": "One approval queue for every resource type. Versioned entries move DRAFT → IN_REVIEW → APPROVED with a full audit trail.",
+      "plat": [
+        "Approval queue, policies and audit trail",
+        "Automated checks bounce bad versions before a human looks"
+      ],
+      "dom": [
+        "Domain lead reviews own-domain requests"
+      ]
+    },
+    {
+      "id": "deploy",
+      "label": "Deploy",
+      "full": "Deploy to managed runtime",
+      "own": "dom",
+      "view": "compose",
+      "story": "One click to AgentCore — runtime, memory and identity provisioned together. The agent registers itself back into the platform.",
+      "plat": [
+        "Managed runtimes: AgentCore · EKS · Lambda · Fargate",
+        "GitHub graduation path for the generated repo"
+      ],
+      "dom": [
+        "Ship when ready — deploys are self-service"
+      ]
+    },
+    {
+      "id": "operate",
+      "label": "Agent Fleet",
+      "full": "Operate the running fleet",
+      "own": "dom",
+      "view": "fleet",
+      "story": "Domain teams run their own agents on a single pane of glass the platform keeps for everyone.",
+      "plat": [
+        "Fleet view over every deployed agent",
+        "Cost attribution per agent and domain"
+      ],
+      "dom": [
+        "Operate own-domain agents day to day",
+        "Act on health and spend"
+      ]
+    },
+    {
+      "id": "observe",
+      "label": "Observe",
+      "full": "Observe — scoped by role",
+      "own": "both",
+      "view": "observability",
+      "story": "Builders drill into their own-domain traces; the platform team sees health, cost and quality aggregates — never payloads.",
+      "plat": [
+        "High-level metrics, SLOs and alerting",
+        "Time-boxed, audited trace-access grants"
+      ],
+      "dom": [
+        "Own-domain traces and memory (with approval)",
+        "Per-agent online quality trends"
+      ]
+    },
+    {
+      "id": "improve",
+      "label": "Improve",
+      "full": "Improve — close the loop",
+      "own": "dom",
+      "view": "observability",
+      "story": "Online eval samples production traffic continuously. Findings feed the next compose — the loop is the product.",
+      "plat": [
+        "Online evaluation sampled from real invocations",
+        "Quality trends wired into observability"
+      ],
+      "dom": [
+        "Iterate on persona, skills and dataset",
+        "Re-run the gate and promote a new version"
+      ]
+    }
+  ],
+  "JOURNEYS": {
+    "admin": {
+      "label": "Platform Admin",
+      "tag": "govern the paved road",
+      "steps": [
+        {
+          "label": "Sign in",
+          "story": "SSO through the company IdP — the admin role and all-domain scope come from the directory, never from the client.",
+          "view": null
+        },
+        {
+          "label": "Governance",
+          "story": "One approval queue across every governed type, plus policies, RBAC, alert definitions and the audit trail.",
+          "view": "governance"
+        },
+        {
+          "label": "AI Registry",
+          "story": "Approve versioned entries: the default-version pointer advances while pinned consumers stay put.",
+          "view": "registry"
+        },
+        {
+          "label": "Domains",
+          "story": "Vend a new domain in one form — namespace, eval pipeline, observability scope and cost bucket, ready for its first builder.",
+          "view": "domains"
+        },
+        {
+          "label": "Agent Fleet",
+          "story": "Single pane of glass over every deployed agent, across all domains, live from the runtime.",
+          "view": "fleet"
+        },
+        {
+          "label": "Cost",
+          "story": "Per-domain chargeback against the vended token budget — spend derives from real invocations.",
+          "view": "cost"
+        },
+        {
+          "label": "Observe",
+          "story": "Aggregates only: health, cost, quality. Trace payloads need a domain-lead grant — the admin sees grant metadata, never content.",
+          "view": "monitoring"
+        }
+      ]
+    },
+    "builder": {
+      "label": "Domain Builder",
+      "tag": "build on the paved road",
+      "steps": [
+        {
+          "label": "Sign in",
+          "story": "Same IdP, different seat: the session resolves to a builder role scoped to one domain.",
+          "view": null
+        },
+        {
+          "label": "Blueprints",
+          "story": "Pick an approved, versioned template — framework and hosting are choices on a compatibility matrix, not projects.",
+          "view": "blueprints"
+        },
+        {
+          "label": "Compose & deploy",
+          "story": "Add a persona and approved skills, tools and MCP servers; one click deploys to a managed runtime and the agent registers back.",
+          "view": "compose"
+        },
+        {
+          "label": "Eval gate",
+          "story": "Run the golden dataset against the deployed agent — the scored run lands on the agent page as promotion evidence.",
+          "view": "fleet"
+        },
+        {
+          "label": "Agent Fleet",
+          "story": "Run your own domain’s agents day to day: health, cost, integration endpoints.",
+          "view": "fleet"
+        },
+        {
+          "label": "Observe & improve",
+          "story": "Own-domain traces (masked until a lead grants access) and the online-eval trend that feeds the next version.",
+          "view": "observability"
+        }
+      ]
+    },
+    "lead": {
+      "label": "Domain Lead",
+      "tag": "approve for your domain",
+      "steps": [
+        {
+          "label": "Sign in",
+          "story": "A builder’s nav with one extra duty: the domain’s approval queue.",
+          "view": null
+        },
+        {
+          "label": "Approvals",
+          "story": "Time-boxed trace-access requests from your own domain’s builders — requester and approver can never be the same person.",
+          "view": "governance"
+        },
+        {
+          "label": "AI Registry",
+          "story": "Own-domain submissions move DRAFT → IN_REVIEW → APPROVED with auto-checks running before any human review.",
+          "view": "registry"
+        },
+        {
+          "label": "Agent Fleet",
+          "story": "Watch the domain fleet: health badges, blueprint-upgrade drift, suspension states.",
+          "view": "fleet"
+        },
+        {
+          "label": "Cost",
+          "story": "Domain spend against the vended budget — the same numbers the platform admin charges back.",
+          "view": "cost"
+        }
+      ]
+    },
+    "user": {
+      "label": "End User",
+      "tag": "consume what is approved",
+      "steps": [
+        {
+          "label": "Sign in",
+          "story": "One tile click issues a real server session.",
+          "view": null
+        },
+        {
+          "label": "Pick an agent",
+          "story": "The catalog shows exactly the agents governance approved — DRAFT agents do not exist for this seat.",
+          "view": "fleet"
+        },
+        {
+          "label": "Chat",
+          "story": "A real streamed answer from the deployed runtime, greeting the signed-in user by name.",
+          "view": "fleet"
+        },
+        {
+          "label": "Behind the scenes",
+          "story": "Every message rides the Foundation Harness below — identity, guardrails, tools, memory, response.",
+          "view": null
+        }
+      ]
+    }
+  }
+}

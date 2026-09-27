@@ -1,0 +1,12 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import * as cdk from 'aws-cdk-lib';import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';import * as iam from 'aws-cdk-lib/aws-iam';import {Template} from 'aws-cdk-lib/assertions';
+import {addPolicyInventory} from '../lib/policy-inventory';
+test('policy inventory is one JWT read route with an independent read-only boundary and exact Gateway bindings',()=>{
+ const app=new cdk.App(),stack=new cdk.Stack(app,'InventoryTest',{env:{account:'111122223333',region:'us-west-2'}});const api=new apigwv2.CfnApi(stack,'Api',{protocolType:'HTTP'}),authorizer=new apigwv2.CfnAuthorizer(stack,'Auth',{apiId:api.ref,authorizerType:'JWT',identitySource:['$request.header.Authorization'],name:'jwt'});
+ const gateways=[{label:'Tools',arn:'arn:aws:bedrock-agentcore:us-west-2:111122223333:gateway/tools-abcdefghij'}];const result=addPolicyInventory(stack,{api,authorizer,gateways,userPoolId:'us-west-2_test',userPoolArn:'arn:aws:cognito-idp:us-west-2:111122223333:userpool/us-west-2_test'});
+ const shared=new iam.ManagedPolicy(stack,'Shared',{statements:[new iam.PolicyStatement({actions:['dynamodb:GetItem'],resources:['*']})]});iam.PermissionsBoundary.of(stack).apply(shared);iam.PermissionsBoundary.of(result.role).apply(result.boundary);
+ const t=Template.fromStack(stack).toJSON();const role=Object.values<any>(t.Resources).find(r=>r.Type==='AWS::IAM::Role'&&r.Properties.RoleName==='AgenticPlatform-Web-PolicyInventoryRole');const boundaryId=Object.keys(t.Resources).find(k=>t.Resources[k].Properties?.ManagedPolicyName==='AgenticPlatform-Web-PolicyInventoryBoundary');assert.deepEqual(role.Properties.PermissionsBoundary,{Ref:boundaryId});
+ const statements=t.Resources[boundaryId!].Properties.PolicyDocument.Statement;const actions=statements.flatMap((s:any)=>[s.Action].flat());assert.ok(actions.includes('bedrock-agentcore:GetGateway'));assert.ok(actions.includes('bedrock-agentcore:ListPolicies'));assert.ok(!actions.some((a:string)=>/CreatePolicy|Update|Delete|PutItem|Invoke|Tag/.test(a)));
+ const gatewayRead=statements.find((s:any)=>[s.Action].flat().includes('bedrock-agentcore:GetGateway'));assert.deepEqual([gatewayRead.Resource].flat(),gateways.map(g=>g.arn));
+ const routes=Object.values<any>(t.Resources).filter(r=>r.Type==='AWS::ApiGatewayV2::Route');assert.equal(routes.length,1);assert.equal(routes[0].Properties.AuthorizationType,'JWT');assert.equal(routes[0].Properties.RouteKey,'GET /api/governance/runtime-policies');
+});

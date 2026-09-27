@@ -1,0 +1,8 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createApprovalDecisionRetries} from './public/approval-decision-retries.mjs';
+const request={fingerprint:'a'.repeat(64),requestId:'12345678-1234-1234-1234-123456789abc',inFlight:true};
+function storage(){const m=new Map();return {getItem:k=>m.get(k)??null,setItem:(k,v)=>m.set(k,v),removeItem:k=>m.delete(k),m};}
+test('same actor/role/domain/approval reload reuses exact request and digest',()=>{const s=storage();const a=createApprovalDecisionRetries(s);a.set('actor-A/platform/approval',request);const b=createApprovalDecisionRetries(s);assert.deepEqual(b.get('actor-A/platform/approval'),{...request,inFlight:false});assert.equal(b.get('actor-B/platform/approval'),undefined);a.clear();assert.equal(a.get('actor-A/platform/approval').requestId,request.requestId);b.delete('actor-A/platform/approval');assert.equal(createApprovalDecisionRetries(s).get('actor-A/platform/approval'),undefined);});
+test('storage unavailable or malformed fails closed rather than minting new request',()=>{assert.throws(()=>createApprovalDecisionRetries({getItem(){throw Error();}}).get('a'));const s=storage();s.m.set('console.approval-retry.v1:a','bad');assert.throws(()=>createApprovalDecisionRetries(s).get('a'));assert.throws(()=>createApprovalDecisionRetries({setItem(){throw Error();}}).set('a',request));});
+test('only digest and request ID persist, not raw reason or tokens',()=>{const s=storage();createApprovalDecisionRetries(s).set('a',{...request,reason:'private reason',accessToken:'synthetic'});assert.deepEqual(Object.keys(JSON.parse([...s.m.values()][0])).sort(),['fingerprint','requestId']);});

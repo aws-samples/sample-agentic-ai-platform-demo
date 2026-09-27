@@ -1,0 +1,18 @@
+{
+  "region": "us-west-2",
+  "memory_id": "data_analyst_agent_memory-2VfuDRCAWO",
+  "memory_name": "data_analyst_agent_memory",
+  "event_expiry_days": 90,
+  "analysts": {
+    "maya": {
+      "actor_id": "maya",
+      "preferences_namespace": "/preferences/maya/",
+      "facts_namespace": "/facts/maya/"
+    },
+    "leo": {
+      "actor_id": "leo",
+      "preferences_namespace": "/preferences/leo/",
+      "facts_namespace": "/facts/leo/"
+    }
+  }
+}

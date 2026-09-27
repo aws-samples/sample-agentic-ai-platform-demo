@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agentic AI Platform — User Journey Guide</title>
+<style>
+  :root{
+    --bg:#0a0e17; --surface:#131b2e; --surface2:#1a2338; --border:rgba(255,255,255,.08);
+    --text:#e2e8f0; --dim:#8892a4; --muted:#5a6578; --accent:#adc6ff;
+    --lock:#f59e0b; --plat:#a78bfa; --dom:#34d399; --ok:#10b981;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;max-width:920px;margin:0 auto;padding:40px 28px 100px}
+  h1{font-size:1.9rem;font-weight:800;background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+  h2{font-size:1.3rem;margin:38px 0 6px;padding-top:20px;border-top:1px solid var(--border)}
+  h3{font-size:1.02rem;margin:22px 0 8px;color:var(--accent)}
+  p{margin:8px 0;color:var(--text)}
+  .sub{color:var(--dim);font-size:1rem;margin-bottom:20px}
+  .lead{color:var(--dim)}
+  a{color:var(--accent)}
+  code{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:1px 6px;font-size:.85em;color:#c7d6f5}
+  .tag{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;padding:3px 9px;border-radius:5px;font-weight:700;display:inline-block;vertical-align:middle;margin-left:8px}
+  .tag.plat{color:var(--plat);background:rgba(167,139,250,.14);border:1px solid rgba(167,139,250,.3)}
+  .tag.dom{color:var(--dom);background:rgba(52,211,153,.14);border:1px solid rgba(52,211,153,.3)}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin:16px 0}
+  .step{display:flex;gap:16px;margin:14px 0}
+  .num{flex-shrink:0;width:30px;height:30px;border-radius:50%;background:var(--dom);color:#0a0e17;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:.9rem}
+  .step .body{flex:1}
+  .fill{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin:10px 0}
+  .fill table{width:100%;border-collapse:collapse;font-size:.9rem}
+  .fill td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:top}
+  .fill td:first-child{color:var(--dim);white-space:nowrap;width:180px;font-weight:600}
+  .fill tr:last-child td{border-bottom:none}
+  .pill{display:inline-block;background:#0b1120;border:1px solid var(--border);border-radius:6px;padding:2px 8px;margin:2px 3px 2px 0;font-size:.82rem;color:#c7d6f5}
+  .note{border-left:3px solid var(--lock);background:rgba(245,158,11,.07);padding:10px 14px;border-radius:0 8px 8px 0;margin:12px 0;font-size:.9rem;color:var(--dim)}
+  .win{border-left:3px solid var(--ok);background:rgba(16,185,129,.07);padding:10px 14px;border-radius:0 8px 8px 0;margin:12px 0;font-size:.9rem}
+  .why{color:var(--muted);font-size:.88rem;font-style:italic;margin-top:4px}
+  .toc{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 22px;margin:20px 0}
+  .toc a{display:block;padding:3px 0;color:var(--dim);text-decoration:none;font-size:.92rem}
+  .toc a:hover{color:var(--accent)}
+  .banner{background:linear-gradient(135deg,rgba(96,165,250,.12),rgba(167,139,250,.12));border:1px solid rgba(167,139,250,.25);border-radius:12px;padding:16px 20px;margin:18px 0;font-size:.95rem}
+  kbd{background:#0b1120;border:1px solid var(--border);border-bottom-width:2px;border-radius:5px;padding:1px 7px;font-size:.82em}
+  .role-legend span{margin-right:16px;font-size:.85rem}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
+</style>
+</head>
+<body>
+
+<h1>Enterprise Agentic AI Platform</h1>
+<p class="sub">The end-to-end user journey — what to click, what to fill in, and why each step matters.</p>
+
+<div class="banner">
+  <b>The console is running at <a href="http://localhost:4000" target="_blank">http://localhost:4000</a>.</b>
+  This guide walks the <b>L3 · Self-Service Scale</b> story: a domain team self-services a new agent on top of a platform-owned Foundation Harness, tests it, evaluates it, and hands it off — without rebuilding identity, memory, observability, or guardrails.
+</div>
+
+<div class="role-legend">
+  <span><span class="dot" style="background:var(--plat)"></span><b>Platform team</b> — control plane (owns the catalog, blueprints, operations, observability)</span>
+  <span><span class="dot" style="background:var(--dom)"></span><b>Domain team</b> — application plane (composes & ships an agent)</span>
+</div>
+
+<div class="toc">
+  <b>The journey</b>
+  <a href="#overview">0 · Overview — understand the platform split</a>
+  <a href="#catalog">1 · Catalog — see what the platform provides <span class="tag plat">platform</span></a>
+  <a href="#blueprints">2 · Blueprints — the Foundation Harness templates <span class="tag plat">platform</span></a>
+  <a href="#build">3 · Build an Agent — the 3-step self-service wizard <span class="tag dom">domain</span></a>
+  <a href="#eval">4 · Offline eval — golden dataset & the iteration loop <span class="tag dom">domain</span></a>
+  <a href="#fleet">5 · Operate & Observability — operate what's deployed <span class="tag plat">platform</span></a>
+  <a href="#handoff">6 · Hand off to GitHub <span class="tag dom">domain</span></a>
+</div>
+
+<h2 id="overview">0 · Overview</h2>
+<p>Open the console and land on <b>Overview</b>. This frames the whole demo: the platform team runs one <b>control plane</b> (catalog, blueprints, operations, observability, guardrails); domain teams work in the <b>application plane</b>, standing on a locked <b>Foundation Harness</b> and differentiating only in their <b>Domain Harness</b> (persona, skills, tools, memory, eval).</p>
+<p class="why">Why it matters: this is the hybrid pattern from the deck. The platform pre-wires the hard, compliance-heavy parts once; every domain team reuses them instead of re-implementing identity/observability/guardrails per project.</p>
+
+<h2 id="catalog">1 · Catalog <span class="tag plat">platform team</span></h2>
+<p>Click <b>Catalog</b> in the sidebar. This is the platform-curated registry — the single source of approved building blocks. Domain teams <b>compose from this</b>, they don't bring their own unvetted models or tools.</p>
+<div class="card">
+  <h3>What you'll see</h3>
+  <table class="fill"><tbody>
+    <tr><td>Approved models</td><td><span class="pill">Claude Opus 4.8</span><span class="pill">Claude Sonnet 5</span><span class="pill">Claude Haiku 4.5</span><span class="pill">OpenAI GPT-5.6 Terra / Luna</span><span class="pill">Google Gemma 4 31B</span></td></tr>
+    <tr><td>Skills (SKILL.md)</td><td><span class="pill">IT Troubleshooting</span><span class="pill">Customer Support</span><span class="pill">HR Policy</span><span class="pill">Data Analysis</span> — each a versioned <code>SKILL.md</code> module (agentskills.io), loaded on demand</td></tr>
+    <tr><td>Tools</td><td><span class="pill">knowledge_base</span><span class="pill">employee_directory</span><span class="pill">order_lookup</span><span class="pill">product_catalogue</span><span class="pill">code_interpreter</span><span class="pill">web_browser</span></td></tr>
+    <tr><td>MCP servers</td><td><span class="pill">AWS Documentation MCP</span><span class="pill">GitHub MCP</span></td></tr>
+  </tbody></table>
+</div>
+<p class="why">Nothing to fill in here — this is a read-only browse. The point is: "here's the paved road."</p>
+
+<h2 id="blueprints">2 · Blueprints <span class="tag plat">platform team</span></h2>
+<p>Click <b>Blueprints</b>. Each card is a predefined <b>Foundation Harness</b> template — a pre-chosen combination of framework, deploy target, memory, streaming, identity and guardrails, with the foundation already wired.</p>
+<div class="card">
+  <h3>The 8 templates</h3>
+  <p><span class="pill">Chat Assistant ✅</span><span class="pill">Workflow Orchestrator ✅</span><span class="pill">RAG Knowledge Agent</span><span class="pill">Claude Agent SDK Assistant</span><span class="pill">LangGraph Multi-Agent</span><span class="pill">MCP Tool Server</span><span class="pill">Action-Taking Agent</span><span class="pill">Lightweight Classifier</span></p>
+  <p style="margin-top:10px"><b>✅ = deployable for real today</b> (Chat Assistant → <code>chatagent</code>, Workflow Orchestrator → <code>workflowagent</code>). The other six are published templates shown as concepts; you can still compose & preview them.</p>
+</div>
+<p>Each card lists the <span style="color:var(--lock)">🔒 locked foundation rows</span>: Identity (Cognito CUSTOM_JWT), Memory (AgentCore Memory), Observability (OTEL → CloudWatch <b>+ Langfuse</b>), Guardrails, Runtime.</p>
+<p class="why">Why it matters: the domain team picks a starting point, not a blank repo. The 🔒 rows are what they <i>don't</i> have to build.</p>
+
+<h2 id="build">3 · Build an Agent — the 3-step wizard <span class="tag dom">domain team</span></h2>
+<p>Click <b>Build an Agent</b> in the sidebar. This is the core self-service flow. We'll build an <b>IT support assistant</b> as the worked example.</p>
+
+<div class="step"><div class="num">1</div><div class="body">
+  <h3>Choose a Foundation Blueprint</h3>
+  <p>Click the <b>Chat Assistant</b> card (it highlights), then <b>Continue →</b>.</p>
+  <div class="fill"><table><tbody>
+    <tr><td>Pick</td><td><b>Chat Assistant</b> (this one deploys for real)</td></tr>
+  </tbody></table></div>
+  <p class="why">You're inheriting identity + memory + observability + guardrails from this blueprint. The panel shows them as locked.</p>
+</div></div>
+
+<div class="step"><div class="num">2</div><div class="body">
+  <h3>Compose your Domain Harness</h3>
+  <p>This is the form where you actually fill things in. A live preview on the right shows <span style="color:var(--lock)">amber = locked foundation</span> vs <span style="color:var(--dom)">green = your domain harness</span>.</p>
+  <div class="fill"><table><tbody>
+    <tr><td>Project name</td><td><code>it-support-demo</code> &nbsp;<span style="color:var(--muted)">(lowercase/digits; becomes the folder + stack name)</span></td></tr>
+    <tr><td>Persona / system prompt</td><td>Paste something like:<br><code style="display:block;white-space:pre-wrap;margin-top:6px;padding:8px">You are AnyCompany's internal IT Helpdesk assistant. Help employees with password resets, VPN, email and laptop setup. Diagnose before prescribing, walk users through one step at a time, and never ask for passwords or MFA codes.</code><span style="color:var(--muted);font-size:.82rem">This becomes the agent's editable <code>instructions.md</code> — you can change it later and redeploy without touching code.</span></td></tr>
+    <tr><td>Approved model</td><td>Leave <b>Blueprint default</b>, or pick <span class="pill">Claude Haiku 4.5</span> for a fast/cheap demo</td></tr>
+    <tr><td>Template options</td><td>Prefilled from the blueprint. Keep <b>Memory: longAndShortTerm</b>, <b>Streaming ✓</b>, <b>Per-user identity ✓</b>, <b>Guardrails ✓</b></td></tr>
+    <tr><td>Reuse platform skills</td><td>Click <b>IT Troubleshooting</b> so it turns green (this copies the real <code>SKILL.md</code> into your project)</td></tr>
+    <tr><td>Reuse platform tools</td><td>Optional — e.g. click <b>knowledge_base</b> to wire a gateway tool stub</td></tr>
+  </tbody></table></div>
+  <p>Then click <b>Generate →</b>.</p>
+  <div class="note">The prompt is written as sections (Role / How you work / Boundaries) rather than one blob — that's the pattern advanced agents use, and it keeps the agent predictable when you later eval it.</div>
+</div></div>
+
+<div class="step"><div class="num">3</div><div class="body">
+  <h3>Test &amp; hand off</h3>
+  <p>Now you're on the final step with a real generated project. Work top to bottom:</p>
+  <div class="fill"><table><tbody>
+    <tr><td><b>Validate</b></td><td>Click it → should show <b>✓ Valid</b> (checks the AgentCore config)</td></tr>
+    <tr><td><b>Deploy to AgentCore</b></td><td>Click it → provisions runtime + memory + identity (~3–5 min). This is a real AWS deploy.</td></tr>
+    <tr><td><b>Chat</b></td><td>Pick who you are in <b>Signed in as</b> (default <b>Melanie Melli</b>; also Alice/Bob), type a message e.g. <code>What's the SLA for a critical ticket?</code> — the reply <b>streams token-by-token</b> and the agent greets you by the selected name (identity is wired, memory is scoped per user).</td></tr>
+    <tr><td><b>Run Eval (promotion gate)</b></td><td>Click it → LLM-as-judge over recent traces, PASS/below-bar vs a threshold</td></tr>
+    <tr><td><b>Offline eval · golden dataset</b></td><td>See section 4 below</td></tr>
+    <tr><td><b>Export to GitHub</b></td><td>See section 6 below</td></tr>
+  </tbody></table></div>
+  <div class="note">Deploy is a real ~3–5 min AWS operation. For a fast demo you can skip deploying a brand-new project and instead use the already-deployed <code>it-helpdesk</code> from the <b>Operate</b> view — it has identity, memory, a skill, and a golden dataset already set up.</div>
+</div></div>
+
+<h2 id="eval">4 · Offline eval — golden dataset &amp; the iteration loop <span class="tag dom">domain team</span></h2>
+<p>On the test step (and on any deployed agent's detail page) there's an <b>Offline eval · golden dataset</b> card. This is the predefined eval pipeline that ships inside the Foundation Harness.</p>
+<div class="card">
+  <h3>What to do</h3>
+  <div class="fill"><table><tbody>
+    <tr><td>Dataset</td><td>The card lists the project's golden scenarios (inputs + expected behavior). <code>it-helpdesk</code> ships 8: SLA questions, VPN runbook, MFA-lost, out-of-scope, etc.</td></tr>
+    <tr><td>Evaluators</td><td>Tick the ones to score with — built-ins like <span class="pill">Builtin.Correctness</span> plus any custom judge like <span class="pill">runbookAdherence</span> (a custom LLM-as-judge that scores IT runbook discipline)</td></tr>
+    <tr><td>Run</td><td>Click <b>Run golden-dataset eval</b>. It invokes the deployed agent for each scenario, waits ~3 min for trace ingestion, scores each with its own ground truth, and saves the run with aggregate scores.</td></tr>
+  </tbody></table></div>
+  <div class="win"><b>The iteration loop (the whole point):</b> change the model or the prompt, redeploy, run the eval again. Each run is saved with a model+prompt snapshot, so you compare before/after. In our test, tightening the IT prompt moved <code>Correctness 0.69 → 0.75</code> and the custom <code>runbookAdherence 1.63 → 2.13</code> — measured, not guessed.</div>
+</div>
+<p class="why">Why it matters: this is what makes changing a deployed agent safe and fast. You get numbers back in minutes, so the develop → measure → improve loop is tight.</p>
+
+<h2 id="fleet">5 · Operate &amp; Observability <span class="tag plat">platform team</span></h2>
+<h3>Operate</h3>
+<p>Click <b>Operate</b> — a single pane of glass over every deployed AgentCore runtime (live from AWS). Click a row (e.g. <code>ithelpdesk_chat_agent</code>) to open its detail: model, memory strategies, identity, skills, observability, plus a live streaming chat and the same golden-eval card.</p>
+<h3>Observability</h3>
+<p>Click <b>Observability</b>. Observability ships <b>inside the harness</b> — one set of OTEL spans, <b>two backends</b>:</p>
+<div class="fill"><table><tbody>
+  <tr><td>Backend 1 · CloudWatch</td><td>AgentCore-native pipeline; powers the L1–L4 metric layers (tokens, latency, reasoning cycles) and <code>agentcore run eval</code></td></tr>
+  <tr><td>Backend 2 · Langfuse</td><td>A second OTLP exporter added by the harness — per-trace timelines, token costs, per-user/session drill-down. Keys live in SSM (never in code). The page shows a live table of recent Langfuse traces.</td></tr>
+</tbody></table></div>
+<p class="why">Nothing to fill in — but this is a strong talking point: the domain team wrote zero observability code and gets two backends.</p>
+
+<h2 id="handoff">6 · Hand off to GitHub <span class="tag dom">domain team</span></h2>
+<p>Back on the Build step 3, the <b>Hand off</b> card is the L3→L4 artifact: export a GitHub repo with the foundation code + a <code>CLAUDE.md</code> that guides the domain team's coding assistant.</p>
+<div class="fill"><table><tbody>
+  <tr><td>GitHub account</td><td>Authorize the account that should own this new private repository. Authorization is requested again for every repository.</td></tr>
+  <tr><td>Repository name</td><td>e.g. <code>it-support-demo</code> — lowercase/digits/<code>-_.</code>; a duplicate name fails fast with a clear message</td></tr>
+  <tr><td>Action</td><td>Approve the immutable preview, then click <b>Authorize GitHub and create repository</b></td></tr>
+</tbody></table></div>
+<p class="why">This is the bridge to L4 (Adaptive Platform): the same golden-path artifact that AI-assisted onboarding would generate — here produced by self-service.</p>
+
+<h2 style="border:none">In one sentence</h2>
+<p class="lead">A domain team stands on a platform blueprint, composes a persona + skills + tools, deploys a real agent with identity/memory/observability/guardrails they never had to build, proves quality against a golden dataset, and hands off a clean repo — the platform's paved road, self-served.</p>
+
+<p style="margin-top:30px;color:var(--muted);font-size:.85rem">Console: <a href="http://localhost:4000" target="_blank">http://localhost:4000</a> · This guide: <code>docs/user-journey.html</code></p>
+
+</body>
+</html>

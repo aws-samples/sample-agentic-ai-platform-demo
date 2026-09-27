@@ -1,0 +1,113 @@
+# Environment & secrets
+.env
+.demo-secrets/
+
+# Dependencies & build artifacts
+**/node_modules
+**/.vite
+**/cdk.out
+.venv
+dist/
+build/
+*.zip
+
+# IDE & editor
+.vscode/
+.idea/
+*.code-workspace
+
+# OS files
+.DS_Store
+
+# Python
+__pycache__
+.ruff_cache
+
+# AI assistant / dev lifecycle docs
+.kiro
+.amazonq/
+.claude/
+.mcp.json
+aidlc-docs/
+codex-*.log
+
+# AgentCore CLI generated state (account-specific; self-healed at runtime)
+**/agentcore/.cli/
+**/.env.local
+**/uv.lock
+
+# Blueprint / domain-example build payloads (large; restored on deploy)
+domain-examples/**/.venv
+domain-examples/**/node_modules
+domain-examples/**/.cli
+
+# UI-generated domain projects (ephemeral) and export staging
+# B13.2 exception: supportdesk is the committed customer-support demo example
+# (same status as domain-examples/it-helpdesk) — the agent-registry seed,
+# usage-ledger seed and the supportdesk_chat_agent runtime all point at it,
+# so a fresh clone must be able to resolve projectDir("supportdesk").
+domain-examples/generated/*
+!domain-examples/generated/supportdesk/
+# data-analyst: committed platform demo example — the real Athena-era analyst
+# agent (Codex SDK + Glue/Athena data plane), registered via the create wizard.
+!domain-examples/generated/data-analyst/
+!domain-examples/generated/supportdesk/agentcore/.cli/
+domain-examples/generated/supportdesk/agentcore/.cli/*
+!domain-examples/generated/supportdesk/agentcore/.cli/deployed-state.json
+console/node_modules/
+.export-staging/
+
+# Deployed-agent approval runtime state
+console/agent-registry.json
+
+# TLP-B8 agent lifecycle runtime state (Exported/In development/.../Registered tracker)
+console/agent-lifecycle.json
+
+# AI Registry — unified registry runtime state, seeded from console/
+# registry-seed.json + catalog.json models/blueprints at first server start
+# (see console/server.mjs migrateAiRegistry)
+console/ai-registry.json
+
+# G5 projects — runtime state, backfilled from compositions on first read
+# (see console/projects.mjs)
+console/projects.json
+
+# but DO track the console UI
+!console/public/
+!console/public/index.html
+
+# CDK build lockfiles inside blueprints (restored by npm install)
+**/agentcore/cdk/package-lock.json
+
+# Office lock files
+~$*
+console/usage-ledger.json
+console/sim-memories.json
+console/hitl-policies.json
+console/hitl-audit.json
+console/alert-policies.json
+console/obs-audit.json
+console/memory-attributions.json
+console/kb-store.json
+console/domain-policies.json
+console/policy-exemptions.json
+console/blueprint-submissions.json
+console/eval-platform.json
+
+# Account-specific AWS registry/gateway config — generated per deployment by
+# node infra/platform-registry/scripts/generate-console-config.mjs (never commit
+# real account ids/ARNs/URLs; see console/*-config.example.json)
+console/registry-config.json
+console/gateway-config.json
+
+# Local serverless deployment outputs
+infra/serverless-platform/deployment-outputs.json
+infra/serverless-platform/security-audit/
+
+# Generated architecture visual-validation artifacts
+docs/diagrams/*.visual-check.*
+infra/serverless-platform/deployment-outputs*.json
+CLAUDE.md
+
+# Local recordings, screenshots, plans and verification output
+artifacts/

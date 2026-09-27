@@ -1,0 +1,8 @@
+{
+  "scenario_id": "q6_avg_order_value_by_country",
+  "recordedAt": "2026-08-25T03:50:20.281Z",
+  "source": "record-transcripts.mjs",
+  "endpoint": "http://localhost:8081/invocations",
+  "sessionId": "rec-q6_avg_order_value_by_country-1787629810775",
+  "turns": 1
+}

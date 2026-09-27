@@ -1,0 +1,820 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "WritePlatformLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:logs:${REGION}:${ACCOUNT}:log-group:AgenticPlatform-Web-*:*"
+      ]
+    },
+    {
+      "Sid": "WriteXRayTelemetry",
+      "Effect": "Allow",
+      "Action": [
+        "xray:GetSamplingRules",
+        "xray:GetSamplingTargets",
+        "xray:PutTraceSegments",
+        "xray:PutTelemetryRecords"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Sid": "WriteAgentRuntimeLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:DescribeLogStreams",
+        "logs:PutLogEvents"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:logs:${REGION}:${ACCOUNT}:log-group:/aws/bedrock-agentcore/runtimes/*"
+      ]
+    },
+    {
+      "Sid": "DescribeAgentRuntimeLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:DescribeLogGroups"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:logs:${REGION}:${ACCOUNT}:log-group:*"
+      ]
+    },
+    {
+      "Sid": "WriteAgentRuntimeMetrics",
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:PutMetricData"
+      ],
+      "Resource": [
+        "*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "cloudwatch:namespace": "bedrock-agentcore"
+        }
+      }
+    },
+    {
+      "Sid": "ReadAgentRuntimeMetrics",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock-agentcore:GetMemory",
+        "bedrock-agentcore:ListMemories",
+        "bedrock:GetKnowledgeBase",
+        "ce:GetCostAndUsage",
+        "cloudwatch:GetMetricData"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Sid": "ReadAgentRuntimeWorkloadIdentity",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock-agentcore:GetWorkloadAccessToken",
+        "bedrock-agentcore:GetWorkloadAccessTokenForJWT",
+        "bedrock-agentcore:GetWorkloadAccessTokenForUserId"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:bedrock-agentcore:${REGION}:${ACCOUNT}:workload-identity-directory/default",
+        "arn:${PARTITION}:bedrock-agentcore:${REGION}:${ACCOUNT}:workload-identity-directory/default/workload-identity/*"
+      ]
+    },
+    {
+      "Sid": "ReadCurrentDemoOperator",
+      "Effect": "Allow",
+      "Action": [
+        "cognito-idp:AdminAddUserToGroup",
+        "cognito-idp:AdminGetUser",
+        "cognito-idp:AdminListGroupsForUser",
+        "cognito-idp:AdminRemoveUserFromGroup",
+        "cognito-idp:CreateGroup",
+        "cognito-idp:DeleteGroup",
+        "cognito-idp:GetGroup",
+        "cognito-idp:ListUsers",
+        "cognito-idp:ListUsersInGroup"
+      ],
+      "Resource": [
+        "${USER_POOL_ARN}"
+      ]
+    },
+    {
+      "Sid": "InvokeJourneyInceptionModel",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel"
+      ],
+      "Resource": [
+        "${JOURNEY_INCEPTION_MODEL_ARN}"
+      ]
+    },
+    {
+      "Sid": "ReadJourneyGitHubOAuthClientSecret",
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetSecretValue"
+      ],
+      "Resource": [
+        "${JOURNEY_GITHUB_OAUTH_CLIENT_SECRET_ARN}"
+      ]
+    },
+    {
+      "Sid": "CreatePlatformDomainRegistry",
+      "Effect": "Allow",
+      "Action": [
+        "agent-registry:CreateRegistry"
+      ],
+      "Resource": [
+        "*"
+      ],
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "aws:TagKeys": [
+            "auto-delete",
+            "managedBy",
+            "project"
+          ]
+        },
+        "StringEquals": {
+          "aws:RequestTag/auto-delete": "no",
+          "aws:RequestTag/managedBy": "cdk",
+          "aws:RequestTag/project": "agentic-ai-platform-demo",
+          "aws:RequestedRegion": "${REGION}"
+        }
+      }
+    },
+    {
+      "Sid": "TagPlatformDomainRegistry",
+      "Effect": "Allow",
+      "Action": [
+        "agent-registry:TagResource"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:agent-registry:${REGION}:${ACCOUNT}:registry/*"
+      ],
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "aws:TagKeys": [
+            "auto-delete",
+            "managedBy",
+            "project"
+          ]
+        },
+        "StringEquals": {
+          "aws:RequestTag/auto-delete": "no",
+          "aws:RequestTag/managedBy": "cdk",
+          "aws:RequestTag/project": "agentic-ai-platform-demo"
+        }
+      }
+    },
+    {
+      "Sid": "CreateHostedAcceptanceDomainRegistry",
+      "Effect": "Allow",
+      "Action": [
+        "agent-registry:CreateRegistry"
+      ],
+      "Resource": [
+        "*"
+      ],
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "aws:TagKeys": [
+            "auto-delete",
+            "managedBy",
+            "project"
+          ]
+        },
+        "StringEquals": {
+          "aws:RequestTag/auto-delete": "no",
+          "aws:RequestTag/managedBy": "hosted-acceptance",
+          "aws:RequestTag/project": "agentic-ai-platform-demo",
+          "aws:RequestedRegion": "${REGION}"
+        }
+      }
+    },
+    {
+      "Sid": "TagHostedAcceptanceDomainRegistry",
+      "Effect": "Allow",
+      "Action": [
+        "agent-registry:TagResource"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:agent-registry:${REGION}:${ACCOUNT}:registry/*"
+      ],
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "aws:TagKeys": [
+            "auto-delete",
+            "managedBy",
+            "project"
+          ]
+        },
+        "StringEquals": {
+          "aws:RequestTag/auto-delete": "no",
+          "aws:RequestTag/managedBy": "hosted-acceptance",
+          "aws:RequestTag/project": "agentic-ai-platform-demo"
+        }
+      }
+    },
+    {
+      "Sid": "ManageRegistryWorkloadIdentity",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock-agentcore:CreateWorkloadIdentity",
+        "bedrock-agentcore:DeleteWorkloadIdentity"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:bedrock-agentcore:${REGION}:${ACCOUNT}:workload-identity-directory/*"
+      ]
+    },
+    {
+      "Sid": "ListControlPlaneRegistries",
+      "Effect": "Allow",
+      "Action": [
+        "agent-registry:ListRegistryRecords"
+      ],
+      "Resource": [
+        "${SHARED_REGISTRY_ARN}",
+        "${PLATFORM_REGISTRY_ARN}",
+        "${CUSTOMER_SUPPORT_REGISTRY_ARN}",
+        "${OPERATIONS_REGISTRY_ARN}"
+      ]
+    },
+    {
+      "Sid": "ReadControlPlaneRegistryRecords",
+      "Effect": "Allow",
+      "Action": [
+        "agent-registry:GetDiscoverableRegistryRecord",
+        "agent-registry:GetRegistryRecord",
+        "agent-registry:UpdateRegistryRecordStatus"
+      ],
+      "Resource": [
+        "${SHARED_REGISTRY_ARN}/record/*",
+        "${PLATFORM_REGISTRY_ARN}/record/*",
+        "${CUSTOMER_SUPPORT_REGISTRY_ARN}/record/*",
+        "${OPERATIONS_REGISTRY_ARN}/record/*"
+      ]
+    },
+    {
+      "Sid": "ListDynamicControlPlaneRegistries",
+      "Effect": "Allow",
+      "Action": [
+        "agent-registry:ListRegistryRecords"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:agent-registry:${REGION}:${ACCOUNT}:registry/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/auto-delete": "no",
+          "aws:ResourceTag/managedBy": [
+            "cdk",
+            "hosted-acceptance"
+          ],
+          "aws:ResourceTag/project": "agentic-ai-platform-demo"
+        }
+      }
+    },
+    {
+      "Sid": "ReadDynamicControlPlaneRegistryRecords",
+      "Effect": "Allow",
+      "Action": [
+        "agent-registry:GetDiscoverableRegistryRecord",
+        "agent-registry:GetRegistryRecord",
+        "agent-registry:UpdateRegistryRecordStatus"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:agent-registry:${REGION}:${ACCOUNT}:registry/*/record/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/auto-delete": "no",
+          "aws:ResourceTag/managedBy": [
+            "cdk",
+            "hosted-acceptance"
+          ],
+          "aws:ResourceTag/project": "agentic-ai-platform-demo"
+        }
+      }
+    },
+    {
+      "Sid": "CreateGovernedRegistryRecords",
+      "Effect": "Allow",
+      "Action": [
+        "agent-registry:CreateRegistryRecord",
+        "agent-registry:TagResource"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:agent-registry:${REGION}:${ACCOUNT}:registry/*",
+        "arn:${PARTITION}:agent-registry:${REGION}:${ACCOUNT}:registry/*/record/*"
+      ],
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "aws:TagKeys": [
+            "auto-delete",
+            "managedBy",
+            "project"
+          ]
+        },
+        "StringEquals": {
+          "aws:RequestTag/auto-delete": "no",
+          "aws:RequestTag/managedBy": "cdk",
+          "aws:RequestTag/project": "agentic-ai-platform-demo",
+          "aws:RequestedRegion": "${REGION}"
+        }
+      }
+    },
+    {
+      "Sid": "MutateGovernedRegistryRecords",
+      "Effect": "Allow",
+      "Action": [
+        "agent-registry:SubmitRegistryRecordForApproval",
+        "agent-registry:UpdateRegistryRecordStatus"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:agent-registry:${REGION}:${ACCOUNT}:registry/*/record/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/auto-delete": "no",
+          "aws:ResourceTag/managedBy": "cdk",
+          "aws:ResourceTag/project": "agentic-ai-platform-demo",
+          "aws:RequestedRegion": "${REGION}"
+        }
+      }
+    },
+    {
+      "Sid": "CreateHostedAcceptanceFixtureRecord",
+      "Effect": "Allow",
+      "Action": [
+        "agent-registry:CreateRegistryRecord"
+      ],
+      "Resource": [
+        "${SHARED_REGISTRY_ARN}"
+      ],
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "aws:TagKeys": [
+            "auto-delete",
+            "managedBy",
+            "project"
+          ]
+        },
+        "StringEquals": {
+          "aws:RequestTag/auto-delete": "no",
+          "aws:RequestTag/managedBy": "hosted-acceptance",
+          "aws:RequestTag/project": "agentic-ai-platform-demo"
+        }
+      }
+    },
+    {
+      "Sid": "TagHostedAcceptanceFixtureRecord",
+      "Effect": "Allow",
+      "Action": [
+        "agent-registry:TagResource"
+      ],
+      "Resource": [
+        "${SHARED_REGISTRY_ARN}/record/*"
+      ],
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "aws:TagKeys": [
+            "auto-delete",
+            "managedBy",
+            "project"
+          ]
+        },
+        "StringEquals": {
+          "aws:RequestTag/auto-delete": "no",
+          "aws:RequestTag/managedBy": "hosted-acceptance",
+          "aws:RequestTag/project": "agentic-ai-platform-demo"
+        }
+      }
+    },
+    {
+      "Sid": "ReadHostedAcceptanceFixtureRecord",
+      "Effect": "Allow",
+      "Action": [
+        "agent-registry:ListTagsForResource"
+      ],
+      "Resource": [
+        "${SHARED_REGISTRY_ARN}/record/*"
+      ]
+    },
+    {
+      "Sid": "MutateHostedAcceptanceFixtureRecord",
+      "Effect": "Allow",
+      "Action": [
+        "agent-registry:DeleteRegistryRecord",
+        "agent-registry:SubmitRegistryRecordForApproval"
+      ],
+      "Resource": [
+        "${SHARED_REGISTRY_ARN}/record/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/auto-delete": "no",
+          "aws:ResourceTag/managedBy": "hosted-acceptance",
+          "aws:ResourceTag/project": "agentic-ai-platform-demo"
+        }
+      }
+    },
+    {
+      "Sid": "ReadHostedAcceptanceDomainRegistry",
+      "Effect": "Allow",
+      "Action": [
+        "agent-registry:GetRegistry",
+        "agent-registry:ListTagsForResource"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:agent-registry:${REGION}:${ACCOUNT}:registry/*"
+      ]
+    },
+    {
+      "Sid": "DeleteHostedAcceptanceDomainRegistry",
+      "Effect": "Allow",
+      "Action": [
+        "agent-registry:DeleteRegistry"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:agent-registry:${REGION}:${ACCOUNT}:registry/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/auto-delete": "no",
+          "aws:ResourceTag/managedBy": [
+            "cdk",
+            "hosted-acceptance"
+          ],
+          "aws:ResourceTag/project": "agentic-ai-platform-demo"
+        }
+      }
+    },
+    {
+      "Sid": "ReadControlPlaneToolsGateway",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock-agentcore:GetGatewayTarget",
+        "bedrock-agentcore:ListGatewayTargets"
+      ],
+      "Resource": [
+        "${TOOLS_GATEWAY_ARN}"
+      ]
+    },
+    {
+      "Sid": "ManageControlPlaneLlmGatewayRateLimits",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock-agentcore:BatchPutGatewayRateLimits",
+        "bedrock-agentcore:ListGatewayRateLimits"
+      ],
+      "Resource": [
+        "${LLM_GATEWAY_ARN}"
+      ]
+    },
+    {
+      "Sid": "InvokeControlPlaneLlmGateway",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock-agentcore:InvokeGateway"
+      ],
+      "Resource": [
+        "${LLM_GATEWAY_ARN}"
+      ],
+      "Condition": {
+        "ArnEquals": {
+          "aws:PrincipalArn": "${GATEWAY_INVOKER_ROLE_ARN}"
+        }
+      }
+    },
+    {
+      "Sid": "AssumeGatewayInvokerRole",
+      "Effect": "Allow",
+      "Action": [
+        "sts:AssumeRole",
+        "sts:SetSourceIdentity"
+      ],
+      "Resource": [
+        "${GATEWAY_INVOKER_ROLE_ARN}"
+      ]
+    },
+    {
+      "Sid": "ReadGovernedAgentRuntime",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock-agentcore:GetAgentRuntime"
+      ],
+      "Resource": [
+        "${AGENT_RUNTIME_ARN}"
+      ]
+    },
+    {
+      "Sid": "ReadGovernedAgentRuntimeEndpoints",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock-agentcore:GetAgentRuntimeEndpoint"
+      ],
+      "Resource": [
+        "${AGENT_RUNTIME_ENDPOINT_ARN_PATTERN}"
+      ]
+    },
+    {
+      "Sid": "InvokeGovernedAgentRuntime",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock-agentcore:InvokeAgentRuntime",
+        "bedrock-agentcore:InvokeAgentRuntimeForUser"
+      ],
+      "Resource": [
+        "${AGENT_RUNTIME_ARN}",
+        "${AGENT_RUNTIME_ENDPOINT_ARN_PATTERN}"
+      ]
+    },
+    {
+      "Sid": "ReadRuntimeInvocationProofSecret",
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetSecretValue"
+      ],
+      "Resource": [
+        "${RUNTIME_INVOCATION_PROOF_SECRET_ARN}"
+      ]
+    },
+    {
+      "Sid": "WriteRuntimeInvocationProofSecret",
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:PutSecretValue"
+      ],
+      "Resource": [
+        "${RUNTIME_INVOCATION_PROOF_SECRET_ARN}"
+      ],
+      "Condition": {
+        "ArnEquals": {
+          "aws:PrincipalArn": "${RUNTIME_PROOF_CONFIGURATOR_ROLE_ARN}"
+        }
+      }
+    },
+    {
+      "Sid": "ReadHitlPolicyCatalog",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem"
+      ],
+      "Resource": [
+        "${PLATFORM_STATE_TABLE_ARN}"
+      ],
+      "Condition": {
+        "ForAllValues:StringLike": {
+          "dynamodb:LeadingKeys": [
+            "HITL_POLICY#*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "ReadPlatformState",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:Query"
+      ],
+      "Resource": [
+        "${PLATFORM_STATE_TABLE_ARN}"
+      ],
+      "Condition": {
+        "ForAllValues:StringLike": {
+          "dynamodb:LeadingKeys": [
+            "AGENT#*",
+            "APPROVAL#*",
+            "AUDIT#*",
+            "BREAK_GLASS",
+            "DEPLOYMENT#*",
+            "DELIVERY#*",
+            "DOMAIN",
+            "ENTITLEMENT#*",
+            "EXPERIENCE_INVOCATION#*",
+            "GITHUB_AUTHORIZATION#*",
+            "GRANT#*",
+            "GUARDRAIL_EXCEPTION#*",
+            "CATALOG_VISIBILITY#platform",
+            "HITL_POLICY#platform",
+            "ALERT_POLICY#platform",
+            "INCIDENT#*",
+            "JOURNEY#*",
+            "MODEL_POLICY",
+            "MODEL_POLICY_AUDIT#*",
+            "MUTATION#*",
+            "PROJECT#*",
+            "REGISTRY_RECORD#*",
+            "REQUEST#*",
+            "SESSION#*",
+            "SUBMISSION#*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "ReadPlatformAuditMetadata",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:Query"
+      ],
+      "Resource": [
+        "${PLATFORM_STATE_TABLE_ARN}/index/EntityTypeIndex"
+      ]
+    },
+    {
+      "Sid": "WritePlatformState",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:PutItem"
+      ],
+      "Resource": [
+        "${PLATFORM_STATE_TABLE_ARN}"
+      ],
+      "Condition": {
+        "ForAllValues:StringLike": {
+          "dynamodb:LeadingKeys": [
+            "AGENT#*",
+            "APPROVAL#*",
+            "AUDIT#*",
+            "BREAK_GLASS",
+            "DEPLOYMENT#*",
+            "DELIVERY#*",
+            "DOMAIN",
+            "ENTITLEMENT#*",
+            "EXPERIENCE_INVOCATION#*",
+            "GITHUB_AUTHORIZATION#*",
+            "GRANT#*",
+            "GUARDRAIL_EXCEPTION#*",
+            "CATALOG_VISIBILITY#platform",
+            "HITL_POLICY#platform",
+            "ALERT_POLICY#platform",
+            "INCIDENT#*",
+            "JOURNEY#*",
+            "MODEL_POLICY",
+            "MODEL_POLICY_AUDIT#*",
+            "MUTATION#*",
+            "PROJECT#*",
+            "REGISTRY_RECORD#*",
+            "REQUEST#*",
+            "SESSION#*",
+            "SUBMISSION#*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "UpdateExperienceInvocation",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:UpdateItem"
+      ],
+      "Resource": [
+        "${PLATFORM_STATE_TABLE_ARN}"
+      ],
+      "Condition": {
+        "ForAllValues:StringLike": {
+          "dynamodb:LeadingKeys": [
+            "DELIVERY#*",
+            "EXPERIENCE_INVOCATION#*",
+            "GITHUB_AUTHORIZATION#*",
+            "MUTATION#*",
+            "PROJECT#*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "ReadDeleteHostedAcceptanceState",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:DeleteItem",
+        "dynamodb:GetItem"
+      ],
+      "Resource": [
+        "${PLATFORM_STATE_TABLE_ARN}"
+      ],
+      "Condition": {
+        "ForAllValues:StringLike": {
+          "dynamodb:LeadingKeys": [
+            "AGENT#customer_support#hosted-project-*",
+            "AGENT#operations#hosted-project-*",
+            "APPROVAL#hosted_acceptance_*",
+            "AUDIT#*",
+            "DEPLOYMENT#customer_support#hosted-project-*",
+            "DEPLOYMENT#operations#hosted-project-*",
+            "DELIVERY#*",
+            "DOMAIN",
+            "ENTITLEMENT#*",
+            "EXPERIENCE_INVOCATION#*",
+            "HOSTED_ACCEPTANCE",
+            "HOSTED_ROLE_SWITCHING",
+            "JOURNEY#*",
+            "MUTATION#*",
+            "PROJECT#customer_support",
+            "PROJECT#operations",
+            "REQUEST#*",
+            "SESSION#*",
+            "SUBMISSION#*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "InvokeRegistryDecisionFinalizer",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:GetFunction",
+        "lambda:InvokeFunction"
+      ],
+      "Resource": [
+        "${REGISTRY_DECISION_FINALIZER_FUNCTION_ARN}",
+        "${RUNTIME_PROOF_CONFIGURATOR_FUNCTION_ARN}"
+      ]
+    },
+    {
+      "Sid": "ReadCdkAssets",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject*",
+        "s3:GetBucket*",
+        "s3:List*"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:s3:::cdk-${QUALIFIER}-assets-${ACCOUNT}-${REGION}",
+        "arn:${PARTITION}:s3:::cdk-${QUALIFIER}-assets-${ACCOUNT}-${REGION}/*"
+      ]
+    },
+    {
+      "Sid": "DeployWebAssets",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject*",
+        "s3:GetBucket*",
+        "s3:List*",
+        "s3:DeleteObject*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging",
+        "s3:Abort*"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:s3:::agenticplatform-web-*",
+        "arn:${PARTITION}:s3:::agenticplatform-web-*/*"
+      ]
+    },
+    {
+      "Sid": "InvalidateCloudFront",
+      "Effect": "Allow",
+      "Action": [
+        "cloudfront:CreateInvalidation",
+        "cloudfront:GetInvalidation"
+      ],
+      "Resource": [
+        "${CLOUDFRONT_DISTRIBUTION_ARN}"
+      ]
+    },
+    {
+      "Sid": "ReconcileCloudFrontAlarm",
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:PutMetricAlarm",
+        "cloudwatch:DeleteAlarms",
+        "cloudwatch:ListTagsForResource",
+        "cloudwatch:TagResource",
+        "cloudwatch:UntagResource"
+      ],
+      "Resource": [
+        "${CLOUDFRONT_ALARM_ARN_PATTERN}"
+      ]
+    },
+    {
+      "Sid": "ReconcileRuntimeBoundaryTags",
+      "Effect": "Allow",
+      "Action": [
+        "iam:ListPolicyTags",
+        "iam:TagPolicy",
+        "iam:UntagPolicy"
+      ],
+      "Resource": [
+        "${RUNTIME_PERMISSIONS_BOUNDARY_ARN}",
+        "arn:${PARTITION}:iam::${ACCOUNT}:policy/AgenticPlatform-Web-PolicyInventoryBoundary"
+      ]
+    }
+  ]
+}

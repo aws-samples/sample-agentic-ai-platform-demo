@@ -1,0 +1,76 @@
+# platform-gate: v1 (org required check — do not remove or bypass)
+# CD (dev): every push to main auto-deploys the `dev` deployment target via
+# OIDC. Single AWS account, environment model = AgentCore deployment target
+# (agentcore/aws-targets.json — see promote.yml for staging/prod). No manual
+# approval — dev is the fast feedback loop.
+# Exports ship with aws-targets.json reset to [] (no deploy targets leak), so
+# until a consumer configures a `dev` target + a CDK-capable deploy role the
+# deploy step skips honestly instead of failing red.
+name: deploy-dev
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  deploy-dev:
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install AgentCore CLI
+        # The AgentCore CLI is the npm package `@aws/agentcore`. The deprecated
+        # pip starter toolkit also installs an `agentcore` command but is a
+        # different tool with different options — installing it here caused
+        # `No such option: -y` (deploy-dev run 32854161825). uv is required by
+        # the CLI's CodeZip bundling step for python runtimes.
+        run: |
+          npm install -g @aws/agentcore
+          pip install --quiet uv
+      - name: Check deployment configuration
+        # Skip contract (platform-telemetry v1): when no deploy role or target
+        # is configured the Deploy step below is SKIPPED via `if:` so its step
+        # conclusion is a native GitHub `skipped` — gates/report-run.mjs reads
+        # that step conclusion and reports the deployment as status "skipped"
+        # instead of success. Keep the step name prefixed "Deploy " and this
+        # check's output name stable — the reporter depends on both.
+        id: deployment
+        env:
+          AWS_DEPLOY_ROLE_ARN: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+        run: |
+          TARGET=dev
+          if [ -z "$AWS_DEPLOY_ROLE_ARN" ]; then
+            echo "::notice::AWS_DEPLOY_ROLE_ARN is not configured; deployment is skipped."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          elif node -e 'const t=require("./agentcore/aws-targets.json");process.exit(Array.isArray(t)&&t.some(x=>x.name===process.argv[1])?0:1)' "$TARGET"; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::No '$TARGET' target in agentcore/aws-targets.json (exports reset targets to []). Configure the target and a CDK-capable deploy role to enable CD — skipping deploy honestly."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Configure AWS credentials (OIDC)
+        if: steps.deployment.outputs.enabled == 'true'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_DEPLOY_REGION || 'us-west-2' }}
+      - name: Deploy <agent>-dev
+        # TLP-B11 #14: the AgentCore CLI can exit 0 on failure (observed on
+        # v0.24.1 local-run commands), so "step is green" must not be the only
+        # evidence — grep the CLI output for a failure signature and fail loudly.
+        if: steps.deployment.outputs.enabled == 'true'
+        run: |
+          set -euo pipefail
+          TARGET=dev
+          node gates/check-resource-bindings.mjs
+          npm --prefix agentcore/cdk install --no-audit --no-fund
+          agentcore deploy --target "$TARGET" --yes 2>&1 | tee deploy.log
+          ! grep -qiE "error|failed|traceback" deploy.log || { echo "::error::agentcore deploy reported errors (CLI may still exit 0 — see log above)"; exit 1; }

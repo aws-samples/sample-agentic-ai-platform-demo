@@ -1,0 +1,250 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "WriteControlPlaneLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:logs:${REGION}:${ACCOUNT}:log-group:AgenticPlatform-ControlPlane-Provisioned-*:*"
+      ]
+    },
+    {
+      "Sid": "CreateTaggedControlPlaneRegistries",
+      "Effect": "Allow",
+      "Action": [
+        "agent-registry:CreateRegistry"
+      ],
+      "Resource": [
+        "*"
+      ],
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "aws:TagKeys": [
+            "auto-delete",
+            "managedBy",
+            "project"
+          ]
+        },
+        "StringEquals": {
+          "aws:RequestTag/auto-delete": "no",
+          "aws:RequestTag/managedBy": "cdk",
+          "aws:RequestTag/project": "agentic-ai-platform-demo",
+          "aws:RequestedRegion": "${REGION}"
+        }
+      }
+    },
+    {
+      "Sid": "TagControlPlaneRegistries",
+      "Effect": "Allow",
+      "Action": [
+        "agent-registry:TagResource"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:agent-registry:${REGION}:${ACCOUNT}:registry/*"
+      ],
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "aws:TagKeys": [
+            "auto-delete",
+            "managedBy",
+            "project"
+          ]
+        },
+        "StringEquals": {
+          "aws:RequestTag/auto-delete": "no",
+          "aws:RequestTag/managedBy": "cdk",
+          "aws:RequestTag/project": "agentic-ai-platform-demo",
+          "aws:RequestedRegion": "${REGION}",
+          "aws:ResourceTag/auto-delete": "no",
+          "aws:ResourceTag/managedBy": "cdk",
+          "aws:ResourceTag/project": "agentic-ai-platform-demo"
+        }
+      }
+    },
+    {
+      "Sid": "CreateTaggedControlPlaneRegistryRecords",
+      "Effect": "Allow",
+      "Action": [
+        "agent-registry:CreateRegistryRecord"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:agent-registry:${REGION}:${ACCOUNT}:registry/*",
+        "arn:${PARTITION}:agent-registry:${REGION}:${ACCOUNT}:registry/*/record/*"
+      ],
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "aws:TagKeys": [
+            "auto-delete",
+            "managedBy",
+            "project"
+          ]
+        },
+        "StringEquals": {
+          "aws:RequestTag/auto-delete": "no",
+          "aws:RequestTag/managedBy": "cdk",
+          "aws:RequestTag/project": "agentic-ai-platform-demo",
+          "aws:RequestedRegion": "${REGION}",
+          "aws:ResourceTag/auto-delete": "no",
+          "aws:ResourceTag/managedBy": "cdk",
+          "aws:ResourceTag/project": "agentic-ai-platform-demo"
+        }
+      }
+    },
+    {
+      "Sid": "ReadControlPlaneRegistries",
+      "Effect": "Allow",
+      "Action": [
+        "agent-registry:GetRegistry",
+        "agent-registry:ListRegistryRecords"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:agent-registry:${REGION}:${ACCOUNT}:registry/*"
+      ]
+    },
+    {
+      "Sid": "ReadControlPlaneRegistryRecords",
+      "Effect": "Allow",
+      "Action": [
+        "agent-registry:GetRegistryRecord"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:agent-registry:${REGION}:${ACCOUNT}:registry/*/record/*"
+      ]
+    },
+    {
+      "Sid": "MutateTaggedControlPlaneRegistries",
+      "Effect": "Allow",
+      "Action": [
+        "agent-registry:DeleteRegistry",
+        "agent-registry:UpdateRegistry"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:agent-registry:${REGION}:${ACCOUNT}:registry/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/auto-delete": "no",
+          "aws:ResourceTag/managedBy": "cdk",
+          "aws:ResourceTag/project": "agentic-ai-platform-demo"
+        }
+      }
+    },
+    {
+      "Sid": "MutateTaggedControlPlaneRegistryRecords",
+      "Effect": "Allow",
+      "Action": [
+        "agent-registry:DeleteRegistryRecord",
+        "agent-registry:SubmitRegistryRecordForApproval",
+        "agent-registry:UpdateRegistryRecordStatus"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:agent-registry:${REGION}:${ACCOUNT}:registry/*/record/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/auto-delete": "no",
+          "aws:ResourceTag/managedBy": "cdk",
+          "aws:ResourceTag/project": "agentic-ai-platform-demo"
+        }
+      }
+    },
+    {
+      "Sid": "ListControlPlaneRegistries",
+      "Effect": "Allow",
+      "Action": [
+        "agent-registry:ListRegistries"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Sid": "ManageControlPlaneWorkloadIdentities",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock-agentcore:CreateWorkloadIdentity",
+        "bedrock-agentcore:DeleteWorkloadIdentity",
+        "bedrock-agentcore:GetWorkloadIdentity"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:bedrock-agentcore:${REGION}:${ACCOUNT}:workload-identity-directory/*"
+      ]
+    },
+    {
+      "Sid": "CreateAgentRegistryServiceLinkedRole",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateServiceLinkedRole"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:iam::${ACCOUNT}:role/aws-service-role/agent-registry.amazonaws.com/AWSServiceRoleForAgentRegistry"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "iam:AWSServiceName": "agent-registry.amazonaws.com"
+        }
+      }
+    },
+    {
+      "Sid": "InvokeControlPlaneProviderFunctions",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:GetFunction",
+        "lambda:InvokeFunction"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:lambda:${REGION}:${ACCOUNT}:function:${PROVISIONED_NAME_PREFIX}-*"
+      ]
+    },
+    {
+      "Sid": "StartControlPlaneProviderWaiter",
+      "Effect": "Allow",
+      "Action": [
+        "states:StartExecution"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:states:${REGION}:${ACCOUNT}:stateMachine:${PROVISIONED_NAME_PREFIX}-*"
+      ]
+    },
+    {
+      "Sid": "ReconcileControlPlaneBoundaryTags",
+      "Effect": "Allow",
+      "Action": [
+        "iam:ListPolicyTags",
+        "iam:TagPolicy",
+        "iam:UntagPolicy"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:iam::${ACCOUNT}:policy/AgenticPlatform-ControlPlane-RuntimePermissionsBoundary"
+      ]
+    },
+    {
+      "Sid": "UseBedrockMantleProject",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock-mantle:CreateInference",
+        "bedrock-mantle:GetModel",
+        "bedrock-mantle:GetProject",
+        "bedrock-mantle:ListModels"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:bedrock-mantle:${REGION}:${ACCOUNT}:project/default"
+      ]
+    },
+    {
+      "Sid": "ListBedrockMantleProjects",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock-mantle:ListProjects",
+        "bedrock-mantle:ListTagsForResource"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}

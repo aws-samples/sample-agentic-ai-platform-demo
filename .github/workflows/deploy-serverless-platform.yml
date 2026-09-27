@@ -1,0 +1,783 @@
+name: Deploy Stage 1 Serverless Platform
+
+'on':
+  workflow_call: {}
+
+permissions:
+  contents: read
+
+env:
+  AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  ENABLE_GITHUB_DEPLOYMENT: ${{ vars.ENABLE_GITHUB_DEPLOYMENT }}
+  BRANCH_PROTECTION_ATTESTED: ${{ vars.BRANCH_PROTECTION_ATTESTED }}
+  GITHUB_DEPLOY_ROLE_NAME: ${{ vars.GITHUB_DEPLOY_ROLE_NAME }}
+  CFN_EXECUTION_ROLE_NAME: ${{ vars.CFN_EXECUTION_ROLE_NAME }}
+  COGNITO_DOMAIN_PREFIX: ${{ vars.COGNITO_DOMAIN_PREFIX }}
+  GITHUB_REPOSITORY_ID: ${{ github.repository_id }}
+  GITHUB_REPOSITORY_OWNER_ID: ${{ github.repository_owner_id }}
+  AUDITED_GITHUB_WORKFLOW_REF: ${{ github.repository }}/.github/workflows/deploy-serverless-platform.yml@refs/heads/main
+  GITHUB_OIDC_SUBJECT_MODE: ${{ vars.GITHUB_OIDC_SUBJECT_MODE }}
+  GITHUB_OIDC_SUBJECT: ${{ vars.GITHUB_OIDC_SUBJECT }}
+  CONTROL_PLANE_MODE: ${{ vars.CONTROL_PLANE_MODE }}
+  CONTROL_PLANE_SHARED_REGISTRY_ID: ${{ vars.CONTROL_PLANE_SHARED_REGISTRY_ID }}
+  CONTROL_PLANE_REGISTRY_PLATFORM_ID: ${{ vars.CONTROL_PLANE_REGISTRY_PLATFORM_ID }}
+  CONTROL_PLANE_REGISTRY_CUSTOMER_SUPPORT_ID: ${{ vars.CONTROL_PLANE_REGISTRY_CUSTOMER_SUPPORT_ID }}
+  CONTROL_PLANE_REGISTRY_OPERATIONS_ID: ${{ vars.CONTROL_PLANE_REGISTRY_OPERATIONS_ID }}
+  CONTROL_PLANE_LLM_GATEWAY_ID: ${{ vars.CONTROL_PLANE_LLM_GATEWAY_ID }}
+  CONTROL_PLANE_LLM_GATEWAY_REGION: ${{ vars.CONTROL_PLANE_LLM_GATEWAY_REGION }}
+  CONTROL_PLANE_TOOLS_GATEWAY_ID: ${{ vars.CONTROL_PLANE_TOOLS_GATEWAY_ID }}
+  STARTER_BUILDER_MODEL_ID: ${{ vars.STARTER_BUILDER_MODEL_ID }}
+  JOURNEY_GITHUB_OAUTH_CLIENT_ID: ${{ vars.JOURNEY_GITHUB_OAUTH_CLIENT_ID }}
+  JOURNEY_GITHUB_OAUTH_CLIENT_SECRET_ARN: ${{ vars.JOURNEY_GITHUB_OAUTH_CLIENT_SECRET_ARN }}
+
+jobs:
+  deploy:
+    name: Deploy serverless platform
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.ref_protected == true && vars.ENABLE_GITHUB_DEPLOYMENT == 'true' && vars.BRANCH_PROTECTION_ATTESTED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Verify checked commit is current main head
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          fail() {
+            printf '::error::%s\n' "$1"
+            exit 1
+          }
+
+          [[ "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ ]] \
+            || fail "GITHUB_SHA must be an exact 40-character commit SHA."
+
+          CHECKED_OUT_SHA="$(git rev-parse HEAD)" \
+            || fail "Unable to resolve the checked-out commit."
+          [[ "$CHECKED_OUT_SHA" =~ ^[0-9a-f]{40}$ ]] \
+            || fail "The checked-out commit is not a valid 40-character SHA."
+          [[ "$CHECKED_OUT_SHA" == "$GITHUB_SHA" ]] \
+            || fail "The checked-out commit does not match GITHUB_SHA."
+
+          if ! REMOTE_MAIN_OUTPUT="$(
+            git ls-remote --exit-code origin refs/heads/main
+          )"; then
+            fail "Unable to resolve the current remote refs/heads/main."
+          fi
+          [[ -n "$REMOTE_MAIN_OUTPUT" ]] \
+            || fail "The current remote refs/heads/main result is empty."
+          [[ "$REMOTE_MAIN_OUTPUT" != *$'\n'* ]] \
+            || fail "Expected exactly one remote refs/heads/main result."
+
+          REMOTE_MAIN_PATTERN=$'^([0-9a-f]{40})\trefs/heads/main$'
+          [[ "$REMOTE_MAIN_OUTPUT" =~ $REMOTE_MAIN_PATTERN ]] \
+            || fail "The remote refs/heads/main result is malformed."
+          REMOTE_MAIN_SHA="${BASH_REMATCH[1]}"
+          [[ "$REMOTE_MAIN_SHA" == "$GITHUB_SHA" ]] \
+            || fail "GITHUB_SHA is no longer the current remote refs/heads/main."
+
+          printf 'Verified current remote main head %s.\n' "$REMOTE_MAIN_SHA"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            e2e/package-lock.json
+            infra/platform-registry/package-lock.json
+            infra/serverless-platform/package-lock.json
+
+      - name: Install locked deployment dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci
+          npm --prefix e2e ci
+          npm --prefix infra/platform-registry ci
+          npm --prefix infra/serverless-platform ci
+
+      - name: Install Chromium headless shell
+        shell: bash
+        timeout-minutes: 10
+        run: |
+          set -euo pipefail
+          npm --prefix e2e exec -- playwright install --with-deps --only-shell chromium
+
+      - name: Validate deployment configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          fail() {
+            printf '::error::%s\n' "$1"
+            exit 1
+          }
+
+          validate_registry_id() {
+            local variable_name="$1"
+            local value="$2"
+            [[ -n "$value" ]] \
+              || fail "Repository variable ${variable_name} is required in reference-existing mode."
+            [[ "$value" =~ ^[A-Za-z0-9]{12,16}$ ]] \
+              || fail "Repository variable ${variable_name} must be a valid Agent Registry ID."
+          }
+
+          validate_gateway_id() {
+            local variable_name="$1"
+            local value="$2"
+            [[ -n "$value" ]] \
+              || fail "Repository variable ${variable_name} is required in reference-existing mode."
+            [[ "$value" =~ ^([a-z0-9]+(-[a-z0-9]+)*)-[a-z0-9]{10}$ ]] \
+              && (( ${#value} <= 111 )) \
+              || fail "Repository variable ${variable_name} must be a valid AgentCore Gateway ID."
+          }
+
+          [[ "$AWS_ACCOUNT_ID" =~ ^[0-9]{12}$ ]] \
+            || fail "Repository variable AWS_ACCOUNT_ID must be exactly 12 digits."
+          [[ "$AWS_REGION" == "us-west-2" ]] \
+            || fail "Repository variable AWS_REGION must be exactly us-west-2."
+          [[ "$ENABLE_GITHUB_DEPLOYMENT" == "true" ]] \
+            || fail "Repository variable ENABLE_GITHUB_DEPLOYMENT must be exactly true."
+          [[ "$BRANCH_PROTECTION_ATTESTED" == "true" ]] \
+            || fail "Repository variable BRANCH_PROTECTION_ATTESTED must be exactly true."
+          [[ "$GITHUB_DEPLOY_ROLE_NAME" == "AgenticPlatformGitHubDeployRole" ]] \
+            || fail "Repository variable GITHUB_DEPLOY_ROLE_NAME must be exactly AgenticPlatformGitHubDeployRole."
+          [[ "$CFN_EXECUTION_ROLE_NAME" == "AgenticPlatformCloudFormationExecutionRole" ]] \
+            || fail "Repository variable CFN_EXECUTION_ROLE_NAME must be exactly AgenticPlatformCloudFormationExecutionRole."
+          [[ "$COGNITO_DOMAIN_PREFIX" =~ ^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$ ]] \
+            || fail "Repository variable COGNITO_DOMAIN_PREFIX must be 1-63 lowercase letters, numbers, or internal hyphens."
+          [[ "$GITHUB_REPOSITORY_ID" =~ ^[1-9][0-9]*$ ]] \
+            || fail "GitHub repository ID must be a positive numeric value."
+          [[ "$GITHUB_REPOSITORY_OWNER_ID" =~ ^[1-9][0-9]*$ ]] \
+            || fail "GitHub repository owner ID must be a positive numeric value."
+          [[ "$AUDITED_GITHUB_WORKFLOW_REF" == "$GITHUB_REPOSITORY/.github/workflows/deploy-serverless-platform.yml@refs/heads/main" ]] \
+            || fail "Audited GitHub workflow ref must identify the reusable deployment workflow on main."
+          [[ "$GITHUB_OIDC_SUBJECT_MODE" == "legacy" || "$GITHUB_OIDC_SUBJECT_MODE" == "immutable" ]] \
+            || fail "Repository variable GITHUB_OIDC_SUBJECT_MODE must be exactly legacy or immutable."
+          [[ -n "$GITHUB_OIDC_SUBJECT" ]] \
+            || fail "Repository variable GITHUB_OIDC_SUBJECT must contain the exact attested main subject."
+
+          case "$CONTROL_PLANE_MODE" in
+            reference-existing)
+              CONTROL_PLANE_STACK_NAME="AgenticPlatform-ControlPlane"
+              validate_registry_id \
+                CONTROL_PLANE_SHARED_REGISTRY_ID \
+                "$CONTROL_PLANE_SHARED_REGISTRY_ID"
+              validate_registry_id \
+                CONTROL_PLANE_REGISTRY_PLATFORM_ID \
+                "$CONTROL_PLANE_REGISTRY_PLATFORM_ID"
+              validate_registry_id \
+                CONTROL_PLANE_REGISTRY_CUSTOMER_SUPPORT_ID \
+                "$CONTROL_PLANE_REGISTRY_CUSTOMER_SUPPORT_ID"
+              validate_registry_id \
+                CONTROL_PLANE_REGISTRY_OPERATIONS_ID \
+                "$CONTROL_PLANE_REGISTRY_OPERATIONS_ID"
+              validate_gateway_id \
+                CONTROL_PLANE_LLM_GATEWAY_ID \
+                "$CONTROL_PLANE_LLM_GATEWAY_ID"
+              [[ "$CONTROL_PLANE_LLM_GATEWAY_REGION" =~ ^[a-z]{2}(-gov)?-[a-z]+-[0-9]+$ ]] \
+                || fail "Repository variable CONTROL_PLANE_LLM_GATEWAY_REGION must be a valid AWS region."
+              validate_gateway_id \
+                CONTROL_PLANE_TOOLS_GATEWAY_ID \
+                "$CONTROL_PLANE_TOOLS_GATEWAY_ID"
+              ;;
+            provision)
+              CONTROL_PLANE_STACK_NAME="AgenticPlatform-ControlPlane-Provisioned"
+              for variable_name in \
+                CONTROL_PLANE_SHARED_REGISTRY_ID \
+                CONTROL_PLANE_REGISTRY_PLATFORM_ID \
+                CONTROL_PLANE_REGISTRY_CUSTOMER_SUPPORT_ID \
+                CONTROL_PLANE_REGISTRY_OPERATIONS_ID \
+                CONTROL_PLANE_LLM_GATEWAY_ID \
+                CONTROL_PLANE_LLM_GATEWAY_REGION \
+                CONTROL_PLANE_TOOLS_GATEWAY_ID
+              do
+                [[ -z "${!variable_name}" ]] \
+                  || fail "Repository variable ${variable_name} must be empty in provision mode."
+              done
+              ;;
+            *)
+              fail "Repository variable CONTROL_PLANE_MODE must be exactly reference-existing or provision."
+              ;;
+          esac
+
+          [[ "$STARTER_BUILDER_MODEL_ID" =~ ^[A-Za-z0-9][A-Za-z0-9._:/-]{2,255}$ ]] \
+            || fail "Repository variable STARTER_BUILDER_MODEL_ID must be a valid Gateway model ID."
+          [[ -z "$JOURNEY_GITHUB_OAUTH_CLIENT_ID" && -z "$JOURNEY_GITHUB_OAUTH_CLIENT_SECRET_ARN" ]] \
+            || {
+              [[ "$JOURNEY_GITHUB_OAUTH_CLIENT_ID" =~ ^[A-Za-z0-9.]{20}$ ]] \
+                || fail "Repository variable JOURNEY_GITHUB_OAUTH_CLIENT_ID must be a valid GitHub OAuth App client ID."
+              [[ "$JOURNEY_GITHUB_OAUTH_CLIENT_SECRET_ARN" =~ ^arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:[A-Za-z0-9/_+=.@-]+$ ]] \
+                || fail "Repository variable JOURNEY_GITHUB_OAUTH_CLIENT_SECRET_ARN must be a same-account regional secret ARN."
+            }
+
+          printf 'CONTROL_PLANE_STACK_NAME=%s\n' \
+            "$CONTROL_PLANE_STACK_NAME" >> "$GITHUB_ENV"
+
+      - name: Configure AWS credentials with GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # v5.1.1
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/${{ env.GITHUB_DEPLOY_ROLE_NAME }}
+          role-session-name: agentic-platform-${{ github.run_id }}-${{ github.run_attempt }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: Verify AWS caller and CDK bootstrap
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          CALLER_ACCOUNT="$(aws sts get-caller-identity --query Account --output text)"
+          [[ "$CALLER_ACCOUNT" == "$AWS_ACCOUNT_ID" ]] || {
+            printf '::error::OIDC role assumed account %s; expected repository variable AWS_ACCOUNT_ID.\n' "$CALLER_ACCOUNT"
+            exit 1
+          }
+          [[ "$AWS_REGION" == "us-west-2" && "${AWS_DEFAULT_REGION:-}" == "us-west-2" ]] || {
+            printf '::error::Deployment credentials must target us-west-2.\n'
+            exit 1
+          }
+
+          BOOTSTRAP_VERSION="$(
+            aws ssm get-parameter \
+              --name /cdk-bootstrap/hnb659fds/version \
+              --region "$AWS_REGION" \
+              --query Parameter.Value \
+              --output text
+          )"
+          [[ "$BOOTSTRAP_VERSION" =~ ^[0-9]+$ ]] && (( BOOTSTRAP_VERSION >= 6 )) || {
+            printf '::error::CDK bootstrap parameter is absent or older than required version 6.\n'
+            exit 1
+          }
+          printf 'Verified AWS account, region, and CDK bootstrap version %s.\n' "$BOOTSTRAP_VERSION"
+
+      - name: Run security audit before control-plane diff
+        working-directory: infra/serverless-platform
+        shell: bash
+        run: |
+          set -euo pipefail
+          GITHUB_WORKFLOW_REF="$AUDITED_GITHUB_WORKFLOW_REF" \
+            SECURITY_AUDIT_MODE=deploy npm run security:audit
+
+      - name: Review control-plane changes
+        working-directory: infra/platform-registry
+        shell: bash
+        run: |
+          set -euo pipefail
+          CFN_EXECUTION_ROLE_ARN="arn:aws:iam::${AWS_ACCOUNT_ID}:role/${CFN_EXECUTION_ROLE_NAME}"
+          CONTROL_PLANE_CONTEXT=(
+            --context "mode=$CONTROL_PLANE_MODE"
+            --context "account=$AWS_ACCOUNT_ID"
+            --context "region=$AWS_REGION"
+          )
+          if [[ "$CONTROL_PLANE_MODE" == "reference-existing" ]]; then
+            CONTROL_PLANE_CONTEXT+=(
+              --context "sharedRegistryId=$CONTROL_PLANE_SHARED_REGISTRY_ID"
+              --context "registryPlatformId=$CONTROL_PLANE_REGISTRY_PLATFORM_ID"
+              --context "registryCustomerSupportId=$CONTROL_PLANE_REGISTRY_CUSTOMER_SUPPORT_ID"
+              --context "registryOperationsId=$CONTROL_PLANE_REGISTRY_OPERATIONS_ID"
+              --context "llmGatewayId=$CONTROL_PLANE_LLM_GATEWAY_ID"
+              --context "llmGatewayRegion=$CONTROL_PLANE_LLM_GATEWAY_REGION"
+              --context "toolsGatewayId=$CONTROL_PLANE_TOOLS_GATEWAY_ID"
+            )
+          fi
+
+          npm exec -- cdk diff "$CONTROL_PLANE_STACK_NAME" \
+            --role-arn "$CFN_EXECUTION_ROLE_ARN" \
+            "${CONTROL_PLANE_CONTEXT[@]}"
+
+      - name: Run security audit before control-plane deploy
+        working-directory: infra/serverless-platform
+        shell: bash
+        run: |
+          set -euo pipefail
+          GITHUB_WORKFLOW_REF="$AUDITED_GITHUB_WORKFLOW_REF" \
+            SECURITY_AUDIT_MODE=deploy npm run security:audit
+
+      - name: Deploy control-plane stack
+        working-directory: infra/platform-registry
+        shell: bash
+        run: |
+          set -euo pipefail
+          CFN_EXECUTION_ROLE_ARN="arn:aws:iam::${AWS_ACCOUNT_ID}:role/${CFN_EXECUTION_ROLE_NAME}"
+          CONTROL_PLANE_CONTEXT=(
+            --context "mode=$CONTROL_PLANE_MODE"
+            --context "account=$AWS_ACCOUNT_ID"
+            --context "region=$AWS_REGION"
+          )
+          if [[ "$CONTROL_PLANE_MODE" == "reference-existing" ]]; then
+            CONTROL_PLANE_CONTEXT+=(
+              --context "sharedRegistryId=$CONTROL_PLANE_SHARED_REGISTRY_ID"
+              --context "registryPlatformId=$CONTROL_PLANE_REGISTRY_PLATFORM_ID"
+              --context "registryCustomerSupportId=$CONTROL_PLANE_REGISTRY_CUSTOMER_SUPPORT_ID"
+              --context "registryOperationsId=$CONTROL_PLANE_REGISTRY_OPERATIONS_ID"
+              --context "llmGatewayId=$CONTROL_PLANE_LLM_GATEWAY_ID"
+              --context "llmGatewayRegion=$CONTROL_PLANE_LLM_GATEWAY_REGION"
+              --context "toolsGatewayId=$CONTROL_PLANE_TOOLS_GATEWAY_ID"
+            )
+          fi
+
+          npm exec -- cdk deploy "$CONTROL_PLANE_STACK_NAME" \
+            --require-approval never \
+            --role-arn "$CFN_EXECUTION_ROLE_ARN" \
+            --outputs-file control-plane-outputs.json \
+            "${CONTROL_PLANE_CONTEXT[@]}"
+
+      - name: Validate control-plane outputs and tags
+        working-directory: infra/platform-registry
+        shell: bash
+        run: |
+          set -euo pipefail
+          STACK_DOCUMENT="$(mktemp)"
+          trap 'rm -f "$STACK_DOCUMENT"' EXIT
+
+          aws cloudformation describe-stacks \
+            --stack-name "$CONTROL_PLANE_STACK_NAME" \
+            --region "$AWS_REGION" \
+            --output json > "$STACK_DOCUMENT"
+
+          CONTROL_PLANE_STACK_DOCUMENT="$STACK_DOCUMENT" node <<'NODE'
+          const fs = require("node:fs");
+
+          const document = JSON.parse(
+            fs.readFileSync(process.env.CONTROL_PLANE_STACK_DOCUMENT, "utf8"),
+          );
+          if (!Array.isArray(document.Stacks) || document.Stacks.length !== 1) {
+            throw new Error("Expected exactly one selected control-plane stack.");
+          }
+          const stack = document.Stacks[0];
+          if (
+            !stack
+            || stack.StackName !== process.env.CONTROL_PLANE_STACK_NAME
+            || !/^(?:CREATE|UPDATE|IMPORT)_COMPLETE$/.test(stack.StackStatus)
+          ) {
+            throw new Error("Selected control-plane stack is not complete.");
+          }
+
+          const requiredTags = new Map([
+            ["auto-delete", "no"],
+            ["managedBy", "cdk"],
+            ["project", "agentic-ai-platform-demo"],
+          ]);
+          if (!Array.isArray(stack.Tags)) {
+            throw new Error("Control-plane stack tags are missing.");
+          }
+          const tags = new Map();
+          for (const tag of stack.Tags) {
+            if (
+              !tag
+              || typeof tag.Key !== "string"
+              || !tag.Key
+              || typeof tag.Value !== "string"
+              || tags.has(tag.Key)
+            ) {
+              throw new Error("Control-plane stack tags are malformed.");
+            }
+            tags.set(tag.Key, tag.Value);
+          }
+          if (
+            tags.size !== requiredTags.size
+            || [...requiredTags].some(
+              ([key, value]) => tags.get(key) !== value,
+            )
+          ) {
+            throw new Error("Control-plane stack mandatory tags have drifted.");
+          }
+
+          const contract = [
+            [
+              "SharedRegistryId",
+              "AgenticPlatform-ControlPlane-SharedRegistryId",
+              "CONTROL_PLANE_SHARED_REGISTRY_ID",
+              /^[A-Za-z0-9]{12,16}$/,
+            ],
+            [
+              "RegistryPlatformId",
+              "AgenticPlatform-ControlPlane-Registry-platform-Id",
+              "CONTROL_PLANE_REGISTRY_PLATFORM_ID",
+              /^[A-Za-z0-9]{12,16}$/,
+            ],
+            [
+              "RegistryCustomerSupportId",
+              "AgenticPlatform-ControlPlane-Registry-customer-support-Id",
+              "CONTROL_PLANE_REGISTRY_CUSTOMER_SUPPORT_ID",
+              /^[A-Za-z0-9]{12,16}$/,
+            ],
+            [
+              "RegistryOperationsId",
+              "AgenticPlatform-ControlPlane-Registry-operations-Id",
+              "CONTROL_PLANE_REGISTRY_OPERATIONS_ID",
+              /^[A-Za-z0-9]{12,16}$/,
+            ],
+            [
+              "LlmGatewayId",
+              "AgenticPlatform-ControlPlane-LlmGatewayId",
+              "CONTROL_PLANE_LLM_GATEWAY_ID",
+              /^([a-z0-9]+(?:-[a-z0-9]+)*)-[a-z0-9]{10}$/,
+            ],
+            [
+              "LlmGatewayRegion",
+              "AgenticPlatform-ControlPlane-LlmGatewayRegion",
+              "CONTROL_PLANE_LLM_GATEWAY_REGION",
+              /^[a-z]{2}(-gov)?-[a-z]+-[0-9]+$/,
+            ],
+            [
+              "ToolsGatewayId",
+              "AgenticPlatform-ControlPlane-ToolsGatewayId",
+              "CONTROL_PLANE_TOOLS_GATEWAY_ID",
+              /^([a-z0-9]+(?:-[a-z0-9]+)*)-[a-z0-9]{10}$/,
+            ],
+          ];
+          if (!Array.isArray(stack.Outputs)) {
+            throw new Error("Control-plane stack outputs are missing.");
+          }
+          const outputs = new Map();
+          for (const output of stack.Outputs) {
+            if (
+              !output
+              || typeof output.OutputKey !== "string"
+              || !output.OutputKey
+              || outputs.has(output.OutputKey)
+            ) {
+              throw new Error("Control-plane stack outputs are malformed.");
+            }
+            outputs.set(output.OutputKey, output);
+          }
+
+          for (
+            const [outputKey, exportName, environmentName, pattern] of contract
+          ) {
+            const output = outputs.get(outputKey);
+            if (
+              !output
+              || output.ExportName !== exportName
+              || typeof output.OutputValue !== "string"
+              || !pattern.test(output.OutputValue)
+              || (
+                outputKey.endsWith("GatewayId")
+                && output.OutputValue.length > 111
+              )
+            ) {
+              throw new Error("Control-plane export contract is invalid.");
+            }
+            if (
+              process.env.CONTROL_PLANE_MODE === "reference-existing"
+              && output.OutputValue !== process.env[environmentName]
+            ) {
+              throw new Error(
+                "Control-plane output does not match its protected repository variable.",
+              );
+            }
+          }
+          NODE
+
+      - name: Run security audit before web diff
+        working-directory: infra/serverless-platform
+        shell: bash
+        run: |
+          set -euo pipefail
+          GITHUB_WORKFLOW_REF="$AUDITED_GITHUB_WORKFLOW_REF" \
+            SECURITY_AUDIT_MODE=deploy npm run security:audit
+
+      - name: Review web changes
+        working-directory: infra/serverless-platform
+        shell: bash
+        run: |
+          set -euo pipefail
+          CFN_EXECUTION_ROLE_ARN="arn:aws:iam::${AWS_ACCOUNT_ID}:role/${CFN_EXECUTION_ROLE_NAME}"
+          JOURNEY_GITHUB_OAUTH_CONTEXT=()
+          if [[ -n "$JOURNEY_GITHUB_OAUTH_CLIENT_ID" ]]; then
+            JOURNEY_GITHUB_OAUTH_CONTEXT=(
+              --context "githubOAuthClientId=$JOURNEY_GITHUB_OAUTH_CLIENT_ID"
+              --context "githubOAuthClientSecretArn=$JOURNEY_GITHUB_OAUTH_CLIENT_SECRET_ARN"
+            )
+          fi
+
+          npm exec -- cdk diff PlatformWebStack \
+            --role-arn "$CFN_EXECUTION_ROLE_ARN" \
+            --context "account=$AWS_ACCOUNT_ID" \
+            --context "region=$AWS_REGION" \
+            --context "cognitoDomainPrefix=$COGNITO_DOMAIN_PREFIX" \
+            --context "starterBuilderModelId=$STARTER_BUILDER_MODEL_ID" \
+            --context "llmGatewayId=$CONTROL_PLANE_LLM_GATEWAY_ID" \
+            --context "llmGatewayRegion=$CONTROL_PLANE_LLM_GATEWAY_REGION" \
+            "${JOURNEY_GITHUB_OAUTH_CONTEXT[@]}"
+
+      - name: Run security audit before web deploy
+        working-directory: infra/serverless-platform
+        shell: bash
+        run: |
+          set -euo pipefail
+          GITHUB_WORKFLOW_REF="$AUDITED_GITHUB_WORKFLOW_REF" \
+            SECURITY_AUDIT_MODE=deploy npm run security:audit
+
+      - name: Deploy PlatformWebStack
+        working-directory: infra/serverless-platform
+        shell: bash
+        run: |
+          set -euo pipefail
+          CFN_EXECUTION_ROLE_ARN="arn:aws:iam::${AWS_ACCOUNT_ID}:role/${CFN_EXECUTION_ROLE_NAME}"
+          JOURNEY_GITHUB_OAUTH_CONTEXT=()
+          if [[ -n "$JOURNEY_GITHUB_OAUTH_CLIENT_ID" ]]; then
+            JOURNEY_GITHUB_OAUTH_CONTEXT=(
+              --context "githubOAuthClientId=$JOURNEY_GITHUB_OAUTH_CLIENT_ID"
+              --context "githubOAuthClientSecretArn=$JOURNEY_GITHUB_OAUTH_CLIENT_SECRET_ARN"
+            )
+          fi
+
+          npm exec -- cdk deploy PlatformWebStack \
+            --require-approval never \
+            --role-arn "$CFN_EXECUTION_ROLE_ARN" \
+            --outputs-file deployment-outputs.json \
+            --context "account=$AWS_ACCOUNT_ID" \
+            --context "region=$AWS_REGION" \
+            --context "cognitoDomainPrefix=$COGNITO_DOMAIN_PREFIX" \
+            --context "starterBuilderModelId=$STARTER_BUILDER_MODEL_ID" \
+            --context "llmGatewayId=$CONTROL_PLANE_LLM_GATEWAY_ID" \
+            --context "llmGatewayRegion=$CONTROL_PLANE_LLM_GATEWAY_REGION" \
+            "${JOURNEY_GITHUB_OAUTH_CONTEXT[@]}"
+
+      - name: Validate security target after web deploy
+        working-directory: infra/serverless-platform
+        env:
+          SECURITY_AUDIT_WEB_TEMPLATE: cdk.out/PlatformWebStack.template.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          GITHUB_WORKFLOW_REF="$AUDITED_GITHUB_WORKFLOW_REF" \
+            SECURITY_AUDIT_MODE=postdeploy npm run security:audit
+
+      - name: Parse deployment outputs
+        id: deployment-outputs
+        working-directory: infra/serverless-platform
+        shell: bash
+        env:
+          OUTPUTS_FILE: deployment-outputs.json
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require("node:fs");
+
+          const document = JSON.parse(
+            fs.readFileSync(process.env.OUTPUTS_FILE, "utf8"),
+          );
+          if (!document || typeof document !== "object" || Array.isArray(document)) {
+            throw new Error("Deployment outputs must be a JSON object.");
+          }
+
+          const candidates = Object.values(document).filter(
+            (value) => value
+              && typeof value === "object"
+              && !Array.isArray(value)
+              && typeof value.ApplicationUrl === "string"
+              && typeof value.UserPoolId === "string"
+              && typeof value.UserPoolClientId === "string",
+          );
+          if (candidates.length !== 1) {
+            throw new Error(
+              "Expected one stack with ApplicationUrl, UserPoolId, and "
+                + `UserPoolClientId; found ${candidates.length}.`,
+            );
+          }
+
+          const applicationUrl = candidates[0].ApplicationUrl.trim().replace(/\/+$/, "");
+          const userPoolId = candidates[0].UserPoolId.trim();
+          const userPoolClientId = candidates[0].UserPoolClientId.trim();
+          const parsedUrl = new URL(applicationUrl);
+          if (
+            parsedUrl.protocol !== "https:"
+            || parsedUrl.username
+            || parsedUrl.password
+            || parsedUrl.search
+            || parsedUrl.hash
+          ) {
+            throw new Error("ApplicationUrl must be a credential-free HTTPS origin.");
+          }
+          if (
+            !userPoolId.startsWith(`${process.env.AWS_REGION}_`)
+              || !/^[a-z0-9-]+_[A-Za-z0-9]+$/.test(userPoolId)
+          ) {
+            throw new Error("UserPoolId does not match the deployment region.");
+          }
+          if (
+            !/^[A-Za-z0-9_+]{1,128}$/.test(userPoolClientId)
+          ) {
+            throw new Error("UserPoolClientId is malformed.");
+          }
+          if (
+            /[\r\n]/.test(applicationUrl)
+            || /[\r\n]/.test(userPoolId)
+            || /[\r\n]/.test(userPoolClientId)
+          ) {
+            throw new Error("Deployment outputs cannot contain line breaks.");
+          }
+
+          fs.appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            `application_url=${applicationUrl}\n`
+              + `user_pool_id=${userPoolId}\n`
+              + `user_pool_client_id=${userPoolClientId}\n`,
+          );
+          NODE
+
+      - name: Validate deployed project tags
+        working-directory: infra/serverless-platform
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/validate-deployed-tags.mjs \
+            --account-id "$AWS_ACCOUNT_ID" \
+            --region "$AWS_REGION" \
+            --stack "$CONTROL_PLANE_STACK_NAME" \
+            --stack "AgenticPlatform-Web"
+
+      - name: Smoke test deployed application
+        shell: bash
+        env:
+          APPLICATION_URL: ${{ steps.deployment-outputs.outputs.application_url }}
+        run: |
+          set -euo pipefail
+          RESPONSE_DIR="$(mktemp -d)"
+          trap 'rm -rf "$RESPONSE_DIR"' EXIT
+
+          HEALTH_STATUS=""
+          for attempt in {1..12}; do
+            HEALTH_STATUS="$(
+              curl \
+                --silent \
+                --show-error \
+                --connect-timeout 10 \
+                --max-time 30 \
+                --output "$RESPONSE_DIR/health.json" \
+                --write-out '%{http_code}' \
+                "$APPLICATION_URL/api/health" \
+                || true
+            )"
+            if [[ "$HEALTH_STATUS" == "200" ]]; then
+              break
+            fi
+            printf 'Health check attempt %s returned HTTP %s; retrying.\n' \
+              "$attempt" "${HEALTH_STATUS:-curl-error}"
+            sleep 10
+          done
+          [[ "$HEALTH_STATUS" == "200" ]] || {
+            printf '::error::GET /api/health returned HTTP %s.\n' "${HEALTH_STATUS:-curl-error}"
+            exit 1
+          }
+
+          ME_STATUS=""
+          for attempt in {1..12}; do
+            ME_STATUS="$(
+              curl \
+                --silent \
+                --show-error \
+                --connect-timeout 10 \
+                --max-time 30 \
+                --output /dev/null \
+                --write-out '%{http_code}' \
+                "$APPLICATION_URL/api/me" \
+                || true
+            )"
+            if [[ "$ME_STATUS" == "401" ]]; then
+              break
+            fi
+            printf 'Identity check attempt %s returned HTTP %s; retrying.\n' \
+              "$attempt" "${ME_STATUS:-curl-error}"
+            if (( attempt < 12 )); then
+              sleep 10
+            fi
+          done
+          [[ "$ME_STATUS" == "401" ]] || {
+            printf '::error::Unauthenticated GET /api/me returned HTTP %s instead of 401.\n' "$ME_STATUS"
+            exit 1
+          }
+
+          node - "$RESPONSE_DIR/health.json" <<'NODE'
+          const fs = require("node:fs");
+          const healthPath = process.argv[2];
+          const health = JSON.parse(fs.readFileSync(healthPath, "utf8"));
+
+          if (health.ok !== true) {
+            throw new Error("GET /api/health did not return a successful body.");
+          }
+          NODE
+
+      - name: Assume hosted acceptance role
+        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # v5.1.1
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/AgenticPlatform-Web-HostedAcceptanceRole
+          role-session-name: agentic-platform-acceptance-${{ github.run_id }}-${{ github.run_attempt }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-chaining: true
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: Run hosted control-plane acceptance
+        shell: bash
+        timeout-minutes: 20
+        env:
+          APPLICATION_URL: ${{ steps.deployment-outputs.outputs.application_url }}
+          COGNITO_USER_POOL_ID: ${{ steps.deployment-outputs.outputs.user_pool_id }}
+          COGNITO_USER_POOL_CLIENT_ID: ${{ steps.deployment-outputs.outputs.user_pool_client_id }}
+          HOSTED_ACCEPTANCE_RUN_ID: ${{ github.run_id }}
+          HOSTED_ACCEPTANCE_RUN_ATTEMPT: ${{ github.run_attempt }}
+          AWS_REGION: ${{ env.AWS_REGION }}
+        run: |
+          set -euo pipefail
+          node e2e/hosted-control-plane-acceptance.mjs
+
+      - name: Reacquire GitHub deploy role for verifier cleanup
+        if: always()
+        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # v5.1.1
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/${{ env.GITHUB_DEPLOY_ROLE_NAME }}
+          role-session-name: agentic-platform-cleanup-${{ github.run_id }}-${{ github.run_attempt }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: Assume hosted acceptance role for verifier cleanup
+        if: always()
+        uses: aws-actions/configure-aws-credentials@61815dcd50bd041e203e49132bacad1fd04d2708 # v5.1.1
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/AgenticPlatform-Web-HostedAcceptanceRole
+          role-session-name: agentic-platform-cleanup-acceptance-${{ github.run_id }}-${{ github.run_attempt }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-chaining: true
+          role-duration-seconds: 3600
+          mask-aws-account-id: true
+
+      - name: Delete hosted acceptance verifier users
+        if: always()
+        shell: bash
+        timeout-minutes: 20
+        env:
+          COGNITO_USER_POOL_ID: ${{ steps.deployment-outputs.outputs.user_pool_id }}
+          HOSTED_ACCEPTANCE_RUN_ID: ${{ github.run_id }}
+          HOSTED_ACCEPTANCE_RUN_ATTEMPT: ${{ github.run_attempt }}
+          AWS_REGION: ${{ env.AWS_REGION }}
+        run: |
+          set -euo pipefail
+          node e2e/hosted-control-plane-acceptance.mjs --cleanup-only
+
+      - name: Publish deployment summary
+        shell: bash
+        env:
+          APPLICATION_URL: ${{ steps.deployment-outputs.outputs.application_url }}
+        run: |
+          set -euo pipefail
+          {
+            echo "## Stage 1 serverless deployment"
+            echo
+            printf -- "- Application: [%s](%s)\n" "$APPLICATION_URL" "$APPLICATION_URL"
+            echo "- Region: $AWS_REGION"
+          } >> "$GITHUB_STEP_SUMMARY"

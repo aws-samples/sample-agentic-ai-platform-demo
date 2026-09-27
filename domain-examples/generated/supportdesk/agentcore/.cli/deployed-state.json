@@ -1,0 +1,15 @@
+{
+  "targets": {
+    "default": {
+      "resources": {
+        "runtimes": {
+          "chat_agent": {
+            "runtimeId": "supportdesk_chat_agent-WdAqciGd1F",
+            "runtimeArn": "arn:aws:bedrock-agentcore:us-west-2:217522444267:runtime/supportdesk_chat_agent-WdAqciGd1F",
+            "roleArn": "arn:aws:iam::217522444267:role/AgentCore-supportdesk-def-ApplicationAgentChatAgent-EthGTvJRBavK"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "$schema": "https://schema.agentcore.aws.dev/v1/agentcore.json",
+  "name": "dataanalyst",
+  "version": 1,
+  "managedBy": "CDK",
+  "tags": {
+    "agentcore:created-by": "agentcore-cli",
+    "agentcore:project-name": "dataanalyst",
+    "auto-delete": "no",
+    "domain-id": "platform",
+    "project-id": "data-analyst",
+    "component": "runtime",
+    "managed-by": "plato-bootstrap",
+    "env": "nonprod"
+  },
+  "runtimes": [
+    {
+      "name": "workflow_agent",
+      "build": "CodeZip",
+      "entrypoint": "main.py",
+      "codeLocation": "app/workflow_agent/",
+      "runtimeVersion": "PYTHON_3_12",
+      "networkMode": "PUBLIC",
+      "protocol": "HTTP",
+      "authorizerType": "CUSTOM_JWT",
+      "authorizerConfiguration": {
+        "customJwtAuthorizer": {
+          "discoveryUrl": "https://cognito-idp.us-west-2.amazonaws.com/us-west-2_14Yp24JXn/.well-known/openid-configuration",
+          "allowedClients": [
+            "6iup5ro4jfv98nsjgtgok79vll"
+          ]
+        }
+      },
+      "requestHeaderAllowlist": [
+        "X-Amzn-Bedrock-AgentCore-Runtime-Custom-user-id",
+        "X-Amzn-Bedrock-AgentCore-Runtime-Custom-user-name",
+        "X-Amzn-Bedrock-AgentCore-Runtime-Custom-user-email"
+      ]
+    }
+  ],
+  "memories": [
+    {
+      "name": "dataanalystMemory",
+      "eventExpiryDuration": 90,
+      "strategies": [
+        {
+          "type": "USER_PREFERENCE",
+          "namespaceTemplates": [
+            "/users/{actorId}/preferences"
+          ]
+        },
+        {
+          "type": "SEMANTIC",
+          "namespaceTemplates": [
+            "/users/{actorId}/facts"
+          ]
+        }
+      ]
+    }
+  ],
+  "knowledgeBases": [],
+  "credentials": [],
+  "evaluators": [],
+  "onlineEvalConfigs": [],
+  "agentCoreGateways": [],
+  "policyEngines": [
+    {
+      "name": "platform_content_guardrails",
+      "description": "Platform baseline enforcement point backing the content-guardrails org control (TLP-B11 #13). The engine attachment is what the compliance gate verifies; teams extend it with forbid policies for their domain \u2014 the baseline policy below is permissive so attaching it never changes runtime behavior.",
+      "policies": [
+        {
+          "name": "dataanalyst_platform_baseline",
+          "description": "Baseline attachment policy \u2014 extend with domain-specific forbid policies.",
+          "statement": "permit(principal, action, resource is AgentCore::Gateway);",
+          "validationMode": "IGNORE_ALL_FINDINGS"
+        }
+      ]
+    }
+  ],
+  "configBundles": [],
+  "abTests": [],
+  "harnesses": [],
+  "datasets": [
+    {
+      "name": "golden",
+      "schemaType": "AGENTCORE_EVALUATION_PREDEFINED_V1",
+      "description": "Golden 7-scenario dataset (single + multi-turn) for the eval gate \u2014 UCI Online Retail business questions with numeric assertions",
+      "config": {
+        "managed": {
+          "location": "datasets/golden.jsonl"
+        }
+      }
+    }
+  ],
+  "payments": []
+}

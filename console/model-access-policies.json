@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "note": "Domain model access policy for AgentCore Gateway inference targets. Model access is an authorization policy; rate limits are traffic controls and must not be treated as the security boundary.",
+  "identityDimension": "$.context.jwt.team",
+  "policies": [
+    {
+      "id": "frontier-claude-opus",
+      "modelPattern": "*claude-opus*",
+      "description": "Frontier Claude Opus models are platform-controlled. Domain teams can request temporary access for approved evaluation or production exceptions.",
+      "allowedDomains": [
+        "platform"
+      ],
+      "requestableDomains": [
+        "customer-support",
+        "operations"
+      ],
+      "rateLimitProfile": {
+        "requestsPerMinute": 20,
+        "tokensPerMinute": 80000,
+        "connectionsPerSecond": 5
+      }
+    },
+    {
+      "id": "frontier-claude-fable",
+      "modelPattern": "*claude-fable*",
+      "description": "Fable-class models start as platform-only until the domain owner has an explicit access grant.",
+      "allowedDomains": [
+        "platform"
+      ],
+      "requestableDomains": [
+        "customer-support",
+        "operations"
+      ],
+      "rateLimitProfile": {
+        "requestsPerMinute": 30,
+        "tokensPerMinute": 100000,
+        "connectionsPerSecond": 8
+      }
+    },
+    {
+      "id": "claude-sonnet-standard",
+      "modelPattern": "*claude-sonnet*",
+      "description": "Standard Claude Sonnet tier for builders in approved domains.",
+      "allowedDomains": [
+        "customer-support",
+        "operations",
+        "platform"
+      ],
+      "requestableDomains": [
+        "*"
+      ],
+      "rateLimitProfile": {
+        "requestsPerMinute": 80,
+        "tokensPerMinute": 250000,
+        "connectionsPerSecond": 20
+      }
+    },
+    {
+      "id": "claude-haiku-standard",
+      "modelPattern": "*claude-haiku*",
+      "description": "Low-cost Claude tier available to all platform domains.",
+      "allowedDomains": [
+        "customer-support",
+        "operations",
+        "platform"
+      ],
+      "requestableDomains": [
+        "*"
+      ],
+      "rateLimitProfile": {
+        "requestsPerMinute": 160,
+        "tokensPerMinute": 500000,
+        "connectionsPerSecond": 35
+      }
+    },
+    {
+      "id": "open-model-sandbox",
+      "modelPattern": "*gpt-oss*",
+      "description": "Open-model sandbox is restricted to Operations by default; other domains can request access.",
+      "allowedDomains": [
+        "operations",
+        "platform"
+      ],
+      "requestableDomains": [
+        "customer-support"
+      ],
+      "rateLimitProfile": {
+        "requestsPerMinute": 60,
+        "tokensPerMinute": 180000,
+        "connectionsPerSecond": 15
+      }
+    },
+    {
+      "id": "default-gateway-model",
+      "modelPattern": "*",
+      "description": "Default gateway model tier for approved domains.",
+      "allowedDomains": [
+        "customer-support",
+        "operations",
+        "platform"
+      ],
+      "requestableDomains": [
+        "*"
+      ],
+      "rateLimitProfile": {
+        "requestsPerMinute": 50,
+        "tokensPerMinute": 120000,
+        "connectionsPerSecond": 12
+      }
+    }
+  ]
+}

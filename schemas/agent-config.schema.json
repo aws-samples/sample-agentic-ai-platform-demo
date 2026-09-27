@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/agentic-ai-platform/schemas/agent-config.schema.json",
+  "title": "agent-config.yaml",
+  "description": "Config-as-code for a domain agent. THE source of truth for what an agent-config.yaml may contain: the console's YAML import validates every upload against this file before applying it, and reports the YAML path + line of anything that does not fit. The platform baseline (identity, observability, org-enforced guardrails) is deliberately NOT expressible here — see x-platform-locked.",
+  "type": "object",
+  "required": ["name"],
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Agent / project name. Becomes the project name, so it obeys the same slug rule the wizard's name field does.",
+      "pattern": "^[a-z0-9][a-z0-9-]{1,40}$",
+      "x-hint": "expected lowercase letters, digits and dashes, starting with a letter or digit."
+    },
+    "model": {
+      "type": "string",
+      "description": "Model id. Must additionally be APPROVED in the AI Registry for the importing session's domain — that check is a live registry lookup, not a schema enum.",
+      "minLength": 1
+    },
+    "system_prompt": {
+      "type": "string",
+      "description": "A FILE REFERENCE, never inline prose: a relative .md/.markdown/.txt path inside the app repo, so the instructions are reviewed in a PR and versioned with the agent.",
+      "pattern": "^(?!/)(?!.*\\.\\.)[\\w./-]+\\.(md|markdown|txt)$",
+      "x-hint": "expected a relative .md/.markdown/.txt file reference inside the repo (e.g. app/chat_agent/instructions.md), not inline text."
+    },
+    "rag": {
+      "type": "object",
+      "description": "Retrieval configuration.",
+      "required": ["datasource"],
+      "additionalProperties": false,
+      "properties": {
+        "datasource": { "type": "string", "minLength": 1 },
+        "index": { "type": "string", "minLength": 1 },
+        "retrieval": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "top_k": { "type": "integer", "minimum": 1, "maximum": 50 },
+            "rerank": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "memory": {
+      "type": "object",
+      "description": "Memory retention + isolation. A config may tighten these; the platform's own memory plan is not overridable here.",
+      "additionalProperties": false,
+      "properties": {
+        "retention_days": { "type": "integer", "minimum": 1, "maximum": 365 },
+        "scope": { "type": "string", "enum": ["per-user", "per-session", "shared"] }
+      }
+    },
+    "guardrails": {
+      "type": "array",
+      "description": "Domain-chosen guardrail ids, as a flat list. Each id must be one the console really knows. Org-enforced and domain-enforced guardrails are added by the platform whether or not they appear here — omitting one does NOT switch it off, and attempting to switch one off is rejected (x-platform-locked).",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "eval": {
+      "type": "object",
+      "description": "Pre-export eval gate terms.",
+      "additionalProperties": false,
+      "properties": {
+        "golden_dataset": { "type": "string", "minLength": 1 },
+        "threshold": {
+          "type": "number",
+          "description": "Pass rate between 0 and 1 (write 0.8, not 80).",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "scenarios": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "output": {
+      "type": "object",
+      "description": "Optional structured-output contract for the agent's response.",
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "type": "string",
+          "description": "A FILE REFERENCE to a committed JSON Schema, same discipline as system_prompt.",
+          "pattern": "^(?!/)(?!.*\\.\\.)[\\w./-]+\\.json$",
+          "x-hint": "expected a relative .json file reference inside the repo (e.g. app/chat_agent/response.schema.json)."
+        }
+      }
+    }
+  },
+  "x-platform-locked": {
+    "description": "Platform-enforced baseline. These keys are owned by the platform and merged on generate; a config that tries to set or override one is REJECTED rather than silently ignored, so an importing builder learns the policy instead of believing the override worked.",
+    "reservedKeys": [
+      "identity",
+      "observability",
+      "platform",
+      "guardrails_baseline",
+      "enforced_guardrails",
+      "guardrail_overrides"
+    ],
+    "guardrailBaselineMessage": "is a platform-enforced guardrail baseline — an agent-config.yaml may not set or override it. List the guardrails you are ADDING; enforced ones are merged by the platform."
+  }
+}

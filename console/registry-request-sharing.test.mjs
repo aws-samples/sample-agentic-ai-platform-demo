@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import {readFileSync} from 'node:fs';
+const source=readFileSync(new URL('./public/modules/app.mjs',import.meta.url),'utf8');
+function fn(name){const start=source.indexOf('async function '+name+'(');return source.slice(start,source.indexOf('\n}',start)+2)}
+function harness(){let now=0,calls=0;const pending=[];const ctx=vm.createContext({hostedRegistryReadCache:null,context:'admin/platform',Date:{now:()=>now},CANCELED_REQUEST:Symbol(),hostedModelReadContext:()=>ctx.context,rawApi:()=>{calls++;return new Promise((resolve,reject)=>pending.push({resolve,reject}))},clearHostedRegistryReadCache:()=>{ctx.hostedRegistryReadCache=null}});vm.runInContext(fn('readHostedRegistry'),ctx);return {ctx,pending,calls:()=>calls,clock:n=>{now=n}}}
+test('slow Registry requests remain shared after the old one-second TTL; success TTL starts at completion',async()=>{const h=harness();const a=h.ctx.readHostedRegistry();h.clock(2000);const b=h.ctx.readHostedRegistry();assert.equal(h.calls(),1);h.pending[0].resolve({ok:true,entries:[]});await Promise.all([a,b]);await h.ctx.readHostedRegistry();assert.equal(h.calls(),1);});
+test('Registry failures are retryable and never cached as empty inventory',async()=>{const h=harness();const a=h.ctx.readHostedRegistry();h.pending[0].resolve({ok:false,code:'CONTROL_PLANE_UNAVAILABLE'});assert.equal((await a).ok,false);const b=h.ctx.readHostedRegistry();assert.equal(h.calls(),2);h.pending[1].resolve({ok:true,entries:[]});await b;});
+test('a slow response from another identity cannot render or evict the new cache',async()=>{const h=harness();const a=h.ctx.readHostedRegistry().catch(e=>e);h.ctx.context='other/platform';const b=h.ctx.readHostedRegistry();h.pending[1].resolve({ok:true,entries:[]});await b;h.pending[0].resolve({ok:true,entries:[{id:'private'}]});assert.equal(await a,h.ctx.CANCELED_REQUEST);await h.ctx.readHostedRegistry();assert.equal(h.calls(),2);});
+
+test('completed Registry cache expires without reads extending its freshness window',async()=>{const h=harness();const a=h.ctx.readHostedRegistry();h.clock(2000);h.pending[0].resolve({ok:true,entries:[]});await a;h.clock(6000);await h.ctx.readHostedRegistry();assert.equal(h.calls(),1);h.clock(7001);const b=h.ctx.readHostedRegistry();assert.equal(h.calls(),2);h.pending[1].resolve({ok:true,entries:[]});await b;});

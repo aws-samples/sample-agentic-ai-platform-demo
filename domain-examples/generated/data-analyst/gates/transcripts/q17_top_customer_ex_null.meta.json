@@ -1,0 +1,8 @@
+{
+  "scenario_id": "q17_top_customer_ex_null",
+  "recordedAt": "2026-08-25T03:50:27.611Z",
+  "source": "record-transcripts.mjs",
+  "endpoint": "http://localhost:8081/invocations",
+  "sessionId": "rec-q17_top_customer_ex_null-1787629820281",
+  "turns": 1
+}
