@@ -28,12 +28,15 @@ implementation map, verified deployment context, and known gaps.
 
 ## Deployment context
 
-- The owner designated AWS account **534409838809** for deployment testing.
+- The deployer must explicitly select the target AWS account. Historical
+  verification accounts in project memory are not deployment defaults.
 - Current repository deployment region: **us-west-2**.
 - Before AWS writes, verify the caller with STS and inspect the target stacks.
   Profile names, local outputs, and historical examples are not account proof.
-- This is an existing deployment. Use its discovered resources and reviewed
-  configuration; the clean-account provision command is not the default here.
+- Inspect the selected account before choosing a deployment path. Use the
+  clean-account command for a new installation; use discovered resources and
+  reviewed configuration for an existing installation. Reinstallation requires
+  explicit authorization to remove the old installation.
 - Follow the current runbook in
   [infra/serverless-platform/README.md](infra/serverless-platform/README.md),
   including its predeployment audit. Keep deployable code account-portable.

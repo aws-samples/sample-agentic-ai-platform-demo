@@ -307,6 +307,7 @@ export AWS_PROFILE="<configured-profile>"
 export AWS_ACCOUNT_ID="<account-id>"
 export AWS_REGION="us-west-2"
 export GITHUB_REPOSITORY="aws-samples/sample-agentic-ai-platform-demo"
+export CONTROL_PLANE_MODE="provision"
 export COGNITO_DOMAIN_PREFIX="<globally-unique-prefix>"
 
 npm ci
@@ -315,6 +316,32 @@ npm run serverless:install
 npm --prefix infra/serverless-platform run security:audit
 npm run platform:deploy:clean-account
 ```
+
+Demo deployments use **shared Lambda concurrency by default**, without setting
+Reserved Concurrency on the Web or DomainBootstrap functions. A demo does not
+need 143 dedicated concurrent executions. Its traffic still shares the regional
+account quota and can be throttled when that capacity is exhausted.
+
+Dedicated reservations are optional: set `LAMBDA_CONCURRENCY_MODE=reserved`
+before the deployment command, or pass `-c lambdaConcurrencyMode=reserved` to
+both stacks when deploying them directly. That mode reserves 143 executions
+and needs another 100 to remain unreserved under AWS rules. The deployment
+command checks the selected mode's available capacity before creating stacks.
+When updating an installation that should retain its existing reservations,
+select `reserved` explicitly and review the CDK diff.
+Inspect the account with `aws lambda get-account-settings --region "$AWS_REGION"`.
+Do not delete unrelated applications to make room for a demo.
+
+AgentCore trace delivery also requires the regional CloudWatch Logs trace
+destination. The Web stack configures Transaction Search with 1% X-Ray indexing
+and the scoped log-delivery policy before creating runtime trace deliveries.
+The deployment identity needs the native
+`AWS::XRay::TransactionSearchConfig` permissions, including Application Signals
+discovery and its service-linked role creation. The optional GitHub deployment
+role includes those permissions. This is a regional setting: review it when
+installing alongside other tracing workloads. The configuration and its access
+policy are retained on stack deletion so removing the demo does not disable
+other applications' trace ingestion.
 
 Use your existing authenticated AWS environment instead of `AWS_PROFILE` when
 running with workload credentials. Verify the caller account with STS. An

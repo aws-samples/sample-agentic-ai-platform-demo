@@ -303,9 +303,8 @@ links and consistency; run behavior-specific tests for source changes and denial
 cases for authorization/delivery changes.
 
 Use the owner-designated account and verify it with STS before AWS mutations.
-The original test deployment is account 534409838809; the separately authorized
-new-account verification deployment is 820242898417, both in us-west-2. These
-operational facts must never become hard-coded portable runtime/template defaults.
+Historical verification accounts are evidence only. They must never become
+deployment targets or hard-coded portable runtime/template defaults.
 Inspect live stacks, outputs, reviewed configuration and planned changes. Follow
 the [deployment runbook](infra/serverless-platform/README.md), including audit,
 diff, postdeployment checks and acceptance. Existing deployments are not an
@@ -316,6 +315,11 @@ and required `auto-delete=no`, `project=agentic-ai-platform-demo`, `managedBy=cd
 tags. Test-account authorization does not replace product production approval.
 Distinguish local tests, synthesis, live smoke, authenticated acceptance, actual
 deployment and cross-account verification.
+
+Demo deployments default to shared Lambda concurrency without fixed per-function
+reservations. Dedicated reservations are an explicit deployment option, not a
+prerequisite for a small demo. Check capacity before creating resources and
+document the selected mode; shared capacity remains subject to account throttling.
 
 ## 10. Handover acceptance
 

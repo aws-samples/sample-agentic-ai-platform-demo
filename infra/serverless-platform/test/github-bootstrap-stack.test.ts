@@ -2019,6 +2019,29 @@ test("execution role uses a dedicated tagged Runtime observability deployment po
   ]);
   assert.deepEqual(resources(xrayPolicy), ["*"]);
   assert.deepEqual(xrayPolicy.Condition, logsPolicy.Condition);
+
+  const transactionSearch = statementBySid(template, "TraceSearchConfiguration");
+  assert.deepEqual(actions(transactionSearch), [
+    "application-signals:StartDiscovery",
+    "xray:GetIndexingRules",
+    "xray:GetTraceSegmentDestination",
+    "xray:UpdateIndexingRule",
+    "xray:UpdateTraceSegmentDestination",
+  ]);
+  assert.deepEqual(resources(transactionSearch), ["*"]);
+  assert.deepEqual(transactionSearch.Condition, logsPolicy.Condition);
+  const serviceRole = statementBySid(template, "TraceSearchServiceRole");
+  assert.deepEqual(actions(serviceRole), ["iam:CreateServiceLinkedRole"]);
+  assert.deepEqual(serviceRole.Condition, {
+    StringEquals: {"iam:AWSServiceName": "application-signals.cloudwatch.amazonaws.com"},
+  });
+  assert.ok(resources(serviceRole).every(resource => String(resource).includes("AWSServiceRoleForCloudWatchApplicationSignals")));
+  const traceLogs = statementBySid(template, "TraceSearchLogGroups");
+  assert.deepEqual(actions(traceLogs), ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutRetentionPolicy"]);
+  assert.equal(resources(traceLogs).length, 2);
+  assert.ok(resources(traceLogs).every(resource =>
+    String(resource).endsWith(":log-group:aws/spans:*")
+    || String(resource).endsWith(":log-group:/aws/application-signals/data:*")));
 });
 
 test("Runtime deployment permissions exclude unused network, encryption, invocation, and list capabilities", () => {

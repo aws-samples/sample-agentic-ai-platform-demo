@@ -1,3 +1,4 @@
+import { lambdaReservedConcurrency } from "./lambda-concurrency";
 import * as path from 'node:path';
 import * as cdk from 'aws-cdk-lib';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -22,7 +23,7 @@ export function addPolicyInventory(stack: cdk.Stack, props: {userPoolArn:string;
  // validated same-account engine ARNs obtained from the two configured Gateways.
  const reason='Policy engines are discovered only from configured Gateway attachments; the reader validates account/region and exposes no client-selected engine or mutation operation.';
  for(const resource of [role,boundary]) resource.node.addMetadata(cdk.Validations.ACKNOWLEDGED_RULES_METADATA_KEY,{[`AwsSolutions-IAM5[Resource::arn:<AWS::Partition>:bedrock-agentcore:${stack.region}:${stack.account}:policy-engine/*]`]:reason});
- const fn=new nodejs.NodejsFunction(stack,'PolicyInventoryFunction',{runtime:lambda.Runtime.NODEJS_24_X,architecture:lambda.Architecture.ARM_64,entry:path.join(__dirname,'..','lambda','policy-inventory','index.mjs'),handler:'handler',role,logGroup:log,timeout:cdk.Duration.seconds(30),memorySize:256,reservedConcurrentExecutions:5,environment:{COGNITO_USER_POOL_ID:props.userPoolId,POLICY_GATEWAYS_JSON:JSON.stringify(props.gateways)},depsLockFilePath:path.join(__dirname,'..','package-lock.json'),bundling:{bundleAwsSDK:true}});
+ const fn=new nodejs.NodejsFunction(stack,'PolicyInventoryFunction',{runtime:lambda.Runtime.NODEJS_24_X,architecture:lambda.Architecture.ARM_64,entry:path.join(__dirname,'..','lambda','policy-inventory','index.mjs'),handler:'handler',role,logGroup:log,timeout:cdk.Duration.seconds(30),memorySize:256,reservedConcurrentExecutions: lambdaReservedConcurrency(stack, 5),environment:{COGNITO_USER_POOL_ID:props.userPoolId,POLICY_GATEWAYS_JSON:JSON.stringify(props.gateways)},depsLockFilePath:path.join(__dirname,'..','package-lock.json'),bundling:{bundleAwsSDK:true}});
  const integration=new apigwv2.CfnIntegration(stack,'PolicyInventoryIntegration',{apiId:props.api.ref,integrationType:'AWS_PROXY',integrationUri:fn.functionArn,payloadFormatVersion:'2.0',timeoutInMillis:29000});
  const route=new apigwv2.CfnRoute(stack,'PolicyInventoryRoute',{apiId:props.api.ref,routeKey:'GET /api/governance/runtime-policies',authorizationType:'JWT',authorizerId:props.authorizer.ref,target:`integrations/${integration.ref}`});route.addResourceDependency(props.authorizer);route.addResourceDependency(integration);
  fn.addPermission('AllowPolicyInventoryInvoke',{principal:new iam.ServicePrincipal('apigateway.amazonaws.com'),sourceArn:`arn:${stack.partition}:execute-api:${stack.region}:${stack.account}:${props.api.ref}/*/GET/api/governance/runtime-policies`});
