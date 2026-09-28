@@ -106,7 +106,7 @@ const CONTROL_PLANE_EXECUTION_MANAGED_POLICY_HASHES = new Map([
   ],
   [
     "AgenticPlatform-GitHubBootstrap-AgentRuntimeObservabilityDeployment",
-    "e84f70a0ee7b7c3a39eb34a4d2dfc35ae81d5148a3b9027dbe125b1f05563216",
+    "44168f34b9ebc046f7779f41f87a0cf20d7047704f918af5f8a251421a6840ab",
   ],
 ]);
 const CONTROL_PLANE_DEPLOYMENT_POLICY_NAME =
@@ -8388,6 +8388,19 @@ function expectedStage1SensitiveRoleStatements(accountId) {
 
 function expectedControlPlaneAdditionalSensitiveStatements(accountId) {
   return [
+    {
+      Effect: "Allow",
+      Action: "iam:CreateServiceLinkedRole",
+      Resource:
+        `arn:${REQUIRED_PARTITION}:iam::${accountId}:role/aws-service-role/`
+        + "application-signals.cloudwatch.amazonaws.com/"
+        + "AWSServiceRoleForCloudWatchApplicationSignals",
+      Condition: {
+        StringEquals: {
+          "iam:AWSServiceName": "application-signals.cloudwatch.amazonaws.com",
+        },
+      },
+    },
     {
       Effect: "Allow",
       Action: [

@@ -10297,6 +10297,33 @@ test("deployment audit treats IAM action names case-insensitively", () => {
   assert.equal(evidenceWrites[0].evidence.status, "failed");
 });
 
+for (const mutation of ["wildcard-resource", "missing-service-condition", "different-service"]) {
+  test(`deployment audit rejects broadened Transaction Search service role: ${mutation}`, () => {
+    const responses = provisionedControlPlaneResponses();
+    const policyName = "AgenticPlatform-GitHubBootstrap-AgentRuntimeObservabilityDeployment";
+    const responseKey = key(...managedPolicyVersionCommand(policyName));
+    const response = JSON.parse(responses.get(responseKey));
+    const statement = response.PolicyVersion.Document.Statement.find(
+      item => item.Sid === "TraceSearchServiceRole",
+    );
+    assert.ok(statement);
+    if (mutation === "wildcard-resource") statement.Resource = "*";
+    if (mutation === "missing-service-condition") delete statement.Condition;
+    if (mutation === "different-service") {
+      statement.Condition.StringEquals["iam:AWSServiceName"] = "lambda.amazonaws.com";
+    }
+    responses.set(responseKey, JSON.stringify(response));
+    const { options } = fixture({
+      env: provisionedControlPlaneEnvironment(),
+      responses,
+    });
+    assert.throws(
+      () => auditPredeploy(options),
+      { code: "CONTROL_PLANE_EXECUTION_ALTERNATE_ROLE_PATH" },
+    );
+  });
+}
+
 test("deployment audit rejects alternate IAM escalation paths outside the control-plane prefix", () => {
   const responses = provisionedControlPlaneResponses();
   const policyName = CONTROL_PLANE_EXECUTION_POLICY_NAMES[0];

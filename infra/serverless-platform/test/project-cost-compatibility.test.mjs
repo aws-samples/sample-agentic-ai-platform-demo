@@ -1,32 +1,31 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { execFileSync } from "node:child_process";
+import { historicalSource } from "./fixtures/compatibility/read-source.mjs";
 import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { pathToFileURL } from "node:url";
 import * as current from "../lambda/experience/invocation-store.mjs";
 import { createJournalUsageProvider } from "../lambda/operations/journal-usage.mjs";
 import { createOperationsService } from "../lambda/operations/service.mjs";
 import { createConfiguredExperienceHandler } from "../lambda/experience/runtime.mjs";
 import { costJournalEnabled, journalCompatibilityFromEnv } from "../lambda/experience/journal-compatibility.mjs";
 
-const root = fileURLToPath(new URL("../../../", import.meta.url));
-const file = "infra/serverless-platform/lambda/experience/invocation-store.mjs";
+const file = "experience/invocation-store.mjs";
 const require = createRequire(import.meta.url);
 const sdkUrl = pathToFileURL(require.resolve("@aws-sdk/client-dynamodb")).href;
 const dataUrl = source => `data:text/javascript;base64,${Buffer.from(source).toString("base64")}`;
 const historical = {};
-// Pin the reader AND its local validator. git show never changes a checkout.
+// Pin the reader AND its local validator without requiring historical commits.
 for (const sha of [
   "38b31309793b6b65bb1e9d4f6a07ea013ae1bc44",
   "1feeae25f786da0a952102f62f18044eb70ce4da",
   "4e4a5fe916994d4ce8ba4b4ca03df53ffa51484b",
 ]) {
-  const show = path => execFileSync("git", ["show", `${sha}:${path}`], { cwd: root, encoding: "utf8" });
+  const show = path => historicalSource(sha, path);
   let source = show(file).replaceAll('"@aws-sdk/client-dynamodb"', JSON.stringify(sdkUrl));
   if (source.includes('"../agent-runtime/usage.mjs"')) {
     source = source.replaceAll('"../agent-runtime/usage.mjs"',
-      JSON.stringify(dataUrl(show("infra/serverless-platform/lambda/agent-runtime/usage.mjs"))));
+      JSON.stringify(dataUrl(show("agent-runtime/usage.mjs"))));
   }
   historical[sha] = await import(dataUrl(source));
 }

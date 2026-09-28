@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createHash } from "node:crypto";
-import { execFileSync } from "node:child_process";
+import { historicalSource } from "./fixtures/compatibility/read-source.mjs";
 import { createRequire } from "node:module";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { pathToFileURL } from "node:url";
 import { readFile } from "node:fs/promises";
 import { Readable } from "node:stream";
 import { BedrockAgentCoreClient } from "@aws-sdk/client-bedrock-agentcore";
@@ -643,15 +643,13 @@ test("Runtime event identity inventions are ignored without an Experience bindin
 test("retained native companion rows remain readable by pinned rollback readers without mutating legacy invocation rows", async () => {
   const h = chain({ journalCompatibility: {} });
   await h.invoke();
-  const root = fileURLToPath(new URL("../../../", import.meta.url));
   const require = createRequire(import.meta.url);
   const sdk = pathToFileURL(require.resolve("@aws-sdk/client-dynamodb")).href;
   const dataUrl = source => `data:text/javascript;base64,${Buffer.from(source).toString("base64")}`;
   for (const sha of ["38b31309793b6b65bb1e9d4f6a07ea013ae1bc44",
     "1feeae25f786da0a952102f62f18044eb70ce4da", "4e4a5fe916994d4ce8ba4b4ca03df53ffa51484b",
     "e27b8122f914f9ae93dfa76190ea233fc64260f4"]) {
-    const show = path => execFileSync("git", ["show", `${sha}:infra/serverless-platform/lambda/${path}`],
-      { cwd: root, encoding: "utf8" });
+    const show = path => historicalSource(sha, path);
     let source = show("experience/invocation-store.mjs").replaceAll('"@aws-sdk/client-dynamodb"', JSON.stringify(sdk));
     for (const [specifier, path] of [["../agent-runtime/usage.mjs", "agent-runtime/usage.mjs"],
       ["./journal-compatibility.mjs", "experience/journal-compatibility.mjs"]]) {
@@ -864,11 +862,9 @@ test("Converse writer requires upgraded-reader attestation; pre-Converse reader 
     converseReaderVersion: "converse-v1",
   });
   await assert.rejects(legacyRoute.recordUsage(h.sent(), event.usage.observation));
-  const root = fileURLToPath(new URL("../../../", import.meta.url));
   const base = "f043d4a33ee7736b3accaa19b9639b85888e98ea";
   const dataUrl = source => `data:text/javascript;base64,${Buffer.from(source).toString("base64")}`;
-  const show = path => execFileSync("git", ["show", `${base}:infra/serverless-platform/lambda/${path}`],
-    { cwd: root, encoding: "utf8" });
+  const show = path => historicalSource(base, path);
   const usageUrl = dataUrl(show("agent-runtime/usage.mjs"));
   const priceUrl = dataUrl(show("operations/model-prices.mjs").replaceAll('"../agent-runtime/usage.mjs"', JSON.stringify(usageUrl)));
   const sdkUrl = pathToFileURL(createRequire(import.meta.url).resolve("@aws-sdk/client-dynamodb")).href;
@@ -894,11 +890,9 @@ test("Converse writer requires upgraded-reader attestation; pre-Converse reader 
 });
 
 test("actual d2aa8ca v2 writer/new reader retains old usage; its reader rejects v3 even with writes disabled", async () => {
-  const root = fileURLToPath(new URL("../../../", import.meta.url));
   const sha = "d2aa8cae631fbe338dffe2c5c8b1b395cb08bba7";
   const dataUrl = source => `data:text/javascript;base64,${Buffer.from(source).toString("base64")}`;
-  const show = path => execFileSync("git", ["show", `${sha}:infra/serverless-platform/lambda/${path}`],
-    { cwd: root, encoding: "utf8" });
+  const show = path => historicalSource(sha, path);
   const sdk = name => JSON.stringify(pathToFileURL(createRequire(import.meta.url).resolve(name)).href);
   const usageUrl = dataUrl(show("agent-runtime/usage.mjs"));
   const priceUrl = dataUrl(show("operations/model-prices.mjs")

@@ -2201,7 +2201,7 @@ test("AgentCore Runtime observability resources are complete and tagged", () => 
   }
   assert.equal(
     resourceEntries(template, "AWS::Logs::ResourcePolicy").length,
-    1,
+    2, // Runtime delivery plus the regional Transaction Search prerequisite.
   );
   assert.equal(
     resourceEntries(template, "AWS::XRay::ResourcePolicy").length,

@@ -7,6 +7,24 @@ This file distinguishes source implementation, dated live evidence and remaining
 work. Do not treat an earlier deployment or simulated result as current acceptance.
 Never store credentials, tokens, browser sessions or private user content here.
 
+## Fresh-install portability checks — 2026-09-28
+
+- Demo Lambda functions now use shared concurrency by default. Dedicated
+  reservations require explicit configuration and a regional capacity check.
+- The Web stack provisions the regional Transaction Search prerequisites before
+  AgentCore trace delivery. Retained regional settings and unique delivery
+  destination names support reinstalls alongside other tracing workloads.
+- A live reinstall completed all three platform stacks. First administrator
+  login, operator initialization, domain resource selection and Builder
+  Generate/repository preview were verified. The strict postdeployment security
+  audit passed. Account-specific evidence remains outside the repository.
+- Historical invocation and execution-journal compatibility tests now load
+  checksum-verified source fixtures instead of requiring commits absent from
+  the published snapshot. The retained-data assertions are unchanged.
+- This verification does not establish GitHub delivery, production release
+  acceptance, or configured Memory/KB bindings. Those require the corresponding
+  setup and separate functional verification.
+
 ## Read first
 
 1. `AGENTS.md` and `agent.md` for working rules and product invariants.
