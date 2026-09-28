@@ -1,3 +1,4 @@
+import { lambdaReservedConcurrency } from "./lambda-concurrency";
 import * as path from "node:path";
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
@@ -92,7 +93,7 @@ export class DomainBootstrapStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_22_X, architecture: lambda.Architecture.ARM_64,
       entry: path.join(__dirname, "../lambda/domain-bootstrap/runtime.mjs"),
       handler: "handler", memorySize: 512, timeout: cdk.Duration.seconds(90),
-      reservedConcurrentExecutions: 5, logGroup, role,
+      reservedConcurrentExecutions: lambdaReservedConcurrency(this, 5), logGroup, role,
       depsLockFilePath: path.join(__dirname, "../package-lock.json"),
       bundling: { externalModules: ["@aws-sdk/*"] },
       environment: {

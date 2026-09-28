@@ -12,6 +12,32 @@ const CONTROL_PLANE_OUTPUTS = path.join(
   "infra/platform-registry/control-plane-outputs.json",
 );
 
+// Web reserves 138 concurrent executions; DomainBootstrap reserves another 5.
+// AWS requires at least 100 executions to remain in the unreserved pool.
+export const PLATFORM_RESERVED_CONCURRENCY = 143;
+export function validateLambdaCapacity(settings, mode = "shared") {
+  if (!["shared", "reserved"].includes(mode)) {
+    throw new Error("LAMBDA_CONCURRENCY_MODE must be shared or reserved.");
+  }
+  const available = settings?.AccountLimit?.UnreservedConcurrentExecutions;
+  const required = mode === "reserved" ? PLATFORM_RESERVED_CONCURRENCY + 100 : 1;
+  if (!Number.isSafeInteger(available) || available < 0) {
+    throw new Error("Lambda account settings did not report a valid unreserved concurrency allowance.");
+  }
+  if (available < required) {
+    if (mode === "shared") {
+      throw new Error("Lambda has no unreserved concurrency available for this demo. Review the account's existing reservations or request a quota increase.");
+    }
+    throw new Error(
+      `Lambda concurrency is insufficient: ${available} unreserved executions available; `
+      + `${required} required (${PLATFORM_RESERVED_CONCURRENCY} platform reservations plus `
+      + "AWS's 100-execution unreserved minimum). Request a regional Lambda Concurrent "
+      + "executions quota increase before retrying, or use the default shared mode "
+      + "for a demo without dedicated reservations.",
+    );
+  }
+}
+
 function required(value, name, pattern) {
   if (typeof value !== "string" || !pattern.test(value)) {
     throw new Error(`${name} is missing or invalid.`);
@@ -30,6 +56,11 @@ function deploymentConfig(env = process.env) {
   }
 
   return {
+    lambdaConcurrencyMode: required(
+      env.LAMBDA_CONCURRENCY_MODE || "shared",
+      "LAMBDA_CONCURRENCY_MODE",
+      /^(shared|reserved)$/,
+    ),
     account: required(env.AWS_ACCOUNT_ID, "AWS_ACCOUNT_ID", /^\d{12}$/),
     region: required(env.AWS_REGION, "AWS_REGION", /^us-west-2$/),
     cognitoDomainPrefix: required(
@@ -84,6 +115,7 @@ function webStep(config, controlPlaneOutputs) {
     "deployment-outputs.json",
     ...cdkContext("account", config.account),
     ...cdkContext("region", config.region),
+    ...cdkContext("lambdaConcurrencyMode", config.lambdaConcurrencyMode || "shared"),
     ...cdkContext("cognitoDomainPrefix", config.cognitoDomainPrefix),
     ...cdkContext(
       "starterBuilderModelId",
@@ -135,6 +167,7 @@ function domainBootstrapStep(config, targetFile) {
       "node --import tsx bin/domain-bootstrap.ts",
       "--require-approval",
       "never",
+      ...cdkContext("lambdaConcurrencyMode", config.lambdaConcurrencyMode || "shared"),
     ],
   };
 }
@@ -266,9 +299,20 @@ function runStep(step) {
   run("npm", step.args, step.cwd, step.env);
 }
 
+function verifyLambdaCapacity(config) {
+  const result = spawnSync("aws", [
+    "lambda", "get-account-settings", "--region", config.region, "--output", "json",
+  ], { encoding: "utf8" });
+  if (result.status !== 0) {
+    throw new Error("Cannot read Lambda account settings. Verify lambda:GetAccountSettings permission before deployment.");
+  }
+  validateLambdaCapacity(JSON.parse(result.stdout), config.lambdaConcurrencyMode);
+}
+
 function main() {
   const config = deploymentConfig();
   verifyCaller(config);
+  verifyLambdaCapacity(config);
   runStep(controlPlaneStep(config));
   runStep(webStep(config, readControlPlaneOutputs()));
   const targetFile = writeDomainBootstrapTarget(config, readWebOutputs());

@@ -99,7 +99,7 @@ test("builder API is deployed with exact state, Gateway invoker, and identity pe
   assert.deepEqual(builderFunction.Properties?.Architectures, ["arm64"]);
   assert.equal(builderFunction.Properties?.Timeout, 30);
   assert.equal(builderFunction.Properties?.MemorySize, 512);
-  assert.equal(builderFunction.Properties?.ReservedConcurrentExecutions, 10);
+  assert.equal(builderFunction.Properties?.ReservedConcurrentExecutions, undefined);
   assert.deepEqual(builderFunction.Properties?.TracingConfig, {
     Mode: "Active",
   });

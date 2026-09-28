@@ -317,6 +317,11 @@ tags. Test-account authorization does not replace product production approval.
 Distinguish local tests, synthesis, live smoke, authenticated acceptance, actual
 deployment and cross-account verification.
 
+Demo deployments default to shared Lambda concurrency without fixed per-function
+reservations. Dedicated reservations are an explicit deployment option, not a
+prerequisite for a small demo. Check capacity before creating resources and
+document the selected mode; shared capacity remains subject to account throttling.
+
 ## 10. Handover acceptance
 
 - Governance approval requests, guardrail exceptions and blueprint submissions

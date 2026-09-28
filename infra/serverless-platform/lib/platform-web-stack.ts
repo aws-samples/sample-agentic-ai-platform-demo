@@ -1,3 +1,4 @@
+import { lambdaReservedConcurrency } from "./lambda-concurrency";
 import { addPolicyInventory } from './policy-inventory';
 import { readFileSync } from "node:fs";
 import * as path from "node:path";
@@ -499,7 +500,7 @@ export class PlatformWebStack extends cdk.Stack {
             "Atomically finalizes Registry decision audit evidence",
           timeout: cdk.Duration.seconds(10),
           memorySize: 256,
-          reservedConcurrentExecutions: 10,
+          reservedConcurrentExecutions: lambdaReservedConcurrency(this, 10),
           role: registryDecisionFinalizerRole,
           logGroup: registryDecisionFinalizerLogs,
           environment: {
@@ -1066,7 +1067,7 @@ export class PlatformWebStack extends cdk.Stack {
           "Vends durable platform domains through AWS Agent Registry",
         timeout: cdk.Duration.seconds(30),
         memorySize: 512,
-        reservedConcurrentExecutions: 10,
+        reservedConcurrentExecutions: lambdaReservedConcurrency(this, 10),
         role: platformAdminRole,
         logGroup: platformAdminLogs,
         environment: {
@@ -1423,7 +1424,7 @@ export class PlatformWebStack extends cdk.Stack {
           "Private broker for exact hosted acceptance resource operations",
         timeout: cdk.Duration.seconds(120),
         memorySize: 512,
-        reservedConcurrentExecutions: 2,
+        reservedConcurrentExecutions: lambdaReservedConcurrency(this, 2),
         role: hostedAcceptanceBrokerRole,
         logGroup: hostedAcceptanceBrokerLogs,
         environment: {
@@ -1581,7 +1582,7 @@ export class PlatformWebStack extends cdk.Stack {
           "Stage 1 platform health and Cognito identity projection",
         timeout: cdk.Duration.seconds(5),
         memorySize: 256,
-        reservedConcurrentExecutions: 10,
+        reservedConcurrentExecutions: lambdaReservedConcurrency(this, 10),
         tracing: lambda.Tracing.ACTIVE,
         role: identityRole,
         logGroup: identityLogs,
@@ -1690,7 +1691,7 @@ export class PlatformWebStack extends cdk.Stack {
           "Reads scoped AWS Registry and AgentCore Gateway inventory",
         timeout: cdk.Duration.seconds(30),
         memorySize: 512,
-        reservedConcurrentExecutions: 10,
+        reservedConcurrentExecutions: lambdaReservedConcurrency(this, 10),
         tracing: lambda.Tracing.ACTIVE,
         role: controlPlaneRole,
         logGroup: controlPlaneLogs,
@@ -1811,7 +1812,7 @@ export class PlatformWebStack extends cdk.Stack {
           "Reads authorized project, agent, deployment, and approval workspaces",
         timeout: cdk.Duration.seconds(30),
         memorySize: 512,
-        reservedConcurrentExecutions: 10,
+        reservedConcurrentExecutions: lambdaReservedConcurrency(this, 10),
         tracing: lambda.Tracing.ACTIVE,
         role: workspaceRole,
         logGroup: workspaceLogs,
@@ -2061,7 +2062,7 @@ export class PlatformWebStack extends cdk.Stack {
           "Creates, configures, and tests governed agent drafts",
         timeout: cdk.Duration.seconds(30),
         memorySize: 512,
-        reservedConcurrentExecutions: 10,
+        reservedConcurrentExecutions: lambdaReservedConcurrency(this, 10),
         tracing: lambda.Tracing.ACTIVE,
         role: builderRole,
         logGroup: builderLogs,
@@ -2312,7 +2313,7 @@ export class PlatformWebStack extends cdk.Stack {
           "Finalizes the governed Runtime proof endpoint binding",
         timeout: cdk.Duration.seconds(30),
         memorySize: 256,
-        reservedConcurrentExecutions: 1,
+        reservedConcurrentExecutions: lambdaReservedConcurrency(this, 1),
         role: runtimeProofConfiguratorRole,
         logGroup: runtimeProofConfiguratorLogs,
         depsLockFilePath: path.join(__dirname, "..", "package-lock.json"),
@@ -2524,6 +2525,16 @@ export class PlatformWebStack extends cdk.Stack {
         tags: REQUIRED_TAGS,
       },
     );
+    // A retained destination can still serve another application's deliveries.
+    // Scope this destination to the stack incarnation so reinstalls do not
+    // collide with it or require deleting another application's trace link.
+    const traceDestination = agentRuntime.node.tryFindChild("TracesDeliveryDest");
+    if (traceDestination instanceof logs.CfnDeliveryDestination) {
+      traceDestination.name = cdk.Fn.join("", [
+        "agentic-platform-traces-",
+        cdk.Fn.select(2, cdk.Fn.split("/", this.stackId)),
+      ]);
+    }
     const sandboxRuntimeEndpoint = agentRuntime.addEndpoint("Sandbox", {
       description: "Governed sandbox endpoint for domain testing",
     });
@@ -2707,7 +2718,7 @@ export class PlatformWebStack extends cdk.Stack {
           "Runs hosted agent-building journeys and approved delivery",
         timeout: cdk.Duration.seconds(90),
         memorySize: 512,
-        reservedConcurrentExecutions: 10,
+        reservedConcurrentExecutions: lambdaReservedConcurrency(this, 10),
         tracing: lambda.Tracing.ACTIVE,
         role: journeyRole,
         logGroup: journeyLogs,
@@ -2840,7 +2851,7 @@ export class PlatformWebStack extends cdk.Stack {
           "Executes governed sandbox and production AgentCore deployments",
         timeout: cdk.Duration.seconds(30),
         memorySize: 512,
-        reservedConcurrentExecutions: 10,
+        reservedConcurrentExecutions: lambdaReservedConcurrency(this, 10),
         tracing: lambda.Tracing.ACTIVE,
         role: deploymentApiRole,
         logGroup: deploymentApiLogs,
@@ -2972,7 +2983,7 @@ export class PlatformWebStack extends cdk.Stack {
           "Governs model access and AgentCore Gateway rate limits",
         timeout: cdk.Duration.seconds(30),
         memorySize: 512,
-        reservedConcurrentExecutions: 10,
+        reservedConcurrentExecutions: lambdaReservedConcurrency(this, 10),
         tracing: lambda.Tracing.ACTIVE,
         role: modelGovernanceRole,
         logGroup: modelGovernanceLogs,
@@ -3199,7 +3210,7 @@ export class PlatformWebStack extends cdk.Stack {
           "Runs domain-scoped Agent Registry publication and access governance",
         timeout: cdk.Duration.seconds(30),
         memorySize: 512,
-        reservedConcurrentExecutions: 10,
+        reservedConcurrentExecutions: lambdaReservedConcurrency(this, 10),
         tracing: lambda.Tracing.ACTIVE,
         role: governanceRole,
         logGroup: governanceLogs,
@@ -3361,7 +3372,7 @@ export class PlatformWebStack extends cdk.Stack {
           "Serves entitled approved agents and governed Runtime invocation",
         timeout: cdk.Duration.seconds(60),
         memorySize: 512,
-        reservedConcurrentExecutions: 10,
+        reservedConcurrentExecutions: lambdaReservedConcurrency(this, 10),
         tracing: lambda.Tracing.ACTIVE,
         role: experienceRole,
         logGroup: experienceLogs,
@@ -3506,7 +3517,7 @@ export class PlatformWebStack extends cdk.Stack {
           "Reads scoped AgentCore operational metrics and estimated cost",
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
-        reservedConcurrentExecutions: 10,
+        reservedConcurrentExecutions: lambdaReservedConcurrency(this, 10),
         tracing: lambda.Tracing.ACTIVE,
         role: operationsRole,
         logGroup: operationsLogs,
@@ -3632,7 +3643,7 @@ export class PlatformWebStack extends cdk.Stack {
           "Manages governed domain and project memberships",
         timeout: cdk.Duration.seconds(10),
         memorySize: 512,
-        reservedConcurrentExecutions: 10,
+        reservedConcurrentExecutions: lambdaReservedConcurrency(this, 10),
         tracing: lambda.Tracing.ACTIVE,
         role: accessAdminRole,
         logGroup: accessAdminLogs,

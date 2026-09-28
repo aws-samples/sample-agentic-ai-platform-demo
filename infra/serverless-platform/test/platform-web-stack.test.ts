@@ -102,6 +102,21 @@ function fixture() {
   return cachedFixture;
 }
 
+test("demo functions share concurrency and reinstalls get a distinct trace destination", () => {
+  const {template} = fixture();
+  for (const resource of Object.values(template.findResources("AWS::Lambda::Function"))) {
+    assert.equal(resource.Properties.ReservedConcurrentExecutions, undefined);
+  }
+  const destination = Object.values(template.findResources("AWS::Logs::DeliveryDestination"))
+    .find(resource => resource.Properties.DeliveryDestinationType === "XRAY");
+  assert.ok(destination);
+  assert.deepEqual(destination.Properties.Name, {
+    "Fn::Join": ["", ["agentic-platform-traces-", {
+      "Fn::Select": [2, {"Fn::Split": ["/", {"Ref": "AWS::StackId"}]}],
+    }]],
+  });
+});
+
 function resourceEntries(template: Template, type: string): Array<[string, CfnResource]> {
   return Object.entries(template.findResources(type)) as Array<[string, CfnResource]>;
 }
@@ -1010,7 +1025,7 @@ test("platform admin API uses retained logs and a bounded Node.js 22 ARM functio
   assert.equal(platformAdminFunction.Properties?.MemorySize, 512);
   assert.equal(
     platformAdminFunction.Properties?.ReservedConcurrentExecutions,
-    10,
+    undefined,
   );
   assert.equal(platformAdminFunction.Properties?.TracingConfig, undefined);
   assert.deepEqual(platformAdminFunction.Properties?.Role, {
@@ -1454,7 +1469,7 @@ test("private hosted acceptance broker owns only bounded Registry and exact stat
   });
   assert.equal(brokerFunction.Properties?.Timeout, 120);
   assert.equal(brokerFunction.Properties?.MemorySize, 512);
-  assert.equal(brokerFunction.Properties?.ReservedConcurrentExecutions, 2);
+  assert.equal(brokerFunction.Properties?.ReservedConcurrentExecutions, undefined);
   assert.deepEqual(normalizedTags(brokerFunction), EXPECTED_TAGS);
   const deploymentFunction = resourceEntries(
     template,
@@ -2763,7 +2778,7 @@ test("identity Lambda is bundled with exact domain-state configuration and read 
   assert.equal(identityFunction?.Properties?.Handler, "index.handler");
   assert.equal(identityFunction?.Properties?.MemorySize, 256);
   assert.equal(identityFunction?.Properties?.Timeout, 5);
-  assert.equal(identityFunction?.Properties?.ReservedConcurrentExecutions, 10);
+  assert.equal(identityFunction?.Properties?.ReservedConcurrentExecutions, undefined);
   assert.deepEqual(identityFunction?.Properties?.TracingConfig, { Mode: "Active" });
   assert.ok(identityFunction?.Properties?.Code?.S3Key);
   assert.deepEqual(identityFunction?.Properties?.Environment?.Variables, {
@@ -2858,7 +2873,7 @@ test("workspace Lambda is separately bundled with exact scoped state access", ()
   assert.equal(workspaceFunction?.Properties?.Timeout, 30);
   assert.equal(
     workspaceFunction?.Properties?.ReservedConcurrentExecutions,
-    10,
+    undefined,
   );
   assert.deepEqual(
     workspaceFunction?.Properties?.TracingConfig,
@@ -3132,7 +3147,7 @@ test("governance, experience, and operations APIs are separately deployed with b
     assert.deepEqual(deployedFunction.Properties?.TracingConfig, {
       Mode: "Active",
     });
-    assert.equal(deployedFunction.Properties?.ReservedConcurrentExecutions, 10);
+    assert.equal(deployedFunction.Properties?.ReservedConcurrentExecutions, undefined);
     const roleReference = deployedFunction.Properties?.Role?.["Fn::GetAtt"];
     assert.ok(Array.isArray(roleReference));
     const role =

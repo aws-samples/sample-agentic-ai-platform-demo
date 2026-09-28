@@ -130,7 +130,7 @@ test("Journey API is one retained Node 22 ARM64 Lambda with bounded configuratio
   assert.equal(fn.Properties?.Handler, "index.handler");
   assert.deepEqual(fn.Properties?.Architectures, ["arm64"]);
   assert.equal(fn.Properties?.Timeout, 90);
-  assert.equal(fn.Properties?.ReservedConcurrentExecutions, 10);
+  assert.equal(fn.Properties?.ReservedConcurrentExecutions, undefined);
   assert.deepEqual(fn.Properties?.TracingConfig, { Mode: "Active" });
   assert.deepEqual(fn.Properties?.Role, {
     "Fn::GetAtt": [roleId, "Arn"],
