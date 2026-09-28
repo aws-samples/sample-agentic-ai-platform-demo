@@ -361,12 +361,16 @@ const CONTROL_PLANE_RUNTIME_PERMISSIONS_BOUNDARY_SOURCE = JSON.parse(
     "utf8",
   ),
 );
+// Newer AWS CLI v2 releases prefix service errors with "\naws: [ERROR]: " and
+// exit 254 instead of 255 for CloudFormation ValidationError. Accept exactly
+// those two formats; anything else still fails closed.
 const MISSING_CDK_TOOLKIT_ERROR =
-  /^An error occurred \(ValidationError\) when calling the DescribeStacks operation: Stack with id CDKToolkit does not exist\r?\n?$/;
+  /^(?:\r?\naws: \[ERROR\]: )?An error occurred \(ValidationError\) when calling the DescribeStacks operation: Stack with id CDKToolkit does not exist\r?\n?$/;
 const MISSING_CLOUDFORMATION_STACK_ERROR =
-  /^An error occurred \(ValidationError\) when calling the (?:DescribeStacks|ListStackResources) operation: Stack with id ([A-Za-z0-9-]+) does not exist\r?\n?$/;
+  /^(?:\r?\naws: \[ERROR\]: )?An error occurred \(ValidationError\) when calling the (?:DescribeStacks|ListStackResources) operation: Stack with id ([A-Za-z0-9-]+) does not exist\r?\n?$/;
 const MISSING_IAM_ROLE_ERROR =
-  /^An error occurred \(NoSuchEntity\) when calling the GetRole operation: The role with name ([A-Za-z0-9_+=,.@-]+) cannot be found\.\r?\n?$/;
+  /^(?:\r?\naws: \[ERROR\]: )?An error occurred \(NoSuchEntity\) when calling the GetRole operation: The role with name ([A-Za-z0-9_+=,.@-]+) cannot be found\.\r?\n?$/;
+const CLOUDFORMATION_MISSING_STACK_STATUSES = new Set([254, 255]);
 const IAM_NAME_PATTERN = /^[A-Za-z0-9_+=,.@-]+$/;
 const IAM_PATH_PATTERN = /^(?:\/|\/[\x21-\x7E]+\/)$/;
 const IAM_PATH_MAX_LENGTH = 512;
@@ -394,7 +398,7 @@ export class AuditCommandError extends Error {
         && args[0] === "cloudformation"
         && args[1] === "describe-stacks"
         && args[stackNameIndex + 1] === "CDKToolkit"
-        && status === 255
+        && CLOUDFORMATION_MISSING_STACK_STATUSES.has(status)
         && MISSING_CDK_TOOLKIT_ERROR.test(stderrText),
       missingCloudFormationStackName:
         command === "aws"
@@ -403,7 +407,7 @@ export class AuditCommandError extends Error {
           args[1] === "describe-stacks"
           || args[1] === "list-stack-resources"
         )
-        && status === 255
+        && CLOUDFORMATION_MISSING_STACK_STATUSES.has(status)
         && missingStackMatch?.[1] === args[stackNameIndex + 1]
           ? missingStackMatch[1]
           : null,

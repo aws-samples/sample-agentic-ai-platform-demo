@@ -14540,6 +14540,76 @@ test("does not hide non-missing CDKToolkit inspection failures", () => {
   );
 });
 
+test("bootstrap-new accepts the newer AWS CLI missing-CDKToolkit format", () => {
+  const responses = absentToolkitResponses();
+  responses.set(
+    key(...COMMANDS.toolkit),
+    new AuditCommandError("aws", COMMANDS.toolkit.slice(1), {
+      status: 254,
+      stderr:
+        "\naws: [ERROR]: An error occurred (ValidationError) when calling the "
+        + "DescribeStacks operation: Stack with id CDKToolkit does not exist\n",
+    }),
+  );
+  responses.set(
+    key(...COMMANDS.oidcList),
+    JSON.stringify({ OpenIDConnectProviderList: [] }),
+  );
+  responses.delete(key(...COMMANDS.oidcGet));
+  const { options } = fixture({
+    env: { SECURITY_AUDIT_MODE: "bootstrap-new" },
+    responses,
+  });
+
+  const result = auditPredeploy(options);
+
+  assert.equal(result.evidence.cdkToolkit.status, "absent");
+});
+
+test("newer AWS CLI error prefix does not hide other CDKToolkit failures", () => {
+  const responses = baseResponses();
+  responses.set(
+    key(...COMMANDS.toolkit),
+    new AuditCommandError("aws", COMMANDS.toolkit.slice(1), {
+      status: 254,
+      stderr:
+        "\naws: [ERROR]: An error occurred (AccessDenied) when calling the "
+        + "DescribeStacks operation: not authorized\n",
+    }),
+  );
+
+  assert.throws(
+    () => auditPredeploy(fixture({ responses }).options),
+    /command failed/,
+  );
+});
+
+test("first provision deploy accepts the newer AWS CLI missing-stack format", () => {
+  const responses = provisionedControlPlaneResponses();
+  responses.set(
+    key(...COMMANDS.provisionedControlPlane),
+    new AuditCommandError(
+      "aws",
+      COMMANDS.provisionedControlPlane.slice(1),
+      {
+        status: 254,
+        stderr:
+          "\naws: [ERROR]: An error occurred (ValidationError) when calling "
+          + "the DescribeStacks operation: Stack with id "
+          + `${PROVISIONED_CONTROL_PLANE_STACK_NAME} does not exist\n`,
+      },
+    ),
+  );
+  const { options } = fixture({
+    env: provisionedControlPlaneEnvironment(),
+    responses,
+  });
+
+  const result = auditPredeploy(options);
+
+  assert.equal(result.evidence.controlPlane.status, "planned");
+});
+
 test("default command runner uses execFile without a shell", () => {
   const invocations = [];
   const runner = createCommandRunner((command, args, options) => {
