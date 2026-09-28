@@ -1,4 +1,5 @@
 import { lambdaReservedConcurrency } from "./lambda-concurrency";
+import { addTracePrerequisites } from "./trace-prerequisites";
 import { addPolicyInventory } from './policy-inventory';
 import { readFileSync } from "node:fs";
 import * as path from "node:path";
@@ -2531,9 +2532,15 @@ export class PlatformWebStack extends cdk.Stack {
     const traceDestination = agentRuntime.node.tryFindChild("TracesDeliveryDest");
     if (traceDestination instanceof logs.CfnDeliveryDestination) {
       traceDestination.name = cdk.Fn.join("", [
-        "agentic-platform-traces-",
-        cdk.Fn.select(2, cdk.Fn.split("/", this.stackId)),
+        "AgenticPlatformWebGoverned",
+        cdk.Fn.join("", cdk.Fn.split("-", cdk.Fn.select(2, cdk.Fn.split("/", this.stackId)))),
       ]);
+      traceDestination.addDependency(addTracePrerequisites(this));
+      for (const resource of this.node.findAll()) {
+        if (resource instanceof cdk.CfnResource && resource.cfnResourceType === "AWS::XRay::ResourcePolicy") {
+          traceDestination.addDependency(resource);
+        }
+      }
     }
     const sandboxRuntimeEndpoint = agentRuntime.addEndpoint("Sandbox", {
       description: "Governed sandbox endpoint for domain testing",

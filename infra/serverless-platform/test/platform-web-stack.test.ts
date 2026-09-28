@@ -111,10 +111,19 @@ test("demo functions share concurrency and reinstalls get a distinct trace desti
     .find(resource => resource.Properties.DeliveryDestinationType === "XRAY");
   assert.ok(destination);
   assert.deepEqual(destination.Properties.Name, {
-    "Fn::Join": ["", ["agentic-platform-traces-", {
-      "Fn::Select": [2, {"Fn::Split": ["/", {"Ref": "AWS::StackId"}]}],
+    "Fn::Join": ["", ["AgenticPlatformWebGoverned", {
+      "Fn::Join": ["", {"Fn::Split": ["-", {
+        "Fn::Select": [2, {"Fn::Split": ["/", {"Ref": "AWS::StackId"}]}],
+      }]}],
     }]],
   });
+  const config = template.findResources("AWS::XRay::TransactionSearchConfig");
+  assert.equal(Object.keys(config).length, 1);
+  const configId = Object.keys(config)[0];
+  assert.equal(config[configId].DeletionPolicy, "Retain");
+  assert.ok(destination.DependsOn.includes(configId));
+  const policies = Object.keys(template.findResources("AWS::XRay::ResourcePolicy"));
+  for (const policyId of policies) assert.ok(destination.DependsOn.includes(policyId));
 });
 
 function resourceEntries(template: Template, type: string): Array<[string, CfnResource]> {

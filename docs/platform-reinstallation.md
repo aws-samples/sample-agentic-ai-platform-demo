@@ -46,6 +46,13 @@ logs can remain as historical resources. The fresh installation creates new
 application resources; it does not restore old data or users automatically.
 Record retained physical IDs in private deployment evidence.
 
+Transaction Search is a regional trace-ingestion setting and its access policy
+is retained. Preserve it when other applications use it. Runtime trace delivery
+destinations include the stack incarnation in their name, so a new installation
+can use its own destination without deleting an old destination still referenced
+by a separate application's delivery. Inspect live delivery sources before
+removing any destination.
+
 ## Reinstall and verify
 
 After deletion and reviewed collision cleanup, follow the root

@@ -332,6 +332,17 @@ select `reserved` explicitly and review the CDK diff.
 Inspect the account with `aws lambda get-account-settings --region "$AWS_REGION"`.
 Do not delete unrelated applications to make room for a demo.
 
+AgentCore trace delivery also requires the regional CloudWatch Logs trace
+destination. The Web stack configures Transaction Search with 1% X-Ray indexing
+and the scoped log-delivery policy before creating runtime trace deliveries.
+The deployment identity needs the native
+`AWS::XRay::TransactionSearchConfig` permissions, including Application Signals
+discovery and its service-linked role creation. The optional GitHub deployment
+role includes those permissions. This is a regional setting: review it when
+installing alongside other tracing workloads. The configuration and its access
+policy are retained on stack deletion so removing the demo does not disable
+other applications' trace ingestion.
+
 Use your existing authenticated AWS environment instead of `AWS_PROFILE` when
 running with workload credentials. Verify the caller account with STS. An
 existing supported CDK bootstrap needs termination protection; if that is its

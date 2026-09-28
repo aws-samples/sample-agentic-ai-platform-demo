@@ -1095,6 +1095,35 @@ export class GitHubBootstrapStack extends cdk.Stack {
                 },
               },
             }),
+            new iam.PolicyStatement({
+              sid: "TraceSearchConfiguration",
+              actions: [
+                "application-signals:StartDiscovery",
+                "xray:GetIndexingRules",
+                "xray:GetTraceSegmentDestination",
+                "xray:UpdateIndexingRule",
+                "xray:UpdateTraceSegmentDestination",
+              ],
+              resources: ["*"],
+              conditions: { StringEquals: { "aws:RequestedRegion": this.region } },
+            }),
+            new iam.PolicyStatement({
+              sid: "TraceSearchServiceRole",
+              actions: ["iam:CreateServiceLinkedRole"],
+              resources: [
+                `arn:${this.partition}:iam::${this.account}:role/aws-service-role/application-signals.cloudwatch.amazonaws.com/AWSServiceRoleForCloudWatchApplicationSignals`,
+              ],
+              conditions: { StringEquals: {
+                "iam:AWSServiceName": "application-signals.cloudwatch.amazonaws.com",
+              } },
+            }),
+            new iam.PolicyStatement({
+              sid: "TraceSearchLogGroups",
+              actions: ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutRetentionPolicy"],
+              resources: ["aws/spans", "/aws/application-signals/data"].map(
+                name => `arn:${this.partition}:logs:${this.region}:${this.account}:log-group:${name}:*`,
+              ),
+            }),
           ],
         },
       );
@@ -1883,13 +1912,22 @@ export class GitHubBootstrapStack extends cdk.Stack {
       id: "AwsSolutions-IAM5[Resource::*]",
       reason:
         "CloudWatch Logs delivery enumeration and Logs/X-Ray resource-policy "
-        + "APIs do not support resource-level authorization; every call is "
-        + "restricted to the deployment region and the policy grants no "
-        + "unrelated Logs or X-Ray capability.",
+        + "APIs, regional Transaction Search settings and Application Signals "
+        + "discovery do not support resource-level authorization. Calls are "
+        + "restricted to the deployment region; native CloudFormation requires "
+        + "these operations before AgentCore trace delivery can be created.",
     });
     agentRuntimeObservabilityDeploymentPolicy.node.addMetadata(
       cdk.Validations.ACKNOWLEDGED_RULES_METADATA_KEY,
       {
+        ["AwsSolutions-IAM5[Resource::arn:<AWS::Partition>:logs:"
+          + `${this.region}:${this.account}:log-group:aws/spans:*]`]:
+          "The Transaction Search resource provider creates streams and sets "
+          + "retention only in the regional aws/spans log group.",
+        ["AwsSolutions-IAM5[Resource::arn:<AWS::Partition>:logs:"
+          + `${this.region}:${this.account}:log-group:/aws/application-signals/data:*]`]:
+          "The Transaction Search resource provider creates streams and sets "
+          + "retention only in the regional Application Signals data log group.",
         ["AwsSolutions-IAM5[Resource::arn:<AWS::Partition>:logs:"
           + `${this.region}:${this.account}:`
           + "delivery-source:AgenticPlatformWebGoverned*]"]:
