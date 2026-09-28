@@ -7,7 +7,7 @@ requires-python = ">=3.12"
 # (the runtime needs the arm64 wheel set — pandas/pyarrow split).
 dependencies = [
     "aws-bedrock-token-generator==1.1.0",
-    "bedrock-agentcore==1.14.1",
+    "bedrock-agentcore==1.18.1",
     "boto3==1.43.31",
     "pydantic==2.12.4",
     "pandas==2.3.2",
