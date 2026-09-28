@@ -303,9 +303,8 @@ links and consistency; run behavior-specific tests for source changes and denial
 cases for authorization/delivery changes.
 
 Use the owner-designated account and verify it with STS before AWS mutations.
-The original test deployment is account 534409838809; the separately authorized
-new-account verification deployment is 820242898417, both in us-west-2. These
-operational facts must never become hard-coded portable runtime/template defaults.
+Historical verification accounts are evidence only. They must never become
+deployment targets or hard-coded portable runtime/template defaults.
 Inspect live stacks, outputs, reviewed configuration and planned changes. Follow
 the [deployment runbook](infra/serverless-platform/README.md), including audit,
 diff, postdeployment checks and acceptance. Existing deployments are not an
